@@ -16,6 +16,10 @@ const logApiCall = (method: string, duration: number, details?: string) => {
     console.debug(`%c[VisOpt API] ${method} took ${duration.toFixed(2)}ms ${details ? `(${details})` : ''}`, 'color: #1a73e8; font-weight: bold;');
 };
 
+const logCacheHit = (origin: string, dest: string) => {
+    console.debug(`%c[VisOpt LMOD] Cache hit: ${origin.split(',')[0]} -> ${dest.split(',')[0]}`, 'color: #34a853; font-style: italic;');
+};
+
 /**
  * Dynamically injects the Google Maps script into the DOM.
  * Prevents duplicate injection.
@@ -47,11 +51,14 @@ export const loadGoogleMapsScript = (apiKey: string): Promise<void> => {
         script.defer = true;
         
         script.onload = () => {
+            console.debug(`%c[VisOpt API] Google Maps Script Loaded Successfully`, 'color: #1a73e8; font-weight: bold;');
             resolve();
         };
         
         script.onerror = () => {
-            reject(new Error("Failed to load Google Maps script. Check your API Key."));
+            const msg = "Failed to load Google Maps script. Check your API Key.";
+            console.error(`[VisOpt API] ${msg}`);
+            reject(new Error(msg));
         };
 
         document.head.appendChild(script);
@@ -64,14 +71,16 @@ export const getRouteData = async (origin: string, dest: string): Promise<{ dist
   // 1. Check LMOD Cache
   const cached = DistanceCache.get(origin, dest);
   if (cached) {
-      // console.debug(`[LMOD] Cache hit: ${origin} -> ${dest}`); // Optional: Log cache hits?
+      logCacheHit(origin, dest);
       return Promise.resolve(cached);
   }
 
   // 2. Fetch from API if missing
   return new Promise((resolve, reject) => {
     if (!(window as any).google || !(window as any).google.maps) {
-      reject("Google Maps SDK not loaded. Please enter API Key in Settings.");
+      const msg = "Google Maps SDK not loaded. Please enter API Key in Settings.";
+      console.warn(`[VisOpt API] ${msg}`);
+      reject(msg);
       return;
     }
 
@@ -86,9 +95,12 @@ export const getRouteData = async (origin: string, dest: string): Promise<{ dist
       },
       (response: any, status: string) => {
         const end = performance.now();
-        logApiCall('DistanceMatrix (Single)', end - start);
+        logApiCall('DistanceMatrix (Single)', end - start, `${origin.split(',')[0]} -> ${dest.split(',')[0]}`);
 
-        if (status !== 'OK') return reject(`Matrix API Error: ${status}`);
+        if (status !== 'OK') {
+            console.error(`[VisOpt API] Matrix API Error: ${status}`);
+            return reject(`Matrix API Error: ${status}`);
+        }
 
         const element = response.rows[0].elements[0];
         if (element.status !== 'OK') {
@@ -111,25 +123,12 @@ export const getRouteData = async (origin: string, dest: string): Promise<{ dist
 };
 
 // Batch Fetch for Matrix Optimization
-// This ensures we have data for all pairs before running TSP
 export const ensureMatrixData = async (addresses: string[], onProgress?: (msg: string) => void): Promise<void> => {
     if (!(window as any).google || !(window as any).google.maps) {
         throw new Error("Google Maps SDK not loaded. Check API Key.");
     }
 
-    // 1. Identify missing pairs
-    // We need a full N x N matrix ideally, or at least Start->All, All->Start, and Inter-Visit pairs
-    // For simplicity and robustness of 2-Opt, we fetch the full square matrix of unique addresses.
     const uniqueAddresses = Array.from(new Set(addresses.map(a => a.trim())));
-    
-    // Google Matrix API works best when we send a set of Origins and Destinations.
-    // Limits: 25 origins max, 25 dests max, 100 elements total per call.
-    // e.g. 10 origins x 10 dests = 100 elements.
-    
-    // We will naively iterate pairs to see if we have high cache coverage, 
-    // but the most efficient way to fill the cache for TSP is to batch calls.
-
-    // Let's break uniqueAddresses into chunks of 10 (since 10x10=100 elements max)
     const chunkSize = 10;
     const service = new google.maps.DistanceMatrixService();
 
@@ -139,8 +138,6 @@ export const ensureMatrixData = async (addresses: string[], onProgress?: (msg: s
             const originsChunk = uniqueAddresses.slice(i, i + chunkSize);
             const destsChunk = uniqueAddresses.slice(j, j + chunkSize);
 
-            // Check if we need to fetch this chunk
-            // If we have ALL data in this sub-grid, skip it.
             let needsFetch = false;
             for (const o of originsChunk) {
                 for (const d of destsChunk) {
@@ -154,12 +151,12 @@ export const ensureMatrixData = async (addresses: string[], onProgress?: (msg: s
             }
 
             if (!needsFetch) {
+                console.debug(`%c[VisOpt LMOD] Skipping batch ${i}-${j} (All cached)`, 'color: #34a853; opacity: 0.7;');
                 continue;
             }
 
             if (onProgress) onProgress(`Fetching distance data... (${i + 1}-${Math.min(i+chunkSize, uniqueAddresses.length)} vs ${j + 1}-${Math.min(j+chunkSize, uniqueAddresses.length)})`);
 
-            // Fetch Chunk
             const start = performance.now();
             await new Promise<void>((resolve) => {
                 service.getDistanceMatrix(
@@ -174,13 +171,11 @@ export const ensureMatrixData = async (addresses: string[], onProgress?: (msg: s
                         logApiCall('DistanceMatrix (Batch)', end - start, `${originsChunk.length}x${destsChunk.length}`);
 
                         if (status !== 'OK') {
-                            console.error(`Matrix API Error: ${status}`);
-                            // We don't reject here to allow partial success, but TSP might be suboptimal
+                            console.error(`[VisOpt API] Batch Matrix API Error: ${status}`);
                             resolve(); 
                             return;
                         }
 
-                        // Process response
                         response.rows.forEach((row: any, rIdx: number) => {
                             const origin = originsChunk[rIdx];
                             row.elements.forEach((element: any, cIdx: number) => {
@@ -198,7 +193,6 @@ export const ensureMatrixData = async (addresses: string[], onProgress?: (msg: s
                 );
             });
 
-            // Brief delay to be nice to the API rate limiter
             await new Promise(r => setTimeout(r, 500));
         }
     }
@@ -224,24 +218,26 @@ export const validateAddressStrict = async (addressStr: string): Promise<string>
     });
     const data = await resp.json();
     const end = performance.now();
-    logApiCall('AddressValidation (REST)', end - start);
+    logApiCall('AddressValidation (REST)', end - start, addressStr.split(',')[0]);
 
-    if (data.error) throw new Error("Validation API: " + data.error.message);
+    if (data.error) {
+        console.error(`[VisOpt API] Validation Error: ${data.error.message}`);
+        throw new Error("Validation API: " + data.error.message);
+    }
 
     const verdict = data.result?.verdict || {};
     const addrObj = data.result?.address || {};
 
-    // Specific logic requested by user in original code
     if (verdict.hasUnconfirmedComponents) throw new Error(`Unconfirmed address components: ${addressStr}`);
     if (verdict.validationGranularity === 'OTHER') throw new Error(`Address too vague (City level): ${addressStr}`);
 
     return addrObj.formattedAddress || addressStr;
   } catch (err) {
+    console.error(`[VisOpt API] Validation Catch:`, err);
     throw err;
   }
 };
 
-// UI Helper for instant validation
 export interface ValidationResult {
     isValid: boolean;
     formattedAddress?: string;
@@ -252,7 +248,6 @@ export const checkAddress = async (addressStr: string): Promise<ValidationResult
     if (!addressStr || addressStr.trim().length < 3) {
         return { isValid: false, error: 'Address too short' };
     }
-    // Early exit if key not loaded
     if (!runtimeApiKey && !(window as any).google) {
         return { isValid: false, error: 'Locked: API Key required' };
     }
@@ -264,4 +259,3 @@ export const checkAddress = async (addressStr: string): Promise<ValidationResult
         return { isValid: false, error: e.message || 'Invalid address' };
     }
 }
-    

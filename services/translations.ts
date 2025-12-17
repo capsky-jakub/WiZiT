@@ -51,7 +51,7 @@ export const translations = {
     colSurname: "Surname",
     colAddress: "Address",
     colValid: "Valid",
-    colOdometer: "Odometer",
+    colOdometer: "Tachom.",
     colDistance: "Distance",
     colTime: "Time",
     colPlan: "Plan",
@@ -100,10 +100,12 @@ export const translations = {
     helpFeatReset: "Factory Reset: Completely wipes the local database, settings, and cached distances. Use with caution.",
     helpFeatCache: "Smart Caching (LMOD): The app stores distance results in your browser ('LMOD'). This saves you money by preventing repeated API calls for the same route segments.",
     helpFeatValidation: "Validation: 'Strict Mode' in settings prevents calculation if any address is ambiguous. Standard mode allows calculation but marks addresses with red crosses if unverified.",
+    helpFeatRoutes: "Route Manager: Save frequently used routes to access them anytime via the folder icon. Includes visits, orders, and durations.",
+    helpFeatAutoLoad: "Auto-loader: If you name a saved route 'Monday', 'Tuesday', etc., the app will automatically load it on startup when it matches today's date.",
     helpTipsTitle: "Tips & Tricks",
     helpTipLmod: "To save API usage, do not clear your browser's 'Local Storage' unnecessarily, as this holds the LMOD cache.",
-    helpTipExport: "Export/Import: Use the arrow icons in the top bar to save your entire workspace (including settings and cache) to a JSON file. Useful for moving to another computer.",
-    helpTipSkip: "Double-click any row to instantly 'Skip' it. This is great for 'What-If' scenarios to see how the route changes without deleting the visit.",
+    helpTipExport: "Backup/Restore: Use the arrow icons in the top bar to save your entire workspace (settings, routes, and cache) to a JSON file.",
+    helpTipSkip: "Dbl-click any row to 'Skip' it. This is great for 'What-If' scenarios to see how the route changes without deleting records.",
 
     // Messages
     msgApiMissing: "API Key Missing. Please enter your Google Maps API Key in Settings.",
@@ -216,10 +218,12 @@ export const translations = {
     helpFeatReset: "Tovární nastavení: Kompletně vymaže lokální databázi, nastavení i mezipaměť vzdáleností. Používejte opatrně.",
     helpFeatCache: "Chytrá mezipaměť (LMOD): Aplikace ukládá výsledky vzdáleností v prohlížeči ('LMOD'). To šetří peníze zamezením opakovaných volání API pro stejné úseky.",
     helpFeatValidation: "Ověřování: 'Striktní režim' v nastavení zabrání výpočtu, pokud je nějaká adresa nejednoznačná. Standardní režim dovolí výpočet, ale označí neověřené adresy červeným křížkem.",
+    helpFeatRoutes: "Správce tras: Ukládejte si často používané trasy lokálně. Přistupujte k nim kdykoli přes ikonu složky v panelu nástrojů.",
+    helpFeatAutoLoad: "Automatické načítání: Pokud pojmenujete trasu přesně podle dne v týdnu (např. 'pondělí'), aplikace ji při spuštění automaticky načte.",
     helpTipsTitle: "Tipy a Triky",
     helpTipLmod: "Pro úsporu API volání nevymazávejte zbytečně 'Local Storage' prohlížeče, kde je uložena LMOD cache.",
-    helpTipExport: "Export/Import: Použijte ikony šipek v horní liště pro uložení celého pracovního prostředí (včetně nastavení a cache) do JSON souboru. Vhodné pro přenos na jiný počítač.",
-    helpTipSkip: "Dvojklik na libovolný řádek jej okamžitě 'Přeskočí'. Skvělé pro modelování scénářů 'Co kdyby' bez nutnosti mazat záznamy.",
+    helpTipExport: "Záloha/Obnova: Použijte ikony šipek v horní liště pro uložení celého pracovního prostředí (včetně nastavení, tras a cache) do JSON souboru.",
+    helpTipSkip: "Dvojklik na řádek jej 'Přeskočí'. Skvělé pro modelování scénářů 'Co kdyby' bez nutnosti mazat záznamy.",
 
     // Messages
     msgApiMissing: "Chybí API klíč. Zadejte jej prosím v Nastavení.",

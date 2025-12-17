@@ -13,17 +13,12 @@ import { solveTSP } from './services/tspSolver';
 import { setCacheExpirationDays } from './services/distanceCache';
 import { translations } from './services/translations';
 
-// --- DEVELOPER CONFIG ---
-// Set your API Key here to avoid re-entering it during development.
-// Clear this before deployment.
 const DEFAULT_DEV_API_KEY = "AIzaSyBCWH72da5n-rq8Qu3sOc64cW_asGZpy0w"; 
 
-// Helper for generating IDs
 const uuid = () => Math.random().toString(36).substring(2, 9);
 const commercialRound = (num: number) => Math.floor(num + 0.5);
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
-// Helper for Time Arithmetic (HH:mm:ss + seconds)
 const addSecondsToTime = (timeStr: string, secondsToAdd: number): string => {
     if (!timeStr) return "00:00:00";
     const [h, m, s] = timeStr.split(':').map(Number);
@@ -38,29 +33,25 @@ const addSecondsToTime = (timeStr: string, secondsToAdd: number): string => {
 };
 
 const App: React.FC = () => {
-  // --- State: Data ---
   const [visits, setVisits] = useState<Visit[]>([]);
   const [startTrip, setStartTrip] = useState<StartTrip | null>(null);
   const [returnTrip, setReturnTrip] = useState<ReturnTrip | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   
-  // --- State: Settings ---
   const [settings, setSettings] = useState<AppSettings>({
     startAddress: "Dlouhá 1113, 530 06 Pardubice, Česko",
     currentOdometer: 0,
-    departureTime: "08:00:00", // Default Departure
+    departureTime: "08:00:00",
     isStrictMode: false,
     isStartValid: false,
     isDarkMode: true,
-    googleApiKey: DEFAULT_DEV_API_KEY, // Default to Dev Constant
+    googleApiKey: DEFAULT_DEV_API_KEY,
     cacheExpirationDays: 30,
-    language: 'cs' // Default to Czech as per user preference (1. Czech)
+    language: 'cs'
   });
 
-  // Derived translations
   const t = translations[settings.language];
 
-  // --- State: UI ---
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
@@ -74,46 +65,40 @@ const App: React.FC = () => {
   const [dbDeleteConfirming, setDbDeleteConfirming] = useState(false);
   const [isApiReady, setIsApiReady] = useState(false);
 
-  // Hidden file input refs
   const fileInputRef = useRef<HTMLInputElement>(null);
   const importDbInputRef = useRef<HTMLInputElement>(null);
 
-  // --- Persistence & API Initialization ---
-  useEffect(() => {
-    // Load on mount
-    const savedVisits = localStorage.getItem('odocalc_visits');
-    const savedSettings = localStorage.getItem('odocalc_settings');
-    const savedStart = localStorage.getItem('odocalc_start');
-    const savedReturn = localStorage.getItem('odocalc_return');
-    
-    if (savedVisits) {
-      try {
-        setVisits(JSON.parse(savedVisits));
-      } catch (e) { console.error("Failed to load visits", e); }
+  // Helper to get localized day name for auto-load
+  const getCurrentDayName = (lang: 'cs' | 'en'): string => {
+    const dayIndex = new Date().getDay(); // 0 (Sun) - 6 (Sat)
+    if (lang === 'cs') {
+      return ['neděle', 'pondělí', 'úterý', 'středa', 'čtvrtek', 'pátek', 'sobota'][dayIndex];
     }
-    
+    return ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dayIndex];
+  };
+
+  useEffect(() => {
+    // 1. Initial Load of Settings (Needed for language/API key)
+    const savedSettings = localStorage.getItem('odocalc_settings');
+    let currentSettings = settings;
+
     if (savedSettings) {
       try {
         const loaded = JSON.parse(savedSettings);
         if (!loaded.departureTime) loaded.departureTime = "08:00:00";
         if (!loaded.cacheExpirationDays) loaded.cacheExpirationDays = 30;
         if (!loaded.language) loaded.language = 'cs';
-        
-        if (!loaded.googleApiKey && DEFAULT_DEV_API_KEY) {
-            loaded.googleApiKey = DEFAULT_DEV_API_KEY;
-        }
+        if (!loaded.googleApiKey && DEFAULT_DEV_API_KEY) loaded.googleApiKey = DEFAULT_DEV_API_KEY;
 
         setSettings(loaded);
+        currentSettings = loaded;
         setCacheExpirationDays(loaded.cacheExpirationDays);
 
         if (loaded.googleApiKey) {
             setRuntimeApiKey(loaded.googleApiKey);
             loadGoogleMapsScript(loaded.googleApiKey)
                 .then(() => setIsApiReady(true))
-                .catch(e => {
-                    console.error("API Load Error:", e);
-                    setIsApiReady(false);
-                });
+                .catch(e => { console.error("API Load Error:", e); setIsApiReady(false); });
         }
       } catch (e) { console.error("Failed to load settings", e); }
     } else {
@@ -122,18 +107,44 @@ const App: React.FC = () => {
             loadGoogleMapsScript(DEFAULT_DEV_API_KEY)
                 .then(() => setIsApiReady(true))
                 .catch(e => { console.error(e); setIsApiReady(false); });
-        } else {
-            setRuntimeApiKey("");
-            setIsApiReady(false);
         }
     }
 
-    if (savedStart) {
-        try { setStartTrip(JSON.parse(savedStart)); } catch (e) { console.error("Failed to load start trip", e); }
+    // 2. CHECK AUTO-LOAD (Saved Routes named by Weekday)
+    const currentDayName = getCurrentDayName(currentSettings.language).toLowerCase();
+    const savedRoutesRaw = localStorage.getItem('odocalc_saved_routes');
+    let autoLoaded = false;
+
+    if (savedRoutesRaw) {
+      try {
+        const savedRoutes: SavedRoute[] = JSON.parse(savedRoutesRaw);
+        const dayRoute = savedRoutes.find(r => r.name.trim().toLowerCase() === currentDayName);
+
+        if (dayRoute) {
+          console.log(`%c[VisOpt] Auto-loading route for current day: ${currentDayName}`, 'color: #1a73e8; font-weight: bold;');
+          setVisits(dayRoute.visits);
+          if (dayRoute.startTrip) setStartTrip(dayRoute.startTrip);
+          if (dayRoute.returnTrip) setReturnTrip(dayRoute.returnTrip);
+          autoLoaded = true;
+        }
+      } catch (e) { console.error("Failed to parse saved routes for auto-load", e); }
     }
 
-    if (savedReturn) {
-        try { setReturnTrip(JSON.parse(savedReturn)); } catch (e) { console.error("Failed to load return trip", e); }
+    // 3. Fallback to last unsaved session state if no auto-load match found
+    if (!autoLoaded) {
+      const savedVisits = localStorage.getItem('odocalc_visits');
+      const savedStart = localStorage.getItem('odocalc_start');
+      const savedReturn = localStorage.getItem('odocalc_return');
+      
+      if (savedVisits) {
+        try { setVisits(JSON.parse(savedVisits)); } catch (e) { console.error("Failed to load visits", e); }
+      }
+      if (savedStart) { 
+        try { setStartTrip(JSON.parse(savedStart)); } catch (e) { console.error("Failed to load start trip", e); } 
+      }
+      if (savedReturn) { 
+        try { setReturnTrip(JSON.parse(savedReturn)); } catch (e) { console.error("Failed to load return trip", e); } 
+      }
     }
   }, []);
 
@@ -145,16 +156,11 @@ const App: React.FC = () => {
     if (returnTrip) localStorage.setItem('odocalc_return', JSON.stringify(returnTrip));
     else localStorage.removeItem('odocalc_return');
 
-    if (settings.isDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+    if (settings.isDarkMode) document.documentElement.classList.add('dark');
+    else document.documentElement.classList.remove('dark');
   }, [visits, settings, startTrip, returnTrip]);
 
-  useEffect(() => {
-    setDeleteConfirming(false);
-  }, [selectedIds]);
+  useEffect(() => { setDeleteConfirming(false); }, [selectedIds]);
 
   const clearCalculation = (currentList: Visit[] = visits) => {
     const cleared = currentList.map(v => {
@@ -192,15 +198,13 @@ const App: React.FC = () => {
           link.click();
           document.body.removeChild(link);
           URL.revokeObjectURL(url);
-      } catch (err: any) {
-          alert("Export failed: " + err.message);
-      }
+          console.log("Database exported successfully.");
+      } catch (err: any) { console.error("Export failed:", err.message); }
   };
 
   const handleImportDB = (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (!file) return;
-
       const reader = new FileReader();
       reader.onload = (event) => {
           try {
@@ -221,10 +225,8 @@ const App: React.FC = () => {
                     .then(() => setIsApiReady(true))
                     .catch(() => setIsApiReady(false));
               }
-              alert(t.msgImportSuccess);
-          } catch (err: any) {
-              alert(t.msgImportFail + ": " + err.message);
-          }
+              console.log(t.msgImportSuccess);
+          } catch (err: any) { console.error(t.msgImportFail, err.message); }
       };
       reader.readAsText(file);
       if (importDbInputRef.current) importDbInputRef.current.value = '';
@@ -246,19 +248,12 @@ const App: React.FC = () => {
             isDarkMode: true,
             googleApiKey: DEFAULT_DEV_API_KEY,
             cacheExpirationDays: 30,
-            language: settings.language // Keep language preference
+            language: settings.language
           });
-          
-          if (DEFAULT_DEV_API_KEY) {
-            setRuntimeApiKey(DEFAULT_DEV_API_KEY);
-            setIsApiReady(true); 
-          } else {
-            setRuntimeApiKey("");
-            setIsApiReady(false);
-          }
+          if (DEFAULT_DEV_API_KEY) { setRuntimeApiKey(DEFAULT_DEV_API_KEY); setIsApiReady(true); } else { setRuntimeApiKey(""); setIsApiReady(false); }
           setCacheExpirationDays(30); 
           setDbDeleteConfirming(false);
-          alert(t.msgDbCleared);
+          console.log(t.msgDbCleared);
       } else {
           setDbDeleteConfirming(true);
           setTimeout(() => setDbDeleteConfirming(false), 4000);
@@ -284,24 +279,13 @@ const App: React.FC = () => {
       setVisits(reindexVisits(cleared));
   };
 
-  const handleAdd = () => {
-    setEditingVisit(null);
-    setIsModalOpen(true);
-  };
-
-  const handleEdit = (visit: Visit) => {
-    setEditingVisit(visit);
-    setIsModalOpen(true);
-  };
+  const handleAdd = () => { setEditingVisit(null); setIsModalOpen(true); };
+  const handleEdit = (visit: Visit) => { setEditingVisit(visit); setIsModalOpen(true); };
 
   const saveVisit = (data: Omit<Visit, 'id'>) => {
     let newList;
-    if (editingVisit) {
-      newList = visits.map(v => v.id === editingVisit.id ? { ...v, ...data } : v);
-    } else {
-      const newVisit = { ...data, id: uuid(), order: 0, isSkipped: false };
-      newList = [...visits, newVisit];
-    }
+    if (editingVisit) { newList = visits.map(v => v.id === editingVisit.id ? { ...v, ...data } : v); } 
+    else { const newVisit = { ...data, id: uuid(), order: 0, isSkipped: false }; newList = [...visits, newVisit]; }
     const cleared = clearCalculation(newList);
     setVisits(reindexVisits(cleared));
     setIsModalOpen(false);
@@ -312,23 +296,14 @@ const App: React.FC = () => {
           const cleared = clearCalculation(visits);
           setVisits(cleared);
       }
-
       if (newSettings.googleApiKey !== settings.googleApiKey) {
           if (newSettings.googleApiKey) {
               setRuntimeApiKey(newSettings.googleApiKey);
               loadGoogleMapsScript(newSettings.googleApiKey)
                 .then(() => setIsApiReady(true))
-                .catch(e => {
-                    console.error(e);
-                    setIsApiReady(false);
-                    alert("Failed to load Maps API with this key.");
-                });
-          } else {
-              setRuntimeApiKey("");
-              setIsApiReady(false);
-          }
+                .catch(e => { console.error(e); setIsApiReady(false); });
+          } else { setRuntimeApiKey(""); setIsApiReady(false); }
       }
-
       if (newSettings.cacheExpirationDays && newSettings.cacheExpirationDays !== settings.cacheExpirationDays) {
           setCacheExpirationDays(newSettings.cacheExpirationDays);
       }
@@ -342,6 +317,7 @@ const App: React.FC = () => {
         setVisits(reindexVisits(cleared));
         setSelectedIds(new Set());
         setDeleteConfirming(false);
+        console.log("Bulk delete performed.");
     } else {
         setDeleteConfirming(true);
         setTimeout(() => setDeleteConfirming(false), 4000);
@@ -357,72 +333,53 @@ const App: React.FC = () => {
           newSelected.delete(id);
           setSelectedIds(newSelected);
       }
+      console.log(`Visit ${id} deleted.`);
   };
 
   const handleExcelUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     try {
       const parsed = await parseVisitsExcel(file);
       await processAndAddVisits(parsed);
-    } catch (err: any) {
-      alert(`${t.msgImportFail}: ${err.message}`);
-    } finally {
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    }
+    } catch (err: any) { console.error(`${t.msgImportFail}:`, err.message); } 
+    finally { if (fileInputRef.current) fileInputRef.current.value = ''; }
   };
 
   const handleLoadSampleData = async (data: any[]) => {
       try {
-          // Map to correct format just in case, though HelpModal should send correct structure
-          const formatted = data.map(d => ({
-              name: d.name,
-              surname: d.surname,
-              address: d.address,
-              order: d.order,
-              visitDuration: d.visitDuration
-          }));
+          const formatted = data.map(d => ({ name: d.name, surname: d.surname, address: d.address, order: d.order, visitDuration: d.visitDuration }));
           await processAndAddVisits(formatted);
-      } catch (err: any) {
-          alert("Sample Load Failed: " + err.message);
-      }
+      } catch (err: any) { console.error("Sample Load Failed:", err.message); }
   };
 
   const handleLoadSavedRoute = (route: SavedRoute) => {
     setVisits(route.visits);
     if (route.startTrip) setStartTrip(route.startTrip);
     if (route.returnTrip) setReturnTrip(route.returnTrip);
-    
-    // Optionally restore start address if saved and different (asking user might be better, but we'll auto-set for now)
-    // if (route.startAddress) setSettings(prev => ({...prev, startAddress: route.startAddress!}));
+    console.log(`Route "${route.name}" loaded manually.`);
   };
 
   const processAndAddVisits = async (newRawVisits: Omit<Visit, 'id'>[]) => {
       let newVisits = newRawVisits.map(v => ({ ...v, id: uuid(), isSkipped: false }));
-      
       const validatedVisits = await Promise.all(newVisits.map(async (v) => {
           const check = await checkAddress(v.address);
           return { ...v, address: v.address, isAddressValid: check.isValid };
       }));
-
       const combined = [...visits, ...validatedVisits];
       const sorted = combined.sort((a, b) => a.order - b.order);
       const cleared = clearCalculation(sorted);
-      
       setVisits(reindexVisits(cleared));
-      alert(`${t.msgImportSuccess} (${validatedVisits.length})`);
+      console.log(`${t.msgImportSuccess} (${validatedVisits.length})`);
   };
 
   const handleValidateAll = async () => {
-      if (!isApiReady) return alert(t.msgApiMissing);
-      if (visits.length === 0) return alert(t.msgNoVisits);
-      
+      if (!isApiReady) return;
+      if (visits.length === 0) return;
       setCalcStatus(CalculationStatus.VALIDATING);
       setErrorMsg(null);
       const total = visits.length;
       const newVisits = [...visits];
-      
       try {
           for (let i = 0; i < newVisits.length; i++) {
               const v = newVisits[i];
@@ -432,22 +389,17 @@ const App: React.FC = () => {
               await sleep(20); 
           }
           setVisits(newVisits);
-          alert(`${t.msgValidationComplete} (${total})`);
-      } catch (err: any) {
-          console.error(err);
-          setErrorMsg(err.message);
-      } finally {
-          setCalcStatus(CalculationStatus.IDLE);
-      }
+          console.log(`${t.msgValidationComplete} (${total})`);
+      } catch (err: any) { console.error(err); setErrorMsg(err.message); } 
+      finally { setCalcStatus(CalculationStatus.IDLE); }
   };
 
   const runCalculation = async (visitsOverride?: Visit[], commitOdometer: boolean = true) => {
-    if (!isApiReady) return alert(t.msgApiMissing);
+    if (!isApiReady) return;
     const sourceVisits = visitsOverride || visits;
     const activeVisits = sourceVisits.filter(v => !v.isSkipped);
-
-    if (activeVisits.length === 0) return alert(t.msgNoActive);
-    if (!settings.startAddress) return alert(t.msgStartReq);
+    if (activeVisits.length === 0) return;
+    if (!settings.startAddress) return;
 
     setCalcStatus(CalculationStatus.VALIDATING);
     setErrorMsg(null);
@@ -463,10 +415,7 @@ const App: React.FC = () => {
     const initialStartData: StartTrip = { address: settings.startAddress, odometer: settings.currentOdometer };
     const totalSteps = activeVisits.length + (settings.isStrictMode ? activeVisits.length + 1 : 1); 
     let stepCount = 0;
-    const updateProgress = (msg: string) => {
-      stepCount++;
-      setProgress({ current: stepCount, total: totalSteps, message: msg });
-    };
+    const updateProgress = (msg: string) => { stepCount++; setProgress({ current: stepCount, total: totalSteps, message: msg }); };
 
     try {
       if (settings.isStrictMode) {
@@ -494,24 +443,19 @@ const App: React.FC = () => {
         if (processingAllVisits[i].isSkipped) continue;
         const visit = processingAllVisits[i];
         updateProgress(`${t.msgRouting} ${visit.surname}...`);
-        
         const routeDest = visit.address;
         const { distanceKm, durationSeconds } = await getRouteData(currentLoc, routeDest);
         const roundedDist = commercialRound(distanceKm);
         currentOdo += roundedDist;
-
         const arrivalTime = addSecondsToTime(currentClock, durationSeconds);
         const visitDurationSeconds = (visit.visitDuration || 0) * 60;
         currentClock = addSecondsToTime(arrivalTime, visitDurationSeconds);
-
         processingAllVisits[i].segmentDistance = roundedDist;
         processingAllVisits[i].exactDistanceKm = distanceKm; 
         processingAllVisits[i].segmentDuration = durationSeconds;
         processingAllVisits[i].arrivalTime = arrivalTime;
-        
         if (commitOdometer) processingAllVisits[i].totalOdometer = currentOdo;
         else processingAllVisits[i].totalOdometer = undefined;
-
         setVisits([...processingAllVisits]); 
         currentLoc = routeDest;
         await sleep(50);
@@ -523,31 +467,18 @@ const App: React.FC = () => {
       currentOdo += roundedReturn;
       const returnArrivalTime = addSecondsToTime(currentClock, returnDur);
 
-      setReturnTrip({
-        address: settings.startAddress, 
-        segmentDistance: roundedReturn,
-        exactDistanceKm: returnDist,
-        segmentDuration: returnDur,
-        arrivalTime: returnArrivalTime,
-        totalOdometer: commitOdometer ? currentOdo : undefined
-      });
-
+      setReturnTrip({ address: settings.startAddress, segmentDistance: roundedReturn, exactDistanceKm: returnDist, segmentDuration: returnDur, arrivalTime: returnArrivalTime, totalOdometer: commitOdometer ? currentOdo : undefined });
       setCalcStatus(CalculationStatus.COMPLETE);
       if (commitOdometer) setSettings(prev => ({ ...prev, currentOdometer: currentOdo }));
-
-    } catch (err: any) {
-      console.error(err);
-      setErrorMsg(err.message || "An unknown error occurred during calculation.");
-      setCalcStatus(CalculationStatus.ERROR);
-      setStartTrip(null);
-    }
+      console.log("Route calculation completed successfully.");
+    } catch (err: any) { console.error(err); setErrorMsg(err.message || "An unknown error occurred during calculation."); setCalcStatus(CalculationStatus.ERROR); setStartTrip(null); }
   };
 
   const handleOptimizeRoute = async () => {
-      if (!isApiReady) return alert(t.msgApiMissing);
+      if (!isApiReady) return;
       const activeVisits = visits.filter(v => !v.isSkipped);
-      if (activeVisits.length < 2) return alert(t.msgNoActive);
-      if (!settings.startAddress) return alert(t.msgStartReq);
+      if (activeVisits.length < 2) return;
+      if (!settings.startAddress) return;
 
       setCalcStatus(CalculationStatus.ROUTING);
       setErrorMsg(null);
@@ -558,31 +489,22 @@ const App: React.FC = () => {
           await ensureMatrixData(allAddresses, (msg) => { setProgress(prev => ({ ...prev, message: msg })); });
           setProgress({ current: 90, total: 100, message: 'Solving TSP...' });
           await sleep(100);
-
           const optimizedActive = solveTSP(settings.startAddress, activeVisits);
           const skippedVisits = visits.filter(v => v.isSkipped);
           const newOrder = [...optimizedActive, ...skippedVisits];
-
           const reindexed = reindexVisits(clearCalculation(newOrder));
           setVisits(reindexed);
           await runCalculation(reindexed, false);
-      } catch (err: any) {
-          console.error(err);
-          setErrorMsg(`${t.msgOptFail}: ${err.message}`);
-          setCalcStatus(CalculationStatus.ERROR);
-      }
+          console.log("Route optimized successfully.");
+      } catch (err: any) { console.error(err); setErrorMsg(`${t.msgOptFail}: ${err.message}`); setCalcStatus(CalculationStatus.ERROR); }
   };
 
-  const getProgressWidth = () => {
-    if (progress.total === 0) return 0;
-    return Math.min(100, Math.floor((progress.current / progress.total) * 100));
-  };
-
+  const getProgressWidth = () => { if (progress.total === 0) return 0; return Math.min(100, Math.floor((progress.current / progress.total) * 100)); };
   const canVisualize = !!startTrip && visits.some(v => !v.isSkipped && v.segmentDistance !== undefined);
   const shouldDisableActions = settings.isStrictMode && visits.some(v => !v.isSkipped && v.isAddressValid === false);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 md:p-8 transition-colors duration-200">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 md:p-8 transition-colors duration-200 font-sans">
       <div className="max-w-screen-2xl mx-auto space-y-6">
         <header className="flex flex-col md:flex-row md:items-center justify-between bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
           <div className="mb-4 md:mb-0">
@@ -611,12 +533,6 @@ const App: React.FC = () => {
                 <button type="button" onClick={() => importDbInputRef.current?.click()} className="p-2 text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600 rounded-md transition-all shadow-sm" title={t.importDb}>
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                 </button>
-                <div className="w-px h-5 bg-gray-300 dark:bg-gray-500 mx-1"></div>
-                
-                 <button type="button" onClick={() => setIsSavedRoutesOpen(true)} className="p-2 text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600 rounded-md transition-all shadow-sm" title={t.savedRoutes}>
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z" /></svg>
-                </button>
-
                 <div className="w-px h-5 bg-gray-300 dark:bg-gray-500 mx-1"></div>
                 <button type="button" onClick={handleClearDB} className={`p-2 rounded-md transition-all shadow-sm ${dbDeleteConfirming ? 'bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400' : 'text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600'}`} title={dbDeleteConfirming ? t.confirmClear : t.clearDb}>
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
@@ -650,6 +566,11 @@ const App: React.FC = () => {
                       <svg className="w-5 h-5 text-green-600 dark:text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                       <span className="hidden md:inline">{t.importExcel}</span>
                     </button>
+                    <button type="button" onClick={() => setIsSavedRoutesOpen(true)} className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 font-medium text-sm transition-colors flex items-center gap-2 shadow-sm" title={t.savedRoutes}>
+                        <svg className="w-5 h-5 text-google-blue dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z" /></svg>
+                        <span className="hidden md:inline">{t.savedRoutes}</span>
+                    </button>
+
                     {selectedIds.size > 0 && (
                         <button type="button" onClick={handleDeleteClick} className={`px-3 py-2 border rounded-lg font-medium text-sm transition-colors shadow-sm ${deleteConfirming ? 'bg-red-600 text-white border-red-700 hover:bg-red-700' : 'bg-white dark:bg-gray-800 text-red-600 dark:text-red-400 border-gray-300 dark:border-gray-600 hover:bg-red-50 dark:hover:bg-red-900/20'}`}>
                             {deleteConfirming ? t.confirm : `${t.delete} (${selectedIds.size})`}
@@ -682,24 +603,10 @@ const App: React.FC = () => {
             </div>
 
             <VisitList 
-              visits={visits}
-              startTrip={startTrip}
-              returnTrip={returnTrip}
-              selectedIds={selectedIds}
-              onEdit={handleEdit}
-              onReorder={handleReorder}
-              onToggleSkip={handleToggleSkip}
-              onDelete={handleDeleteRow}
-              onToggleSelect={(id) => {
-                const newSet = new Set(selectedIds);
-                if (newSet.has(id)) newSet.delete(id); else newSet.add(id);
-                setSelectedIds(newSet);
-              }}
-              onToggleAll={(checked) => {
-                if (checked) setSelectedIds(new Set(visits.map(v => v.id))); else setSelectedIds(new Set());
-              }}
-              lang={settings.language}
-              departureTime={settings.departureTime}
+              visits={visits} startTrip={startTrip} returnTrip={returnTrip} selectedIds={selectedIds} onEdit={handleEdit} onReorder={handleReorder} onToggleSkip={handleToggleSkip} onDelete={handleDeleteRow}
+              onToggleSelect={(id) => { const newSet = new Set(selectedIds); if (newSet.has(id)) newSet.delete(id); else newSet.add(id); setSelectedIds(newSet); }}
+              onToggleAll={(checked) => { if (checked) setSelectedIds(new Set(visits.map(v => v.id))); else setSelectedIds(new Set()); }}
+              lang={settings.language} departureTime={settings.departureTime}
             />
 
             {(calcStatus === CalculationStatus.VALIDATING || calcStatus === CalculationStatus.ROUTING) && (
@@ -713,22 +620,13 @@ const App: React.FC = () => {
                 </div>
               </div>
             )}
-
             <MapSection isOpen={isMapOpen} onClose={() => setIsMapOpen(false)} startTrip={startTrip} visits={visits} lang={settings.language} />
         </div>
       </div>
 
       <VisitModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={saveVisit} initialData={editingVisit} lang={settings.language} />
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} settings={settings} onSave={saveSettings} />
-      <SavedRoutesModal 
-        isOpen={isSavedRoutesOpen} 
-        onClose={() => setIsSavedRoutesOpen(false)} 
-        currentVisits={visits}
-        currentStart={startTrip}
-        currentReturn={returnTrip}
-        onLoadRoute={handleLoadSavedRoute}
-        lang={settings.language}
-      />
+      <SavedRoutesModal isOpen={isSavedRoutesOpen} onClose={() => setIsSavedRoutesOpen(false)} currentVisits={visits} currentStart={startTrip} currentReturn={returnTrip} onLoadRoute={handleLoadSavedRoute} lang={settings.language} />
       <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} lang={settings.language} onLoadSampleData={handleLoadSampleData} />
     </div>
   );

@@ -24,7 +24,6 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang, onL
 
   if (!isOpen) return null;
 
-  // Example 1: Czechia (Original)
   const excelData1 = [
     { n: 'Jakub', s: 'Rákosníček', a: 'Zámecká 67, 357 33 Loket', o: '1', d: '30' },
     { n: 'Karel', s: 'Rarášek', a: 'Zvíkovské Podhradí 1, 397 01 Zvíkovské Podhradí', o: '2', d: '30' },
@@ -35,7 +34,6 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang, onL
     { n: 'Růžena', s: 'Šípková', a: 'Grabštejn 21, 463 34 Hrádek nad Nisou', o: '7', d: '30' },
   ];
 
-  // Example 2: Pardubice
   const excelData2 = [
     { n: 'Jakub', s: 'Rákosníček', a: 'Oskara Brázdy 554, 533 51 Pardubice VII', o: '1', d: '30' },
     { n: 'Antonín', s: 'Křemílek', a: 'Poděbradská 335, 530 09 Pardubice VII', o: '3', d: '60' },
@@ -44,7 +42,6 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang, onL
     { n: 'Růžena', s: 'Šípková', a: 'Chrudimská 1315, 530 02 Pardubice V-Zelené Předměstí', o: '7', d: '150' },
   ];
 
-  // Using Example 1 for the visual table to keep it consistent with general help
   const visualData = excelData1.map(d => ({...d, a: d.a.length > 30 ? d.a.substring(0, 30) + '...' : d.a}));
 
   const handleTestClick = (dataset: typeof excelData1) => {
@@ -60,9 +57,9 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang, onL
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[110] p-4">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto animate-fade-in-up transition-colors p-6 relative flex flex-col">
-        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">
+        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 p-2">
           <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
         </button>
 
@@ -70,7 +67,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang, onL
             <span className="text-google-blue">{t.appTitle}</span> - {t.helpTitle}
         </h2>
 
-        <div className="space-y-6 text-gray-700 dark:text-gray-300 flex-grow">
+        <div className="space-y-8 text-gray-700 dark:text-gray-300 flex-grow">
             
             {/* Prerequisites */}
             <section className="bg-blue-50 dark:bg-blue-900/10 p-4 rounded-lg border border-blue-100 dark:border-blue-800">
@@ -83,7 +80,6 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang, onL
                     <li><strong>Excel:</strong> {t.helpPrereqExcel}</li>
                 </ul>
                 
-                {/* Excel Structure Visualization (Replaces Screenshot) */}
                 <div className="mt-4 border border-gray-300 dark:border-gray-600 rounded-md overflow-hidden bg-white dark:bg-gray-900 shadow-sm relative">
                   <div className="bg-[#217346] text-white px-3 py-1 text-xs font-bold flex items-center gap-2 justify-between">
                     <div className="flex items-center gap-2">
@@ -104,7 +100,6 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang, onL
                             </tr>
                         </thead>
                         <tbody className="bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200">
-                            {/* Header Row */}
                             <tr>
                                 <td className="p-1 border-r border-b border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 text-center text-gray-500">1</td>
                                 <td className="p-1 border-r border-b border-gray-300 dark:border-gray-600 font-bold bg-gray-50 dark:bg-gray-800/50">Name</td>
@@ -113,7 +108,6 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang, onL
                                 <td className="p-1 border-r border-b border-gray-300 dark:border-gray-600 font-bold bg-gray-50 dark:bg-gray-800/50 text-right">Visit order</td>
                                 <td className="p-1 border-b border-gray-300 dark:border-gray-600 font-bold bg-gray-50 dark:bg-gray-800/50 text-right">Duration</td>
                             </tr>
-                            {/* Data Rows (Visual only uses Example 1) */}
                             {visualData.map((row, i) => (
                                 <tr key={i}>
                                     <td className="p-1 border-r border-b border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 text-center text-gray-500">{i + 2}</td>
@@ -128,7 +122,6 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang, onL
                     </table>
                   </div>
                   
-                  {/* Test IT Buttons Overlay / Footer */}
                   <div className="bg-gray-100 dark:bg-gray-800 p-2 border-t border-gray-300 dark:border-gray-600 flex flex-col md:flex-row gap-2 justify-center items-center">
                       <span className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400 mr-2">{t.btnTestIt}</span>
                       <button 
@@ -149,28 +142,42 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang, onL
                 </div>
             </section>
 
-            {/* Features */}
+            {/* Features Expansion */}
             <section>
-                <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                    <svg className="w-5 h-5 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>
+                <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-4 flex items-center gap-2 border-l-4 border-google-blue pl-3">
                     {t.helpFeaturesTitle}
                 </h3>
-                <div className="grid md:grid-cols-2 gap-4 text-sm">
-                    <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded border border-gray-100 dark:border-gray-600">
-                        <h4 className="font-bold mb-1 text-gray-800 dark:text-gray-200">LMOD Cache</h4>
-                        <p>{t.helpFeatCache}</p>
+                <div className="grid md:grid-cols-2 gap-6 text-sm">
+                    <div className="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
+                        <div className="flex items-center gap-2 mb-2 text-google-blue">
+                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z" /></svg>
+                             <h4 className="font-bold text-base">{t.savedRoutesTitle}</h4>
+                        </div>
+                        <p className="text-gray-600 dark:text-gray-400 leading-relaxed">{t.helpFeatRoutes}</p>
                     </div>
-                    <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded border border-gray-100 dark:border-gray-600">
-                        <h4 className="font-bold mb-1 text-gray-800 dark:text-gray-200">Validation</h4>
-                        <p>{t.helpFeatValidation}</p>
+
+                    <div className="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
+                        <div className="flex items-center gap-2 mb-2 text-orange-500">
+                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                             <h4 className="font-bold text-base">Auto-loader</h4>
+                        </div>
+                        <p className="text-gray-600 dark:text-gray-400 leading-relaxed">{t.helpFeatAutoLoad}</p>
                     </div>
-                    <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded border border-gray-100 dark:border-gray-600">
-                         <h4 className="font-bold mb-1 text-gray-800 dark:text-gray-200">Visualizer</h4>
-                         <p>{t.helpFeatVisualize}</p>
+
+                    <div className="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
+                        <div className="flex items-center gap-2 mb-2 text-green-600">
+                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" /></svg>
+                             <h4 className="font-bold text-base">LMOD Cache</h4>
+                        </div>
+                        <p className="text-gray-600 dark:text-gray-400 leading-relaxed">{t.helpFeatCache}</p>
                     </div>
-                    <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded border border-gray-100 dark:border-gray-600">
-                         <h4 className="font-bold mb-1 text-gray-800 dark:text-gray-200">Factory Reset</h4>
-                         <p>{t.helpFeatReset}</p>
+
+                    <div className="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
+                        <div className="flex items-center gap-2 mb-2 text-teal-600">
+                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" /></svg>
+                             <h4 className="font-bold text-base">Visualizer</h4>
+                        </div>
+                        <p className="text-gray-600 dark:text-gray-400 leading-relaxed">{t.helpFeatVisualize}</p>
                     </div>
                 </div>
             </section>
@@ -182,16 +189,16 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang, onL
                     {t.helpTipsTitle}
                 </h3>
                 <ul className="list-disc pl-5 space-y-2 text-sm">
-                    <li><strong>Export/Import:</strong> {t.helpTipExport}</li>
+                    <li><strong>Backup/Restore:</strong> {t.helpTipExport}</li>
                     <li><strong>Economy:</strong> {t.helpTipLmod}</li>
-                    <li><strong>Quick Actions:</strong> {t.helpTipSkip}</li>
+                    <li><strong>Workflow:</strong> {t.helpTipSkip}</li>
                 </ul>
             </section>
         </div>
 
-        <div className="mt-6 flex justify-between items-center">
-            <span className="text-xs text-gray-400 font-mono">{t.footerBrand}</span>
-            <button onClick={onClose} className="px-6 py-2 bg-google-blue hover:bg-blue-700 text-white rounded-lg font-medium transition-colors shadow-sm">
+        <div className="mt-8 flex justify-between items-center border-t dark:border-gray-700 pt-4">
+            <span className="text-xs text-gray-400 font-mono italic">{t.footerBrand}</span>
+            <button onClick={onClose} className="px-8 py-2 bg-google-blue hover:bg-blue-700 text-white rounded-lg font-bold transition-all shadow-md transform hover:scale-105 active:scale-95">
               {t.close}
             </button>
         </div>
