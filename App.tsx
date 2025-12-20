@@ -389,7 +389,7 @@ const App: React.FC = () => {
   };
 
   // --- Client DB Handlers ---
-  const handleAddClient = (data: Omit<Client, 'id'>) => {
+  const handleAddClient = () => {
       setEditingItem(null);
       setEditMode('client');
       setIsModalOpen(true); // Reusing VisitModal for simplicity, could pass initial data
