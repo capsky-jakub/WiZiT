@@ -93,20 +93,39 @@ const SortableRow: React.FC<SortableRowProps> = ({ visit, isSelected, onToggleSe
   const isSkipped = visit.isSkipped;
   const showOdometer = hasCalc && visit.totalOdometer !== undefined;
 
+  const isInteractiveElement = (target: EventTarget | null) => {
+      if (target instanceof HTMLElement) {
+          const tagName = target.tagName;
+          return ['INPUT', 'BUTTON', 'SVG', 'PATH'].includes(tagName);
+      }
+      return false;
+  };
+
   return (
     <tr 
       ref={setNodeRef} 
       style={style} 
+      onClick={(e) => {
+          // 1-Click -> Toggle Selection
+          if (!isInteractiveElement(e.target)) {
+              onToggleSelect(visit.id);
+          }
+      }}
+      onContextMenu={(e) => {
+          // Right-Click -> Toggle Skip
+          if (!isInteractiveElement(e.target)) {
+              e.preventDefault(); // Prevent context menu
+              onToggleSkip(visit.id);
+          }
+      }}
       onDoubleClick={(e) => {
-        if (e.target instanceof HTMLElement) {
-             const tagName = e.target.tagName;
-             if (tagName !== 'INPUT' && tagName !== 'BUTTON' && tagName !== 'SVG' && tagName !== 'PATH') {
-                 onToggleSkip(visit.id);
-             }
-        }
+          // 2-Click -> Open Edit
+          if (!isInteractiveElement(e.target)) {
+              onEdit(visit);
+          }
       }}
       className={`transition-colors cursor-pointer 
-        ${isDragging ? 'bg-blue-50 dark:bg-blue-900/30 shadow-lg' : 'hover:bg-gray-50 dark:hover:bg-gray-700 bg-white dark:bg-gray-800'}
+        ${isDragging ? 'bg-blue-50 dark:bg-blue-900/30 shadow-lg' : (isSelected ? 'bg-blue-50 dark:bg-blue-900/20' : 'hover:bg-gray-50 dark:hover:bg-gray-700 bg-white dark:bg-gray-800')}
         ${isSkipped ? 'opacity-50 grayscale' : 'text-gray-900 dark:text-gray-100'}
       `}
     >
@@ -116,6 +135,7 @@ const SortableRow: React.FC<SortableRowProps> = ({ visit, isSelected, onToggleSe
           {...attributes} 
           {...listeners}
           type="button"
+          onClick={(e) => e.stopPropagation()}
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
@@ -137,7 +157,7 @@ const SortableRow: React.FC<SortableRowProps> = ({ visit, isSelected, onToggleSe
           type="button"
           onClick={(e) => { e.stopPropagation(); onToggleSkip(visit.id); }}
           onPointerDown={(e) => e.stopPropagation()}
-          className={`p-1 rounded-full transition-colors ${isSkipped ? 'text-red-500 bg-red-50 dark:bg-red-900/20' : 'text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400'}`}
+          className={`p-1 rounded-full transition-colors ${isSkipped ? 'text-red-500 bg-red-50 dark:bg-red-900/20' : 'text-gray-300 dark:text-gray-600 hover:text-gray-50 dark:hover:text-gray-400'}`}
         >
            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />

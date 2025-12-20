@@ -1,7 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { SavedRoute, Visit, StartTrip, ReturnTrip } from '../types';
 import { translations, Language } from '../services/translations';
+import { useDraggable } from '../hooks/useDraggable';
 
 interface SavedRoutesModalProps {
   isOpen: boolean;
@@ -21,6 +21,7 @@ export const SavedRoutesModal: React.FC<SavedRoutesModalProps> = ({
   const [viewMode, setViewMode] = useState<'list' | 'save'>('list');
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const t = translations[lang];
+  const { nodeRef, handleRef } = useDraggable<HTMLDivElement>(isOpen);
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -94,8 +95,11 @@ export const SavedRoutesModal: React.FC<SavedRoutesModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[110] p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-lg p-6 animate-fade-in-up transition-colors max-h-[80vh] flex flex-col">
-        <div className="flex justify-between items-center mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">
+      <div 
+        ref={nodeRef}
+        className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-lg p-6 animate-fade-in-up transition-colors max-h-[80vh] flex flex-col"
+      >
+        <div ref={handleRef} className="flex justify-between items-center mb-4 border-b border-gray-200 dark:border-gray-700 pb-2 select-none">
             <h3 className="text-xl font-bold text-gray-800 dark:text-white">
                 {viewMode === 'list' ? t.savedRoutesTitle : t.saveRouteTitle}
             </h3>

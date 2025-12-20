@@ -1,5 +1,4 @@
 
-
 export type Language = 'cs' | 'en';
 
 export const translations = {
@@ -12,6 +11,7 @@ export const translations = {
     // Buttons
     newVisit: "New Visit",
     importExcel: "Import Excel",
+    importPlan: "Import Plan",
     delete: "Delete",
     confirm: "Confirm?",
     validate: "Validate",
@@ -32,6 +32,9 @@ export const translations = {
     btnExample2: "Example 2 (Pardubice)",
     savedRoutes: "Saved Routes",
     btnSaveCurrent: "Save Current List",
+    clientDb: "Clients",
+    addToRoute: "Add to Route",
+    search: "Search...",
 
     // Saved Routes Modal
     savedRoutesTitle: "Route Manager",
@@ -44,6 +47,12 @@ export const translations = {
     load: "Load",
     confirmDeleteRoute: "Are you sure you want to delete this saved route?",
 
+    // Client DB Modal
+    dbTitle: "Clients Management",
+    dbNoClients: "No clients in database. Import Excel or add manually.",
+    dbSelected: "selected",
+    dbAddManual: "Add Client",
+
     // Columns
     colSkip: "Skip",
     colOrder: "Order",
@@ -51,12 +60,14 @@ export const translations = {
     colSurname: "Surname",
     colAddress: "Address",
     colValid: "Valid",
-    colOdometer: "Tachom.",
+    colOdometer: "Odometer",
     colDistance: "Distance",
     colTime: "Time",
     colPlan: "Plan",
     colDurat: "Durat",
     colActions: "Actions",
+    colPrefTime: "Pref. Time",
+    colRepetition: "Repetition",
 
     // Rows
     start: "START",
@@ -64,11 +75,13 @@ export const translations = {
     end: "END",
     return: "RETURN",
     total: "TOTAL",
-    noVisits: "No visits scheduled. Add one manually or import from Excel.",
+    noVisits: "No visits scheduled for today. Import Plan, Excel or add manually.",
 
     // Modals
     editVisit: "Edit Visit",
+    editClient: "Edit Client",
     createVisit: "New Visit",
+    createClient: "New Client",
     settingsTitle: "Application Settings",
     helpTitle: "User Guide",
 
@@ -90,22 +103,35 @@ export const translations = {
     lblDuration: "Duration (min)",
     lblDurationDesc: "Expected time spent at this location.",
     lblDragHint: "* Order is determined by the list position. Drag rows to reorder.",
+    
+    // Scheduling
+    lblScheduleTitle: "Scheduling & Repetition",
+    lblVisitStartAt: "Preferred Time (HH:mm)",
+    lblRepetitionType: "Repetition Strategy",
+    lblDaysOfWeek: "Days of Week",
+    lblSpecificDate: "Specific Date",
+    lblIntervalStart: "Start Date",
+    lblIntervalDays: "Interval (Days)",
+    optWeekly: "Weekly",
+    optDate: "Exact Date",
+    optInterval: "Custom Interval",
+    days: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
 
     // Help - Detailed
     helpPrereqTitle: "Prerequisites",
-    helpPrereqExcel: "Excel Import: The application expects a specific column structure (without headers). Column A: Name, B: Surname, C: Address, D: Order (Number), E: Duration (Minutes, Optional).",
+    helpPrereqExcel: "Excel Import: The first row is considered a header and is IGNORED. Start data from row 2. Columns: A: Name, B: Surname, C: Address. Optional: D: Order, E: Duration.",
     helpPrereqApiKey: "Google Maps API Key: To use this app, you must provide your own API Key from Google Cloud Platform. It requires the 'Directions API', 'Distance Matrix API', and 'Places API' to be enabled.",
     helpFeaturesTitle: "Special Features",
     helpFeatVisualize: "Visualize: Displays an interactive map of your trip. Click on route segments or markers to see details.",
     helpFeatReset: "Factory Reset: Completely wipes the local database, settings, and cached distances. Use with caution.",
     helpFeatCache: "Smart Caching (LMOD): The app stores distance results in your browser ('LMOD'). This saves you money by preventing repeated API calls for the same route segments.",
     helpFeatValidation: "Validation: 'Strict Mode' in settings prevents calculation if any address is ambiguous. Standard mode allows calculation but marks addresses with red crosses if unverified.",
-    helpFeatRoutes: "Route Manager: Save frequently used routes to access them anytime via the folder icon. Includes visits, orders, and durations.",
-    helpFeatAutoLoad: "Auto-loader: If you name a saved route 'Monday', 'Tuesday', etc., the app will automatically load it on startup when it matches today's date.",
+    helpFeatRoutes: "Route Manager: Save frequently used routes locally. Access them anytime via the folder icon in the toolbar.",
+    helpFeatAutoLoad: "Auto-loader: If you name a route exactly after the day of the week (e.g. 'Monday'), the app will automatically load it on startup.",
     helpTipsTitle: "Tips & Tricks",
     helpTipLmod: "To save API usage, do not clear your browser's 'Local Storage' unnecessarily, as this holds the LMOD cache.",
-    helpTipExport: "Backup/Restore: Use the arrow icons in the top bar to save your entire workspace (settings, routes, and cache) to a JSON file.",
-    helpTipSkip: "Dbl-click any row to 'Skip' it. This is great for 'What-If' scenarios to see how the route changes without deleting records.",
+    helpTipExport: "Export/Import: Use the arrow icons in the top bar to save your entire workspace (including settings and cache) to a JSON file. Useful for moving to another computer.",
+    helpTipSkip: "Left-click row to Select. Right-click to Toggle Skip. Double-click to Edit.",
 
     // Messages
     msgApiMissing: "API Key Missing. Please enter your Google Maps API Key in Settings.",
@@ -120,6 +146,11 @@ export const translations = {
     msgImportSuccess: "Successfully added visits from Excel.",
     msgImportFail: "Import failed",
     msgDbCleared: "Database cleared.",
+    msgAddedToRoute: "clients added to current route.",
+    msgDailyCompilation: "Dynamic Route Compiled",
+    msgDailyInfo: "Visits loaded based on client schedules for today.",
+    msgPlanReloaded: "Schedule reloaded for today.",
+    msgConfirmPlanReload: "This will overwrite your current visit list with the scheduled plan for today. Continue?",
   },
   cs: {
     appTitle: "VisOpt",
@@ -130,6 +161,7 @@ export const translations = {
     // Buttons
     newVisit: "Nová návštěva",
     importExcel: "Import Excel",
+    importPlan: "Načíst plán",
     delete: "Smazat",
     confirm: "Potvrdit?",
     validate: "Ověřit",
@@ -150,6 +182,9 @@ export const translations = {
     btnExample2: "Příklad 2 (Pardubice)",
     savedRoutes: "Uložené trasy",
     btnSaveCurrent: "Uložit aktuální",
+    clientDb: "Klienti",
+    addToRoute: "Přidat do trasy",
+    search: "Hledat...",
 
     // Saved Routes Modal
     savedRoutesTitle: "Správce tras",
@@ -161,6 +196,12 @@ export const translations = {
     stops: "zastávek",
     load: "Načíst",
     confirmDeleteRoute: "Opravdu chcete smazat tuto uloženou trasu?",
+
+    // Client DB Modal
+    dbTitle: "Správa klientů",
+    dbNoClients: "Databáze je prázdná. Importujte Excel nebo přidejte ručně.",
+    dbSelected: "vybráno",
+    dbAddManual: "Nový klient",
 
     // Columns
     colSkip: "Přes.",
@@ -175,6 +216,8 @@ export const translations = {
     colPlan: "Plán",
     colDurat: "Trvání",
     colActions: "Akce",
+    colPrefTime: "Čas",
+    colRepetition: "Opakování",
 
     // Rows
     start: "START",
@@ -182,11 +225,13 @@ export const translations = {
     end: "KONEC",
     return: "NÁVRAT",
     total: "CELKEM",
-    noVisits: "Žádné návštěvy. Přidejte ručně nebo importujte z Excelu.",
+    noVisits: "Dnes žádné plánované návštěvy. Načtěte plán, Excel nebo přidejte ručně.",
 
     // Modals
     editVisit: "Upravit návštěvu",
+    editClient: "Upravit klienta",
     createVisit: "Nová návštěva",
+    createClient: "Nový klient",
     settingsTitle: "Nastavení aplikace",
     helpTitle: "Uživatelská příručka",
 
@@ -208,10 +253,23 @@ export const translations = {
     lblDuration: "Trvání (min)",
     lblDurationDesc: "Předpokládaný čas strávený na místě.",
     lblDragHint: "* Pořadí je určeno pozicí v seznamu. Přetáhněte řádky myší.",
+    
+    // Scheduling
+    lblScheduleTitle: "Plánování a Opakování",
+    lblVisitStartAt: "Preferovaný čas (HH:mm)",
+    lblRepetitionType: "Strategie opakování",
+    lblDaysOfWeek: "Dny v týdnu",
+    lblSpecificDate: "Konkrétní datum",
+    lblIntervalStart: "Datum začátku",
+    lblIntervalDays: "Interval (Dny)",
+    optWeekly: "Týdenní",
+    optDate: "Přesné datum",
+    optInterval: "Vlastní interval",
+    days: ["Ne", "Po", "Út", "St", "Čt", "Pá", "So"],
 
     // Help - Detailed
     helpPrereqTitle: "Prerekvizity",
-    helpPrereqExcel: "Import Excelu: Aplikace očekává specifickou strukturu sloupců (bez záhlaví). Sloupec A: Jméno, B: Příjmení, C: Adresa, D: Pořadí (Číslo), E: Trvání (Minuty, Volitelné).",
+    helpPrereqExcel: "Import Excelu: První řádek je považován za záhlaví a je IGNOROVÁN. Data musí začínat na 2. řádku. Sloupce: A: Jméno, B: Příjmení, C: Adresa. Volitelně: D: Pořadí, E: Trvání.",
     helpPrereqApiKey: "Google Maps API Klíč: Pro funkčnost musíte vložit vlastní API klíč z Google Cloud Platform. Vyžaduje povolené služby 'Directions API', 'Distance Matrix API' a 'Places API'.",
     helpFeaturesTitle: "Speciální Funkce",
     helpFeatVisualize: "Vizualizace: Zobrazí interaktivní mapu cesty. Kliknutím na úseky trasy nebo značky zobrazíte detaily.",
@@ -222,8 +280,8 @@ export const translations = {
     helpFeatAutoLoad: "Automatické načítání: Pokud pojmenujete trasu přesně podle dne v týdnu (např. 'pondělí'), aplikace ji při spuštění automaticky načte.",
     helpTipsTitle: "Tipy a Triky",
     helpTipLmod: "Pro úsporu API volání nevymazávejte zbytečně 'Local Storage' prohlížeče, kde je uložena LMOD cache.",
-    helpTipExport: "Záloha/Obnova: Použijte ikony šipek v horní liště pro uložení celého pracovního prostředí (včetně nastavení, tras a cache) do JSON souboru.",
-    helpTipSkip: "Dvojklik na řádek jej 'Přeskočí'. Skvělé pro modelování scénářů 'Co kdyby' bez nutnosti mazat záznamy.",
+    helpTipExport: "Záloha/Obnova: Použijte ikony šipek v horní liště pro uložení celého pracovního prostředí (včetně nastavení a cache) do JSON souboru. Vhodné pro přenos na jiný počítač.",
+    helpTipSkip: "Kliknutím vyberete. Pravým tlačítkem přepnete 'Přeskočit'. Dvojklikem upravíte.",
 
     // Messages
     msgApiMissing: "Chybí API klíč. Zadejte jej prosím v Nastavení.",
@@ -238,5 +296,10 @@ export const translations = {
     msgImportSuccess: "Návštěvy úspěšně přidány.",
     msgImportFail: "Import selhal",
     msgDbCleared: "Databáze vymazána.",
+    msgAddedToRoute: "klientů přidáno do aktuální trasy.",
+    msgDailyCompilation: "Dynamická trasa sestavena",
+    msgDailyInfo: "Návštěvy načteny dle plánů klientů pro dnešní den.",
+    msgPlanReloaded: "Plán pro dnešní den byl načten.",
+    msgConfirmPlanReload: "Toto přepíše aktuální seznam návštěv plánovanou trasou pro dnešní den. Pokračovat?",
   }
 };

@@ -117,7 +117,8 @@ export const MapSection: React.FC<MapSectionProps> = ({ isOpen, onClose, startTr
               position: legs[0].start_location, map: map, label: { text: 'S', color: 'white', fontWeight: 'bold' }, title: 'Start: ' + startAddr, zIndex: 999 
           });
 
-          const startContent = `<div class="p-2 min-w-[200px]"><h3 class="font-bold border-b pb-1 mb-1">Start</h3><p class="text-sm text-gray-600 mb-2">${startAddr}</p></div>`;
+          // FIX: Added text-gray-900 to ensure visibility on white InfoWindow background in dark mode
+          const startContent = `<div class="p-2 min-w-[200px] text-gray-900"><h3 class="font-bold border-b pb-1 mb-1">Start</h3><p class="text-sm text-gray-600 mb-2">${startAddr}</p></div>`;
 
           startMarker.addListener('click', () => {
               infoWindowRef.current.setContent(startContent);
@@ -132,7 +133,8 @@ export const MapSection: React.FC<MapSectionProps> = ({ isOpen, onClose, startTr
                   const marker = new google.maps.Marker({
                       position: leg.end_location, map: map, label: { text: visit.order.toString(), color: 'black', fontWeight: 'bold' }, title: `${visit.order}. ${visit.surname}`,
                   });
-                  const content = `<div class="p-2 min-w-[200px]"><h3 class="font-bold border-b pb-1 mb-1">#${visit.order} ${visit.surname}</h3><p class="text-xs text-gray-500 mb-1">${visit.address}</p><div class="mt-2 bg-gray-50 p-2 rounded border border-gray-100"><p class="text-sm font-mono font-bold text-gray-800">+ ${leg.distance.text}</p></div></div>`;
+                  // FIX: Added text-gray-900 to ensure visibility on white InfoWindow background in dark mode
+                  const content = `<div class="p-2 min-w-[200px] text-gray-900"><h3 class="font-bold border-b pb-1 mb-1">#${visit.order} ${visit.surname}</h3><p class="text-xs text-gray-500 mb-1">${visit.address}</p><div class="mt-2 bg-gray-50 p-2 rounded border border-gray-100"><p class="text-sm font-mono font-bold text-gray-800">+ ${leg.distance.text}</p></div></div>`;
                   marker.addListener('click', () => {
                       infoWindowRef.current.setContent(content);
                       infoWindowRef.current.open(map, marker);

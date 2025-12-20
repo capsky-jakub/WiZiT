@@ -1,8 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { AppSettings } from '../types';
 import { checkAddress } from '../services/googleMapsService';
 import { translations, Language } from '../services/translations';
+import { useDraggable } from '../hooks/useDraggable';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -16,7 +16,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, s
   const [validationStatus, setValidationStatus] = useState<{isValid?: boolean, msg?: string}>({});
   const [isValidating, setIsValidating] = useState(false);
   const [keyStatus, setKeyStatus] = useState<'valid' | 'invalid' | 'unknown'>('unknown');
-
+  
+  const { nodeRef, handleRef } = useDraggable<HTMLHeadingElement>(isOpen);
   const t = translations[settings.language || 'cs'];
 
   useEffect(() => {
@@ -80,9 +81,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, s
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md p-6 animate-fade-in-up transition-colors max-h-[90vh] overflow-y-auto">
-        <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">{t.settingsTitle}</h3>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[130]">
+      <div 
+        ref={nodeRef}
+        className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md p-6 animate-fade-in-up transition-colors max-h-[90vh] overflow-y-auto"
+      >
+        <h3 ref={handleRef} className="text-xl font-semibold mb-4 text-gray-800 dark:text-white select-none">{t.settingsTitle}</h3>
         
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-md border border-blue-100 dark:border-blue-800">

@@ -1,3 +1,4 @@
+
 import { Visit } from '../types';
 
 declare const XLSX: any;
@@ -18,27 +19,46 @@ export const parseVisitsExcel = async (file: File): Promise<Omit<Visit, 'id'>[]>
         
         const parsedVisits: Omit<Visit, 'id'>[] = [];
 
-        rawData.forEach((row: any[]) => {
-          // Expecting columns: 0=Name, 1=Surname, 2=Addr, 3=Order, 4=Duration(optional)
-          if (row.length < 4) return;
+        rawData.forEach((row: any[], index: number) => {
+          // Always skip the first row (Header)
+          if (index === 0) return;
+
+          // Expecting columns: 0=Name, 1=Surname, 2=Addr | Optional: 3=Order, 4=Duration
+          // Allow minimum 3 columns
+          if (row.length < 3) return;
           
-          const orderVal = parseInt(row[3]);
-          const durationVal = row[4] ? parseInt(row[4]) : 0;
-          
-          // Basic validation to ensure it's a data row, not a header
-          if (!isNaN(orderVal)) {
-            parsedVisits.push({
-              name: String(row[0] || '').trim(),
-              surname: String(row[1] || '').trim(),
-              address: String(row[2] || '').trim(),
-              order: orderVal,
-              visitDuration: isNaN(durationVal) ? 0 : durationVal
-            });
+          const name = String(row[0] || '').trim();
+          const surname = String(row[1] || '').trim();
+          const address = String(row[2] || '').trim();
+
+          // Skip empty rows where address is missing
+          if (!address) return;
+
+          // Parse Optional Order (Col 3)
+          let orderVal = 0;
+          if (row.length > 3) {
+              const pOrder = parseInt(row[3]);
+              if (!isNaN(pOrder)) orderVal = pOrder;
           }
+
+          // Parse Optional Duration (Col 4)
+          let durationVal = 0;
+          if (row.length > 4) {
+              const pDuration = row[4] ? parseInt(row[4]) : 0;
+              if (!isNaN(pDuration)) durationVal = pDuration;
+          }
+          
+          parsedVisits.push({
+            name,
+            surname,
+            address,
+            order: orderVal,
+            visitDuration: durationVal
+          });
         });
 
         if (parsedVisits.length === 0) {
-          reject(new Error("No valid visits found in file. Check columns: Name, Surname, Address, Order, Duration."));
+          reject(new Error("No valid visits found. File must contain a header row and at least one data row with: Name, Surname, Address."));
         } else {
           resolve(parsedVisits);
         }

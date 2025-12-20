@@ -14,6 +14,35 @@ export interface Visit {
   segmentDuration?: number; // seconds
   arrivalTime?: string; // Calculated time of arrival (HH:mm:ss)
   totalOdometer?: number;
+  // Dynamic compilation fields
+  preferredTime?: string; // HH:mm copy from Client for reference
+}
+
+export type RepetitionType = 'WEEKLY' | 'DATE' | 'INTERVAL';
+
+export interface VisitRepetition {
+  type: RepetitionType;
+  daysOfWeek?: number[]; // 0=Sunday, 1=Monday...
+  specificDate?: string; // YYYY-MM-DD
+  intervalStart?: string; // YYYY-MM-DD
+  intervalDays?: number;
+}
+
+// Persistent Client (Database entity)
+export interface Client {
+  id: string;
+  name: string;
+  surname: string;
+  address: string;
+  defaultDuration: number;
+  email?: string;
+  phone?: string;
+  notes?: string;
+  isAddressValid?: boolean;
+  
+  // New Scheduling Fields
+  visitStartAt?: string; // HH:mm - Preferred time / Sort order
+  visitRepetition?: VisitRepetition;
 }
 
 // Persistent Storage for Routes

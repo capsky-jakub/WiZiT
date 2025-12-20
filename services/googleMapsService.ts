@@ -228,7 +228,8 @@ export const validateAddressStrict = async (addressStr: string): Promise<string>
     const verdict = data.result?.verdict || {};
     const addrObj = data.result?.address || {};
 
-    if (verdict.hasUnconfirmedComponents) throw new Error(`Unconfirmed address components: ${addressStr}`);
+    // Removed strict check completely
+    
     if (verdict.validationGranularity === 'OTHER') throw new Error(`Address too vague (City level): ${addressStr}`);
 
     return addrObj.formattedAddress || addressStr;

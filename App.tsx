@@ -1,19 +1,21 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Visit, AppSettings, CalculationStatus, ReturnTrip, StartTrip, SavedRoute } from './types';
+import { Visit, Client, AppSettings, CalculationStatus, ReturnTrip, StartTrip, SavedRoute } from './types';
 import { VisitList } from './components/VisitList';
 import { VisitModal } from './components/VisitModal';
 import { SettingsModal } from './components/SettingsModal';
 import { HelpModal } from './components/HelpModal';
 import { MapSection } from './components/MapModal';
 import { SavedRoutesModal } from './components/SavedRoutesModal';
+import { ClientDbModal } from './components/ClientDbModal';
 import { parseVisitsExcel } from './services/excelService';
 import { getRouteData, validateAddressStrict, checkAddress, ensureMatrixData, setRuntimeApiKey, loadGoogleMapsScript } from './services/googleMapsService';
 import { solveTSP } from './services/tspSolver';
 import { setCacheExpirationDays } from './services/distanceCache';
 import { translations } from './services/translations';
+import { isClientScheduledForDate, sortVisitsByTime } from './services/scheduler';
 
-const DEFAULT_DEV_API_KEY = "AIzaSyBCWH72da5n-rq8Qu3sOc64cW_asGZpy0w"; 
+const DEFAULT_DEV_API_KEY = "AIzaSyAGs1LRYdwFOAxC_jctVh7Lz2evdATfKEk"; 
 
 const uuid = () => Math.random().toString(36).substring(2, 9);
 const commercialRound = (num: number) => Math.floor(num + 0.5);
@@ -34,6 +36,7 @@ const addSecondsToTime = (timeStr: string, secondsToAdd: number): string => {
 
 const App: React.FC = () => {
   const [visits, setVisits] = useState<Visit[]>([]);
+  const [clients, setClients] = useState<Client[]>([]); // DB State
   const [startTrip, setStartTrip] = useState<StartTrip | null>(null);
   const [returnTrip, setReturnTrip] = useState<ReturnTrip | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -53,20 +56,28 @@ const App: React.FC = () => {
   const t = translations[settings.language];
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isClientDbOpen, setIsClientDbOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isMapOpen, setIsMapOpen] = useState(false);
   const [isSavedRoutesOpen, setIsSavedRoutesOpen] = useState(false);
-  const [editingVisit, setEditingVisit] = useState<Visit | null>(null);
+  const [compilationInfo, setCompilationInfo] = useState<string | null>(null);
+  
+  const [editingItem, setEditingItem] = useState<Visit | Client | null>(null);
+  const [editMode, setEditMode] = useState<'visit' | 'client'>('visit');
+
   const [calcStatus, setCalcStatus] = useState<CalculationStatus>(CalculationStatus.IDLE);
   const [progress, setProgress] = useState({ current: 0, total: 0, message: '' });
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [deleteConfirming, setDeleteConfirming] = useState(false);
   const [dbDeleteConfirming, setDbDeleteConfirming] = useState(false);
+  const [planReloadConfirming, setPlanReloadConfirming] = useState(false);
   const [isApiReady, setIsApiReady] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const importDbInputRef = useRef<HTMLInputElement>(null);
+
+  // --- Start of Logic ---
 
   // Helper to get localized day name for auto-load
   const getCurrentDayName = (lang: 'cs' | 'en'): string => {
@@ -77,8 +88,35 @@ const App: React.FC = () => {
     return ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dayIndex];
   };
 
+  // Compile Plan Function (Extracted for re-use)
+  const loadDailyPlan = (clientSource: Client[]): Visit[] => {
+        console.log("%c[VisOpt] Compiling Daily Plan...", 'color: #1a73e8; font-weight: bold;');
+        const today = new Date();
+        const compiledVisits: Visit[] = [];
+
+        clientSource.forEach(client => {
+            if (isClientScheduledForDate(client, today)) {
+                compiledVisits.push({
+                    id: uuid(),
+                    name: client.name,
+                    surname: client.surname,
+                    address: client.address,
+                    order: 0, // Order will be determined by sort
+                    visitDuration: client.defaultDuration,
+                    isAddressValid: client.isAddressValid,
+                    isSkipped: false,
+                    preferredTime: client.visitStartAt // Store preference
+                });
+            }
+        });
+
+        const sortedVisits = sortVisitsByTime(compiledVisits);
+        const reindexed = sortedVisits.map((v, idx) => ({...v, order: idx + 1}));
+        return reindexed;
+  };
+
   useEffect(() => {
-    // 1. Initial Load of Settings (Needed for language/API key)
+    // 1. Initial Load of Settings
     const savedSettings = localStorage.getItem('odocalc_settings');
     let currentSettings = settings;
 
@@ -110,47 +148,76 @@ const App: React.FC = () => {
         }
     }
 
-    // 2. CHECK AUTO-LOAD (Saved Routes named by Weekday)
+    // 2. Startup Data Loading Priority:
+    // Priority A: Saved Route matching Day Name
+    // Priority B: Dynamic compilation from DB
+    // Priority C: Last session state (legacy/fallback)
+
+    const savedClientsRaw = localStorage.getItem('odocalc_db_clients');
+    let dbClients: Client[] = [];
+    if (savedClientsRaw) {
+        try { dbClients = JSON.parse(savedClientsRaw); setClients(dbClients); } catch(e) {}
+    }
+
+    let routeLoaded = false;
     const currentDayName = getCurrentDayName(currentSettings.language).toLowerCase();
     const savedRoutesRaw = localStorage.getItem('odocalc_saved_routes');
-    let autoLoaded = false;
 
     if (savedRoutesRaw) {
-      try {
-        const savedRoutes: SavedRoute[] = JSON.parse(savedRoutesRaw);
-        const dayRoute = savedRoutes.find(r => r.name.trim().toLowerCase() === currentDayName);
+        try {
+            const savedRoutes: SavedRoute[] = JSON.parse(savedRoutesRaw);
+            // Loose match for user convenience (trim whitespace)
+            const dayRoute = savedRoutes.find(r => r.name.trim().toLowerCase() === currentDayName);
 
-        if (dayRoute) {
-          console.log(`%c[VisOpt] Auto-loading route for current day: ${currentDayName}`, 'color: #1a73e8; font-weight: bold;');
-          setVisits(dayRoute.visits);
-          if (dayRoute.startTrip) setStartTrip(dayRoute.startTrip);
-          if (dayRoute.returnTrip) setReturnTrip(dayRoute.returnTrip);
-          autoLoaded = true;
+            if (dayRoute) {
+                console.log(`%c[VisOpt] Priority A: Auto-loading Saved Route: ${dayRoute.name}`, 'color: #d93025; font-weight: bold;');
+                setVisits(dayRoute.visits);
+                if (dayRoute.startTrip) setStartTrip(dayRoute.startTrip);
+                if (dayRoute.returnTrip) setReturnTrip(dayRoute.returnTrip);
+                setCompilationInfo(`Auto-loaded saved route: ${dayRoute.name}`);
+                setTimeout(() => setCompilationInfo(null), 5000);
+                routeLoaded = true;
+            }
+        } catch (e) { console.error("Failed to check saved routes", e); }
+    }
+
+    if (!routeLoaded && dbClients.length > 0) {
+        // Priority B: Dynamic
+        console.log("%c[VisOpt] Priority B: Dynamic Compilation", 'color: #1a73e8; font-weight: bold;');
+        const dailyRoute = loadDailyPlan(dbClients);
+        setVisits(dailyRoute);
+        if (dailyRoute.length > 0) {
+                setCompilationInfo(`${translations[currentSettings.language].msgDailyCompilation}: ${dailyRoute.length}`);
+                setTimeout(() => setCompilationInfo(null), 5000);
         }
-      } catch (e) { console.error("Failed to parse saved routes for auto-load", e); }
+        routeLoaded = true;
     }
 
-    // 3. Fallback to last unsaved session state if no auto-load match found
-    if (!autoLoaded) {
-      const savedVisits = localStorage.getItem('odocalc_visits');
-      const savedStart = localStorage.getItem('odocalc_start');
-      const savedReturn = localStorage.getItem('odocalc_return');
-      
-      if (savedVisits) {
-        try { setVisits(JSON.parse(savedVisits)); } catch (e) { console.error("Failed to load visits", e); }
-      }
-      if (savedStart) { 
-        try { setStartTrip(JSON.parse(savedStart)); } catch (e) { console.error("Failed to load start trip", e); } 
-      }
-      if (savedReturn) { 
-        try { setReturnTrip(JSON.parse(savedReturn)); } catch (e) { console.error("Failed to load return trip", e); } 
-      }
+    if (!routeLoaded) {
+        // Priority C: Fallback to last session if nothing else
+        const savedVisits = localStorage.getItem('odocalc_visits');
+        if (savedVisits) {
+            try { setVisits(JSON.parse(savedVisits)); } catch (e) {}
+        }
     }
+
+    // Load Start/Return (Static trip data) - always load if not set by route
+    if (!startTrip) {
+        const savedStart = localStorage.getItem('odocalc_start');
+        if (savedStart) try { setStartTrip(JSON.parse(savedStart)); } catch (e) {} 
+    }
+    if (!returnTrip) {
+        const savedReturn = localStorage.getItem('odocalc_return');
+        if (savedReturn) try { setReturnTrip(JSON.parse(savedReturn)); } catch (e) {} 
+    }
+
   }, []);
 
   useEffect(() => {
     localStorage.setItem('odocalc_visits', JSON.stringify(visits));
     localStorage.setItem('odocalc_settings', JSON.stringify(settings));
+    localStorage.setItem('odocalc_db_clients', JSON.stringify(clients));
+
     if (startTrip) localStorage.setItem('odocalc_start', JSON.stringify(startTrip));
     else localStorage.removeItem('odocalc_start');
     if (returnTrip) localStorage.setItem('odocalc_return', JSON.stringify(returnTrip));
@@ -158,9 +225,9 @@ const App: React.FC = () => {
 
     if (settings.isDarkMode) document.documentElement.classList.add('dark');
     else document.documentElement.classList.remove('dark');
-  }, [visits, settings, startTrip, returnTrip]);
+  }, [visits, settings, startTrip, returnTrip, clients]);
 
-  useEffect(() => { setDeleteConfirming(false); }, [selectedIds]);
+  useEffect(() => { setDeleteConfirming(false); setPlanReloadConfirming(false); }, [selectedIds]);
 
   const clearCalculation = (currentList: Visit[] = visits) => {
     const cleared = currentList.map(v => {
@@ -182,6 +249,7 @@ const App: React.FC = () => {
           };
           const exportData = {
               visits: getParsed('odocalc_visits'),
+              clients: getParsed('odocalc_db_clients'),
               settings: getParsed('odocalc_settings'),
               start: getParsed('odocalc_start'),
               return: getParsed('odocalc_return'),
@@ -214,6 +282,7 @@ const App: React.FC = () => {
               if (data.lmod) localStorage.setItem('odocalc_lmod', JSON.stringify(data.lmod));
               if (data.saved_routes) localStorage.setItem('odocalc_saved_routes', JSON.stringify(data.saved_routes));
               if (data.settings) setSettings(data.settings);
+              if (data.clients) setClients(data.clients);
               if (data.visits) {
                   setVisits(data.visits);
                   setStartTrip(data.start || null);
@@ -236,7 +305,9 @@ const App: React.FC = () => {
       if (dbDeleteConfirming) {
           localStorage.removeItem('odocalc_lmod');
           localStorage.removeItem('odocalc_saved_routes');
+          localStorage.removeItem('odocalc_db_clients');
           setVisits([]);
+          setClients([]);
           setStartTrip(null);
           setReturnTrip(null);
           setSettings({
@@ -279,17 +350,153 @@ const App: React.FC = () => {
       setVisits(reindexVisits(cleared));
   };
 
-  const handleAdd = () => { setEditingVisit(null); setIsModalOpen(true); };
-  const handleEdit = (visit: Visit) => { setEditingVisit(visit); setIsModalOpen(true); };
+  const handleAddVisit = () => { setEditingItem(null); setEditMode('visit'); setIsModalOpen(true); };
+  const handleEditVisit = (visit: Visit) => { setEditingItem(visit); setEditMode('visit'); setIsModalOpen(true); };
 
-  const saveVisit = (data: Omit<Visit, 'id'>) => {
-    let newList;
-    if (editingVisit) { newList = visits.map(v => v.id === editingVisit.id ? { ...v, ...data } : v); } 
-    else { const newVisit = { ...data, id: uuid(), order: 0, isSkipped: false }; newList = [...visits, newVisit]; }
-    const cleared = clearCalculation(newList);
-    setVisits(reindexVisits(cleared));
+  const saveItem = (data: any) => {
+    // Check if we are saving a Visit or a Client based on editMode
+    if (editMode === 'visit') {
+        let newList;
+        if (editingItem && 'order' in editingItem) { 
+            // Editing existing visit
+            newList = visits.map(v => v.id === editingItem.id ? { ...v, ...data } : v); 
+        } else { 
+            // Creating new visit
+            const newVisit = { ...data, id: uuid(), order: 0, isSkipped: false }; 
+            newList = [...visits, newVisit]; 
+        }
+        const cleared = clearCalculation(newList);
+        setVisits(reindexVisits(cleared));
+    } else {
+        // Saving a Client to DB
+        const newClientData: any = {
+            name: data.name,
+            surname: data.surname,
+            address: data.address,
+            defaultDuration: data.visitDuration, // Map from modal's visitDuration
+            isAddressValid: data.isAddressValid,
+            visitStartAt: data.visitStartAt,
+            visitRepetition: data.visitRepetition
+        };
+
+        if (editingItem) {
+             setClients(prev => prev.map(c => c.id === editingItem.id ? { ...c, ...newClientData } : c));
+        } else {
+             setClients(prev => [...prev, { ...newClientData, id: uuid() }]);
+        }
+    }
     setIsModalOpen(false);
   };
+
+  // --- Client DB Handlers ---
+  const handleAddClient = (data: Omit<Client, 'id'>) => {
+      setEditingItem(null);
+      setEditMode('client');
+      setIsModalOpen(true); // Reusing VisitModal for simplicity, could pass initial data
+  };
+
+  const handleEditClient = (client: Client) => {
+      setEditingItem(client);
+      setEditMode('client');
+      setIsModalOpen(true);
+  };
+
+  const handleDeleteClient = (id: string) => {
+      setClients(prev => prev.filter(c => c.id !== id));
+  };
+  
+  const handleBulkDeleteClients = (ids: Set<string>) => {
+      setClients(prev => prev.filter(c => !ids.has(c.id)));
+  };
+
+  const handleBulkValidateClients = async (ids: Set<string>) => {
+      if(!isApiReady) { alert(t.msgApiMissing); return; }
+      
+      const toValidate = ids.size > 0 
+        ? clients.filter(c => ids.has(c.id))
+        : clients;
+
+      // Optimistic update pattern - or wait for results. Let's wait.
+      const updatedClients = [...clients];
+
+      for (const client of toValidate) {
+          try {
+              const res = await checkAddress(client.address);
+              const idx = updatedClients.findIndex(c => c.id === client.id);
+              if (idx !== -1) {
+                  updatedClients[idx] = { ...updatedClients[idx], isAddressValid: res.isValid };
+              }
+          } catch(e) {}
+      }
+      setClients(updatedClients);
+  };
+
+  const handleAddClientsToRoute = (selectedClients: Client[]) => {
+      const newVisits: Visit[] = selectedClients.map(c => ({
+          id: uuid(), // Create new ID for the route instance
+          name: c.name,
+          surname: c.surname,
+          address: c.address,
+          order: 0, // Will be reindexed
+          visitDuration: c.defaultDuration,
+          isAddressValid: c.isAddressValid,
+          isSkipped: false,
+          preferredTime: c.visitStartAt
+      }));
+      
+      const combined = [...visits, ...newVisits];
+      const cleared = clearCalculation(combined);
+      setVisits(reindexVisits(cleared));
+      setIsClientDbOpen(false);
+      console.log(`${newVisits.length} ${t.msgAddedToRoute}`);
+  };
+  
+  // Reload Plan Button Handler
+  const handleReloadPlan = () => {
+      if (planReloadConfirming) {
+          // Robustness check: Ensure we have data even if state is delayed/empty
+          let sourceClients = clients;
+          if (sourceClients.length === 0) {
+              const saved = localStorage.getItem('odocalc_db_clients');
+              if (saved) try { sourceClients = JSON.parse(saved); } catch (e) {}
+          }
+
+          const dailyRoute = loadDailyPlan(sourceClients);
+          const cleared = clearCalculation(dailyRoute);
+          setVisits(reindexVisits(cleared));
+          setCompilationInfo(t.msgPlanReloaded);
+          setTimeout(() => setCompilationInfo(null), 3000);
+          setPlanReloadConfirming(false);
+      } else {
+          setPlanReloadConfirming(true);
+          setTimeout(() => setPlanReloadConfirming(false), 4000);
+      }
+  };
+
+  const handleImportClientsExcel = async (file: File) => {
+      try {
+          const parsed = await parseVisitsExcel(file);
+          // Convert parsed visits to Clients
+          const newClients: Client[] = await Promise.all(parsed.map(async p => {
+             const check = await checkAddress(p.address);
+             return {
+                 id: uuid(),
+                 name: p.name,
+                 surname: p.surname,
+                 address: p.address,
+                 defaultDuration: p.visitDuration,
+                 isAddressValid: check.isValid,
+                 visitRepetition: { type: 'WEEKLY', daysOfWeek: [] } // Default to none/manual schedule
+             };
+          }));
+          setClients(prev => [...prev, ...newClients]);
+          console.log(`${t.msgImportSuccess} (${newClients.length})`);
+      } catch (e: any) {
+          console.error(e);
+          alert(e.message);
+      }
+  };
+
 
   const saveSettings = (newSettings: AppSettings) => {
       if (newSettings.startAddress !== settings.startAddress || newSettings.currentOdometer !== settings.currentOdometer || newSettings.departureTime !== settings.departureTime) {
@@ -373,23 +580,30 @@ const App: React.FC = () => {
       console.log(`${t.msgImportSuccess} (${validatedVisits.length})`);
   };
 
-  const handleValidateAll = async () => {
+  const handleValidate = async () => {
       if (!isApiReady) return;
-      if (visits.length === 0) return;
+      
+      const targets = selectedIds.size > 0 ? visits.filter(v => selectedIds.has(v.id)) : visits;
+      if (targets.length === 0) return;
+
       setCalcStatus(CalculationStatus.VALIDATING);
       setErrorMsg(null);
-      const total = visits.length;
+      
       const newVisits = [...visits];
       try {
-          for (let i = 0; i < newVisits.length; i++) {
-              const v = newVisits[i];
-              setProgress({ current: i + 1, total, message: `${t.msgValidating} ${v.surname}...` });
+          for (let i = 0; i < targets.length; i++) {
+              const v = targets[i];
+              setProgress({ current: i + 1, total: targets.length, message: `${t.msgValidating} ${v.surname}...` });
               const res = await checkAddress(v.address);
-              newVisits[i] = { ...v, isAddressValid: res.isValid };
+              // Update item in master list
+              const idx = newVisits.findIndex(fv => fv.id === v.id);
+              if (idx !== -1) {
+                  newVisits[idx] = { ...newVisits[idx], isAddressValid: res.isValid };
+              }
               await sleep(20); 
           }
           setVisits(newVisits);
-          console.log(`${t.msgValidationComplete} (${total})`);
+          console.log(`${t.msgValidationComplete} (${targets.length})`);
       } catch (err: any) { console.error(err); setErrorMsg(err.message); } 
       finally { setCalcStatus(CalculationStatus.IDLE); }
   };
@@ -549,6 +763,7 @@ const App: React.FC = () => {
         </header>
 
         <div className="space-y-4">
+            
             {calcStatus === CalculationStatus.ERROR && errorMsg && (
               <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 p-4 rounded-lg flex items-center gap-3 animate-fade-in">
                  <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" /></svg>
@@ -557,18 +772,33 @@ const App: React.FC = () => {
             )}
 
             <div className="flex flex-col md:flex-row justify-between items-center gap-4 py-2">
+                
+                {/* Main Action Group (Left) */}
                 <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-                    <button type="button" onClick={handleAdd} className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium text-sm transition-colors shadow-sm flex items-center gap-2">
-                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-                      <span>{t.newVisit}</span>
+                    {/* Client DB Button - Prominent */}
+                    <button type="button" onClick={() => setIsClientDbOpen(true)} className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-bold text-sm transition-colors flex items-center gap-2 shadow-md transform active:scale-95">
+                       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                       <span>{t.clientDb}</span>
                     </button>
+
+                    <button type="button" onClick={handleReloadPlan} className={`px-3 py-2 border rounded-lg font-medium text-sm transition-colors flex items-center gap-2 shadow-sm ${planReloadConfirming ? 'bg-teal-600 text-white border-teal-700 hover:bg-teal-700' : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-teal-600 dark:text-teal-400 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>
+                       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                       <span className="hidden md:inline">{planReloadConfirming ? t.confirm : t.importPlan}</span>
+                    </button>
+                    
                     <button type="button" onClick={() => fileInputRef.current?.click()} className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 font-medium text-sm transition-colors flex items-center gap-2 shadow-sm">
                       <svg className="w-5 h-5 text-green-600 dark:text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                       <span className="hidden md:inline">{t.importExcel}</span>
                     </button>
+
                     <button type="button" onClick={() => setIsSavedRoutesOpen(true)} className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 font-medium text-sm transition-colors flex items-center gap-2 shadow-sm" title={t.savedRoutes}>
                         <svg className="w-5 h-5 text-google-blue dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z" /></svg>
                         <span className="hidden md:inline">{t.savedRoutes}</span>
+                    </button>
+
+                    <button type="button" onClick={handleAddVisit} className="px-3 py-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-lg font-medium text-sm transition-colors shadow-sm flex items-center gap-2">
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                      <span>{t.newVisit}</span>
                     </button>
 
                     {selectedIds.size > 0 && (
@@ -578,16 +808,17 @@ const App: React.FC = () => {
                     )}
                 </div>
                 
+                {/* Right Group: Optimization Actions */}
                 <div className="flex items-center gap-2 w-full md:w-auto justify-end">
-                    <button type="button" onClick={handleValidateAll} disabled={calcStatus === CalculationStatus.ROUTING || calcStatus === CalculationStatus.VALIDATING} className={`px-3 py-2 text-white rounded-lg font-medium text-sm transition-colors shadow-sm flex items-center gap-2 ${calcStatus === CalculationStatus.ROUTING || calcStatus === CalculationStatus.VALIDATING ? 'bg-gray-400 cursor-not-allowed' : 'bg-orange-500 hover:bg-orange-600'}`}>
+                    <button type="button" onClick={handleValidate} disabled={calcStatus === CalculationStatus.ROUTING || calcStatus === CalculationStatus.VALIDATING} className={`px-3 py-2 text-white rounded-lg font-medium text-sm transition-colors shadow-sm flex items-center gap-2 ${calcStatus === CalculationStatus.ROUTING || calcStatus === CalculationStatus.VALIDATING ? 'bg-gray-400 cursor-not-allowed' : 'bg-gray-600 hover:bg-gray-700'}`}>
                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                        <span className="hidden md:inline">{t.validate}</span>
+                        <span className="hidden md:inline">{selectedIds.size > 0 ? `${t.validate} (${selectedIds.size})` : `${t.validate}`}</span>
                     </button>
                     <button type="button" onClick={() => setIsMapOpen(!isMapOpen)} disabled={!canVisualize} className={`px-3 py-2 text-white rounded-lg font-medium text-sm transition-colors shadow-sm flex items-center gap-2 ${!canVisualize ? 'bg-gray-400 cursor-not-allowed' : 'bg-teal-600 hover:bg-teal-700'}`}>
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" /></svg>
                         <span className="hidden md:inline">{isMapOpen ? t.hideMap : t.visualize}</span>
                     </button>
-                    <button type="button" onClick={handleOptimizeRoute} disabled={calcStatus === CalculationStatus.ROUTING || calcStatus === CalculationStatus.VALIDATING || shouldDisableActions} className={`px-3 py-2 text-white rounded-lg font-medium text-sm transition-colors shadow-sm flex items-center gap-2 ${calcStatus === CalculationStatus.ROUTING || calcStatus === CalculationStatus.VALIDATING || shouldDisableActions ? 'bg-gray-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'}`}>
+                    <button type="button" onClick={handleOptimizeRoute} disabled={calcStatus === CalculationStatus.ROUTING || calcStatus === CalculationStatus.VALIDATING || shouldDisableActions} className={`px-3 py-2 text-white rounded-lg font-medium text-sm transition-colors shadow-sm flex items-center gap-2 ${calcStatus === CalculationStatus.ROUTING || calcStatus === CalculationStatus.VALIDATING || shouldDisableActions ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'}`}>
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                         <span className="hidden md:inline">{t.optimal}</span>
                     </button>
@@ -603,11 +834,21 @@ const App: React.FC = () => {
             </div>
 
             <VisitList 
-              visits={visits} startTrip={startTrip} returnTrip={returnTrip} selectedIds={selectedIds} onEdit={handleEdit} onReorder={handleReorder} onToggleSkip={handleToggleSkip} onDelete={handleDeleteRow}
+              visits={visits} startTrip={startTrip} returnTrip={returnTrip} selectedIds={selectedIds} onEdit={handleEditVisit} onReorder={handleReorder} onToggleSkip={handleToggleSkip} onDelete={handleDeleteRow}
               onToggleSelect={(id) => { const newSet = new Set(selectedIds); if (newSet.has(id)) newSet.delete(id); else newSet.add(id); setSelectedIds(newSet); }}
               onToggleAll={(checked) => { if (checked) setSelectedIds(new Set(visits.map(v => v.id))); else setSelectedIds(new Set()); }}
               lang={settings.language} departureTime={settings.departureTime}
             />
+
+            {compilationInfo && (
+              <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 p-4 rounded-lg flex items-center gap-3 animate-fade-in-down">
+                 <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                 <div>
+                    <span className="font-bold">{t.msgDailyInfo}</span>
+                    <span className="ml-2 text-sm opacity-80">{compilationInfo}</span>
+                 </div>
+              </div>
+            )}
 
             {(calcStatus === CalculationStatus.VALIDATING || calcStatus === CalculationStatus.ROUTING) && (
               <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-blue-100 dark:border-gray-700 animate-fade-in-down mb-4">
@@ -624,9 +865,22 @@ const App: React.FC = () => {
         </div>
       </div>
 
-      <VisitModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={saveVisit} initialData={editingVisit} lang={settings.language} />
+      <VisitModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={saveItem} initialData={editingItem} lang={settings.language} mode={editMode} />
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} settings={settings} onSave={saveSettings} />
       <SavedRoutesModal isOpen={isSavedRoutesOpen} onClose={() => setIsSavedRoutesOpen(false)} currentVisits={visits} currentStart={startTrip} currentReturn={returnTrip} onLoadRoute={handleLoadSavedRoute} lang={settings.language} />
+      <ClientDbModal 
+          isOpen={isClientDbOpen} 
+          onClose={() => setIsClientDbOpen(false)} 
+          clients={clients} 
+          onAddClient={handleAddClient} 
+          onEditClient={handleEditClient} 
+          onDeleteClient={handleDeleteClient}
+          onDeleteClients={handleBulkDeleteClients}
+          onValidateClients={handleBulkValidateClients}
+          onAddToRoute={handleAddClientsToRoute} 
+          onImportExcel={handleImportClientsExcel} 
+          lang={settings.language} 
+      />
       <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} lang={settings.language} onLoadSampleData={handleLoadSampleData} />
     </div>
   );

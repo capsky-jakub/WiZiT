@@ -1,6 +1,6 @@
-
 import React, { useEffect } from 'react';
 import { translations, Language } from '../services/translations';
+import { useDraggable } from '../hooks/useDraggable';
 
 interface HelpModalProps {
   isOpen: boolean;
@@ -11,6 +11,7 @@ interface HelpModalProps {
 
 export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang, onLoadSampleData }) => {
   const t = translations[lang];
+  const { nodeRef, handleRef } = useDraggable<HTMLHeadingElement>(isOpen);
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -58,12 +59,15 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang, onL
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[110] p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto animate-fade-in-up transition-colors p-6 relative flex flex-col">
-        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 p-2">
+      <div 
+        ref={nodeRef}
+        className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto animate-fade-in-up transition-colors p-6 relative flex flex-col"
+      >
+        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 p-2 z-10">
           <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
         </button>
 
-        <h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-white flex items-center gap-2 border-b dark:border-gray-700 pb-2">
+        <h2 ref={handleRef} className="text-2xl font-bold mb-6 text-gray-800 dark:text-white flex items-center gap-2 border-b dark:border-gray-700 pb-2 select-none">
             <span className="text-google-blue">{t.appTitle}</span> - {t.helpTitle}
         </h2>
 
@@ -84,7 +88,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang, onL
                   <div className="bg-[#217346] text-white px-3 py-1 text-xs font-bold flex items-center gap-2 justify-between">
                     <div className="flex items-center gap-2">
                         <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
-                        Excel Structure (Example)
+                        Excel Structure (Flexible)
                     </div>
                   </div>
                   <div className="overflow-x-auto">
@@ -95,8 +99,8 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang, onL
                                 <th className="p-1 border-r border-b border-gray-300 dark:border-gray-600 font-normal w-24 text-center">A</th>
                                 <th className="p-1 border-r border-b border-gray-300 dark:border-gray-600 font-normal w-24 text-center">B</th>
                                 <th className="p-1 border-r border-b border-gray-300 dark:border-gray-600 font-normal text-center">C</th>
-                                <th className="p-1 border-r border-b border-gray-300 dark:border-gray-600 font-normal w-16 text-center">D</th>
-                                <th className="p-1 border-b border-gray-300 dark:border-gray-600 font-normal w-16 text-center">E</th>
+                                <th className="p-1 border-r border-b border-gray-300 dark:border-gray-600 font-normal w-16 text-center text-gray-400">D (Opt)</th>
+                                <th className="p-1 border-b border-gray-300 dark:border-gray-600 font-normal w-16 text-center text-gray-400">E (Opt)</th>
                             </tr>
                         </thead>
                         <tbody className="bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200">
@@ -105,8 +109,8 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang, onL
                                 <td className="p-1 border-r border-b border-gray-300 dark:border-gray-600 font-bold bg-gray-50 dark:bg-gray-800/50">Name</td>
                                 <td className="p-1 border-r border-b border-gray-300 dark:border-gray-600 font-bold bg-gray-50 dark:bg-gray-800/50">Surname</td>
                                 <td className="p-1 border-r border-b border-gray-300 dark:border-gray-600 font-bold bg-gray-50 dark:bg-gray-800/50">Address</td>
-                                <td className="p-1 border-r border-b border-gray-300 dark:border-gray-600 font-bold bg-gray-50 dark:bg-gray-800/50 text-right">Visit order</td>
-                                <td className="p-1 border-b border-gray-300 dark:border-gray-600 font-bold bg-gray-50 dark:bg-gray-800/50 text-right">Duration</td>
+                                <td className="p-1 border-r border-b border-gray-300 dark:border-gray-600 font-bold bg-gray-50/50 dark:bg-gray-800/30 text-right text-gray-500">Order</td>
+                                <td className="p-1 border-b border-gray-300 dark:border-gray-600 font-bold bg-gray-50/50 dark:bg-gray-800/30 text-right text-gray-500">Duration</td>
                             </tr>
                             {visualData.map((row, i) => (
                                 <tr key={i}>
@@ -114,8 +118,8 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang, onL
                                     <td className="p-1 border-r border-b border-gray-300 dark:border-gray-600">{row.n}</td>
                                     <td className="p-1 border-r border-b border-gray-300 dark:border-gray-600">{row.s}</td>
                                     <td className="p-1 border-r border-b border-gray-300 dark:border-gray-600 truncate max-w-[150px]" title={row.a}>{row.a}</td>
-                                    <td className="p-1 border-r border-b border-gray-300 dark:border-gray-600 text-right">{row.o}</td>
-                                    <td className="p-1 border-b border-gray-300 dark:border-gray-600 text-right">{row.d}</td>
+                                    <td className="p-1 border-r border-b border-gray-300 dark:border-gray-600 text-right text-gray-500">{row.o}</td>
+                                    <td className="p-1 border-b border-gray-300 dark:border-gray-600 text-right text-gray-500">{row.d}</td>
                                 </tr>
                             ))}
                         </tbody>
