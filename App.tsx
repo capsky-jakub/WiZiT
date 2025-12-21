@@ -15,7 +15,7 @@ import { setCacheExpirationDays } from './services/distanceCache';
 import { translations } from './services/translations';
 import { isClientScheduledForDate, sortVisitsByTime } from './services/scheduler';
 
-const DEFAULT_DEV_API_KEY = ""; 
+const DEFAULT_DEV_API_KEY = "test"; 
 
 const uuid = () => Math.random().toString(36).substring(2, 9);
 const commercialRound = (num: number) => Math.floor(num + 0.5);
