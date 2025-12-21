@@ -1,0 +1,374 @@
+{
+  "visits": [
+    {
+      "id": "2nuka4l",
+      "name": "Růžena",
+      "surname": "Šípková",
+      "address": "Chrudimská 1315, 530 02 Pardubice V-Zelené Předměstí",
+      "order": 1,
+      "visitDuration": 0,
+      "isAddressValid": true,
+      "isSkipped": false,
+      "preferredTime": "08:00"
+    },
+    {
+      "id": "bvem167",
+      "name": "Antonín",
+      "surname": "Křemílek",
+      "address": "Poděbradská 335, 530 09 Pardubice VII",
+      "order": 2,
+      "visitDuration": 0,
+      "isAddressValid": true,
+      "isSkipped": false,
+      "preferredTime": "09:00"
+    },
+    {
+      "id": "m55kkki",
+      "name": "Jan",
+      "surname": "Vochomůrka",
+      "address": "Jana Zajíce 982, 530 12 Pardubice III",
+      "order": 3,
+      "visitDuration": 0,
+      "isAddressValid": true,
+      "isSkipped": false,
+      "preferredTime": "10:00"
+    },
+    {
+      "id": "fld0hm2",
+      "name": "Eliška",
+      "surname": "Šebestová",
+      "address": "Průmyslová 462, 530 03 Pardubice IV-Pardubičky",
+      "order": 4,
+      "visitDuration": 0,
+      "isAddressValid": true,
+      "isSkipped": false,
+      "preferredTime": ""
+    }
+  ],
+  "clients": [
+    {
+      "id": "uf59y1z",
+      "name": "Jakub",
+      "surname": "Rákosníček",
+      "address": "Oskara Brázdy 554, 533 51 Pardubice VII",
+      "defaultDuration": 0,
+      "isAddressValid": true,
+      "visitRepetition": {
+        "type": "DATE",
+        "specificDate": "2025-12-20"
+      },
+      "visitStartAt": ""
+    },
+    {
+      "id": "xtwnzz4",
+      "name": "Antonín",
+      "surname": "Křemílek",
+      "address": "Poděbradská 335, 530 09 Pardubice VII",
+      "defaultDuration": 0,
+      "isAddressValid": true,
+      "visitRepetition": {
+        "type": "WEEKLY",
+        "daysOfWeek": [
+          5
+        ]
+      },
+      "visitStartAt": "09:00"
+    },
+    {
+      "id": "b5tr8pz",
+      "name": "Jan",
+      "surname": "Vochomůrka",
+      "address": "Jana Zajíce 982, 530 12 Pardubice III",
+      "defaultDuration": 0,
+      "isAddressValid": true,
+      "visitRepetition": {
+        "type": "WEEKLY",
+        "daysOfWeek": [
+          5
+        ]
+      },
+      "visitStartAt": "10:00"
+    },
+    {
+      "id": "3ih1778",
+      "name": "Eliška",
+      "surname": "Šebestová",
+      "address": "Průmyslová 462, 530 03 Pardubice IV-Pardubičky",
+      "defaultDuration": 0,
+      "isAddressValid": true,
+      "visitRepetition": {
+        "type": "INTERVAL",
+        "intervalStart": "2025-12-17",
+        "intervalDays": 2
+      },
+      "visitStartAt": ""
+    },
+    {
+      "id": "npek8ti",
+      "name": "Růžena",
+      "surname": "Šípková",
+      "address": "Chrudimská 1315, 530 02 Pardubice V-Zelené Předměstí",
+      "defaultDuration": 0,
+      "isAddressValid": true,
+      "visitRepetition": {
+        "type": "DATE",
+        "daysOfWeek": [],
+        "specificDate": "2025-12-19"
+      },
+      "visitStartAt": "08:00"
+    },
+    {
+      "name": "fds",
+      "surname": "fsd",
+      "address": "fsd",
+      "defaultDuration": 100,
+      "isAddressValid": false,
+      "visitStartAt": "",
+      "visitRepetition": {
+        "type": "WEEKLY",
+        "daysOfWeek": []
+      },
+      "id": "1f0grh8"
+    }
+  ],
+  "settings": {
+    "startAddress": "Dlouhá 1113, 530 06 Pardubice, Česko",
+    "currentOdometer": 0,
+    "departureTime": "08:00:00",
+    "isStrictMode": false,
+    "isStartValid": false,
+    "isDarkMode": true,
+    "googleApiKey": "AIzaSyAGs1LRYdwFOAxC_jctVh7Lz2evdATfKEk",
+    "cacheExpirationDays": 30,
+    "language": "cs"
+  },
+  "start": null,
+  "return": null,
+  "lmod": {
+    "Dlouhá 1113, 530 06 Pardubice, Česko::Dlouhá 1113, 530 06 Pardubice, Česko": {
+      "distanceKm": 0,
+      "durationSeconds": 0,
+      "expiresAt": 1768744360808
+    },
+    "Dlouhá 1113, 530 06 Pardubice, Česko::Oskara Brázdy 554, 533 51 Pardubice VII": {
+      "distanceKm": 3.084,
+      "durationSeconds": 455,
+      "expiresAt": 1768744360808
+    },
+    "Dlouhá 1113, 530 06 Pardubice, Česko::Poděbradská 335, 530 09 Pardubice VII": {
+      "distanceKm": 7.503,
+      "durationSeconds": 670,
+      "expiresAt": 1768744360809
+    },
+    "Dlouhá 1113, 530 06 Pardubice, Česko::Jana Zajíce 982, 530 12 Pardubice III": {
+      "distanceKm": 7.866,
+      "durationSeconds": 898,
+      "expiresAt": 1768744360809
+    },
+    "Dlouhá 1113, 530 06 Pardubice, Česko::Průmyslová 462, 530 03 Pardubice IV-Pardubičky": {
+      "distanceKm": 8.456,
+      "durationSeconds": 923,
+      "expiresAt": 1768744360809
+    },
+    "Dlouhá 1113, 530 06 Pardubice, Česko::Chrudimská 1315, 530 02 Pardubice V-Zelené Předměstí": {
+      "distanceKm": 4.411,
+      "durationSeconds": 499,
+      "expiresAt": 1768744360809
+    },
+    "Oskara Brázdy 554, 533 51 Pardubice VII::Dlouhá 1113, 530 06 Pardubice, Česko": {
+      "distanceKm": 2.914,
+      "durationSeconds": 434,
+      "expiresAt": 1768744360809
+    },
+    "Oskara Brázdy 554, 533 51 Pardubice VII::Oskara Brázdy 554, 533 51 Pardubice VII": {
+      "distanceKm": 0,
+      "durationSeconds": 0,
+      "expiresAt": 1768744360809
+    },
+    "Oskara Brázdy 554, 533 51 Pardubice VII::Poděbradská 335, 530 09 Pardubice VII": {
+      "distanceKm": 3.663,
+      "durationSeconds": 438,
+      "expiresAt": 1768744360809
+    },
+    "Oskara Brázdy 554, 533 51 Pardubice VII::Jana Zajíce 982, 530 12 Pardubice III": {
+      "distanceKm": 8.263,
+      "durationSeconds": 846,
+      "expiresAt": 1768744360810
+    },
+    "Oskara Brázdy 554, 533 51 Pardubice VII::Průmyslová 462, 530 03 Pardubice IV-Pardubičky": {
+      "distanceKm": 8.946,
+      "durationSeconds": 928,
+      "expiresAt": 1768744360810
+    },
+    "Oskara Brázdy 554, 533 51 Pardubice VII::Chrudimská 1315, 530 02 Pardubice V-Zelené Předměstí": {
+      "distanceKm": 8.722,
+      "durationSeconds": 583,
+      "expiresAt": 1768744360810
+    },
+    "Poděbradská 335, 530 09 Pardubice VII::Dlouhá 1113, 530 06 Pardubice, Česko": {
+      "distanceKm": 7.751,
+      "durationSeconds": 795,
+      "expiresAt": 1768744360810
+    },
+    "Poděbradská 335, 530 09 Pardubice VII::Oskara Brázdy 554, 533 51 Pardubice VII": {
+      "distanceKm": 3.875,
+      "durationSeconds": 589,
+      "expiresAt": 1768744360810
+    },
+    "Poděbradská 335, 530 09 Pardubice VII::Poděbradská 335, 530 09 Pardubice VII": {
+      "distanceKm": 0,
+      "durationSeconds": 0,
+      "expiresAt": 1768744360811
+    },
+    "Poděbradská 335, 530 09 Pardubice VII::Jana Zajíce 982, 530 12 Pardubice III": {
+      "distanceKm": 5.363,
+      "durationSeconds": 716,
+      "expiresAt": 1768744360811
+    },
+    "Poděbradská 335, 530 09 Pardubice VII::Průmyslová 462, 530 03 Pardubice IV-Pardubičky": {
+      "distanceKm": 7.94,
+      "durationSeconds": 941,
+      "expiresAt": 1768744360811
+    },
+    "Poděbradská 335, 530 09 Pardubice VII::Chrudimská 1315, 530 02 Pardubice V-Zelené Předměstí": {
+      "distanceKm": 4.8,
+      "durationSeconds": 828,
+      "expiresAt": 1768744360811
+    },
+    "Jana Zajíce 982, 530 12 Pardubice III::Dlouhá 1113, 530 06 Pardubice, Česko": {
+      "distanceKm": 7.858,
+      "durationSeconds": 918,
+      "expiresAt": 1768744360811
+    },
+    "Jana Zajíce 982, 530 12 Pardubice III::Oskara Brázdy 554, 533 51 Pardubice VII": {
+      "distanceKm": 7.906,
+      "durationSeconds": 815,
+      "expiresAt": 1768744360811
+    },
+    "Jana Zajíce 982, 530 12 Pardubice III::Poděbradská 335, 530 09 Pardubice VII": {
+      "distanceKm": 5.341,
+      "durationSeconds": 647,
+      "expiresAt": 1768744360811
+    },
+    "Jana Zajíce 982, 530 12 Pardubice III::Jana Zajíce 982, 530 12 Pardubice III": {
+      "distanceKm": 0,
+      "durationSeconds": 0,
+      "expiresAt": 1768744360811
+    },
+    "Jana Zajíce 982, 530 12 Pardubice III::Průmyslová 462, 530 03 Pardubice IV-Pardubičky": {
+      "distanceKm": 4.175,
+      "durationSeconds": 495,
+      "expiresAt": 1768744360812
+    },
+    "Jana Zajíce 982, 530 12 Pardubice III::Chrudimská 1315, 530 02 Pardubice V-Zelené Předměstí": {
+      "distanceKm": 5.174,
+      "durationSeconds": 611,
+      "expiresAt": 1768744360812
+    },
+    "Průmyslová 462, 530 03 Pardubice IV-Pardubičky::Dlouhá 1113, 530 06 Pardubice, Česko": {
+      "distanceKm": 8.871,
+      "durationSeconds": 892,
+      "expiresAt": 1768744360812
+    },
+    "Průmyslová 462, 530 03 Pardubice IV-Pardubičky::Oskara Brázdy 554, 533 51 Pardubice VII": {
+      "distanceKm": 8.587,
+      "durationSeconds": 846,
+      "expiresAt": 1768744360812
+    },
+    "Průmyslová 462, 530 03 Pardubice IV-Pardubičky::Poděbradská 335, 530 09 Pardubice VII": {
+      "distanceKm": 6.218,
+      "durationSeconds": 756,
+      "expiresAt": 1768744360812
+    },
+    "Průmyslová 462, 530 03 Pardubice IV-Pardubičky::Jana Zajíce 982, 530 12 Pardubice III": {
+      "distanceKm": 4.214,
+      "durationSeconds": 486,
+      "expiresAt": 1768744360812
+    },
+    "Průmyslová 462, 530 03 Pardubice IV-Pardubičky::Průmyslová 462, 530 03 Pardubice IV-Pardubičky": {
+      "distanceKm": 0,
+      "durationSeconds": 0,
+      "expiresAt": 1768744360813
+    },
+    "Průmyslová 462, 530 03 Pardubice IV-Pardubičky::Chrudimská 1315, 530 02 Pardubice V-Zelené Předměstí": {
+      "distanceKm": 4.616,
+      "durationSeconds": 386,
+      "expiresAt": 1768744360813
+    },
+    "Chrudimská 1315, 530 02 Pardubice V-Zelené Předměstí::Dlouhá 1113, 530 06 Pardubice, Česko": {
+      "distanceKm": 4.397,
+      "durationSeconds": 525,
+      "expiresAt": 1768744360813
+    },
+    "Chrudimská 1315, 530 02 Pardubice V-Zelené Předměstí::Oskara Brázdy 554, 533 51 Pardubice VII": {
+      "distanceKm": 7.184,
+      "durationSeconds": 519,
+      "expiresAt": 1768744360813
+    },
+    "Chrudimská 1315, 530 02 Pardubice V-Zelené Předměstí::Poděbradská 335, 530 09 Pardubice VII": {
+      "distanceKm": 4.392,
+      "durationSeconds": 630,
+      "expiresAt": 1768744360813
+    },
+    "Chrudimská 1315, 530 02 Pardubice V-Zelené Předměstí::Jana Zajíce 982, 530 12 Pardubice III": {
+      "distanceKm": 5.206,
+      "durationSeconds": 582,
+      "expiresAt": 1768744360813
+    },
+    "Chrudimská 1315, 530 02 Pardubice V-Zelené Předměstí::Průmyslová 462, 530 03 Pardubice IV-Pardubičky": {
+      "distanceKm": 4.462,
+      "durationSeconds": 355,
+      "expiresAt": 1768744360813
+    },
+    "Chrudimská 1315, 530 02 Pardubice V-Zelené Předměstí::Chrudimská 1315, 530 02 Pardubice V-Zelené Předměstí": {
+      "distanceKm": 0,
+      "durationSeconds": 0,
+      "expiresAt": 1768744360813
+    }
+  },
+  "saved_routes": [
+    {
+      "id": "uxl93ro",
+      "name": "PÁTEK",
+      "createdAt": "2025-12-19T14:24:18.215Z",
+      "visits": [
+        {
+          "id": "fgaehdh",
+          "name": "Jan",
+          "surname": "Vochomůrka",
+          "address": "Jana Zajíce 982, 530 12 Pardubice III",
+          "order": 1,
+          "visitDuration": 0,
+          "isAddressValid": true,
+          "isSkipped": false,
+          "preferredTime": "10:00"
+        },
+        {
+          "id": "1i48fz0",
+          "name": "Antonín",
+          "surname": "Křemílek",
+          "address": "Poděbradská 335, 530 09 Pardubice VII",
+          "order": 2,
+          "visitDuration": 0,
+          "isAddressValid": true,
+          "isSkipped": false,
+          "preferredTime": "09:00"
+        },
+        {
+          "id": "gs5miw9",
+          "name": "Růžena",
+          "surname": "Šípková",
+          "address": "Chrudimská 1315, 530 02 Pardubice V-Zelené Předměstí",
+          "order": 3,
+          "visitDuration": 0,
+          "isAddressValid": true,
+          "isSkipped": false,
+          "preferredTime": "08:00"
+        }
+      ],
+      "startTrip": null,
+      "returnTrip": null
+    }
+  ],
+  "timestamp": "2025-12-19T15:19:26.751Z"
+}
