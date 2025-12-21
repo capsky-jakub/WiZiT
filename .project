@@ -10,14 +10,14 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>.bashrc</name>
-			<type>1</type>
-			<location>C:/Users/S1426/.bashrc</location>
-		</link>
-		<link>
 			<name>Automation</name>
 			<type>2</type>
 			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>Automation/.bashrc</name>
+			<type>1</type>
+			<location>C:/Users/S1426/.bashrc</location>
 		</link>
 	</linkedResources>
 </projectDescription>
