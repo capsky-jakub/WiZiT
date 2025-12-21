@@ -12,9 +12,6 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: undefined, // Disable chunk splitting
-				// This forces the entry file name
-				//entryFileNames: `my-visopt-app_v2512_m41n.js`,
-				//assetFileNames: `my-visopt-app_v2512_m41n.[ext]`,
       },
     },
   },
