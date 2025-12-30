@@ -2,7 +2,7 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, User } from "firebase/auth";
 import { getFirestore, doc, setDoc, getDoc } from "firebase/firestore";
-import { BackupData, Client, AppSettings, SavedRoute } from "../types";
+import { BackupData } from "../types";
 
 const firebaseConfig = {
   apiKey: "***REMOVED***",

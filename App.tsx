@@ -86,6 +86,7 @@ const App: React.FC = () => {
   // --- Auth & Sync Logic ---
 
   useEffect(() => {
+    // Modular SDK auth state change listener
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
