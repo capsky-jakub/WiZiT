@@ -91,3 +91,12 @@ export enum CalculationStatus {
   COMPLETE = 'COMPLETE',
   ERROR = 'ERROR'
 }
+
+// Payload for Cloud Sync
+export interface BackupData {
+  clients: Client[];
+  settings: AppSettings;
+  savedRoutes: SavedRoute[];
+  lmod: any; // Cache object
+  timestamp: number; // Last modified time
+}

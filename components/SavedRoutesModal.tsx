@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { SavedRoute, Visit, StartTrip, ReturnTrip } from '../types';
 import { translations, Language } from '../services/translations';
@@ -11,10 +12,11 @@ interface SavedRoutesModalProps {
   currentReturn: ReturnTrip | null;
   onLoadRoute: (route: SavedRoute) => void;
   lang: Language;
+  onRoutesChanged?: () => void; // Callback for sync
 }
 
 export const SavedRoutesModal: React.FC<SavedRoutesModalProps> = ({ 
-  isOpen, onClose, currentVisits, currentStart, currentReturn, onLoadRoute, lang 
+  isOpen, onClose, currentVisits, currentStart, currentReturn, onLoadRoute, lang, onRoutesChanged
 }) => {
   const [savedRoutes, setSavedRoutes] = useState<SavedRoute[]>([]);
   const [newRouteName, setNewRouteName] = useState('');
@@ -71,6 +73,7 @@ export const SavedRoutesModal: React.FC<SavedRoutesModalProps> = ({
     setNewRouteName('');
     setViewMode('list');
     console.log(`Route "${newRouteName}" saved successfully.`);
+    if (onRoutesChanged) onRoutesChanged();
   };
 
   const handleDelete = (e: React.MouseEvent, id: string) => {
@@ -83,6 +86,7 @@ export const SavedRoutesModal: React.FC<SavedRoutesModalProps> = ({
       setSavedRoutes(updatedRoutes);
       setDeletingId(null);
       console.log(`Route ${id} deleted permanently.`);
+      if (onRoutesChanged) onRoutesChanged();
     } else {
       setDeletingId(id);
       setTimeout(() => {

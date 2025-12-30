@@ -14,6 +14,8 @@ import { solveTSP } from './services/tspSolver';
 import { setCacheExpirationDays } from './services/distanceCache';
 import { translations } from './services/translations';
 import { isClientScheduledForDate, sortVisitsByTime } from './services/scheduler';
+import { FirebaseService, auth } from './services/firebaseService';
+import { onAuthStateChanged, User } from 'firebase/auth';
 
 const DEFAULT_DEV_API_KEY = "AIzaSyAGs1LRYdwFOAxC_jctVh7Lz2evdATfKEk"; 
 
@@ -40,6 +42,10 @@ const App: React.FC = () => {
   const [startTrip, setStartTrip] = useState<StartTrip | null>(null);
   const [returnTrip, setReturnTrip] = useState<ReturnTrip | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  
+  // Cloud Sync State
+  const [user, setUser] = useState<User | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
   
   const [settings, setSettings] = useState<AppSettings>({
     startAddress: "Dlouhá 1113, 530 06 Pardubice, Česko",
@@ -76,6 +82,63 @@ const App: React.FC = () => {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const importDbInputRef = useRef<HTMLInputElement>(null);
+
+  // --- Auth & Sync Logic ---
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      if (currentUser) {
+        handleSyncFromCloud(currentUser);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleSyncFromCloud = async (currentUser: User) => {
+    setIsSyncing(true);
+    const result = await FirebaseService.syncDown(currentUser);
+    if (result.updated && result.data) {
+        // Update React State from Cloud Data
+        if (result.data.clients) setClients(result.data.clients);
+        if (result.data.settings) {
+            setSettings(result.data.settings);
+            // Re-apply API key if needed
+            if (result.data.settings.googleApiKey) {
+                setRuntimeApiKey(result.data.settings.googleApiKey);
+                loadGoogleMapsScript(result.data.settings.googleApiKey)
+                    .then(() => setIsApiReady(true))
+                    .catch(() => setIsApiReady(false));
+            }
+        }
+        // Saved Routes and LMOD are just in LocalStorage, no top-level state to update immediately
+        // unless modals are open (handled by modals reading LS on open)
+        setCompilationInfo("Configuration synced from Cloud");
+        setTimeout(() => setCompilationInfo(null), 3000);
+    }
+    setIsSyncing(false);
+  };
+
+  const handleTriggerSync = async () => {
+      if (user) {
+          setIsSyncing(true);
+          await FirebaseService.syncUp(user);
+          setIsSyncing(false);
+      }
+  };
+
+  const handleLogin = async () => {
+      try {
+          await FirebaseService.signIn();
+      } catch (e) {
+          console.error("Login failed", e);
+      }
+  };
+
+  const handleLogout = async () => {
+      await FirebaseService.signOut();
+      setUser(null);
+  };
 
   // --- Start of Logic ---
 
@@ -295,6 +358,8 @@ const App: React.FC = () => {
                     .catch(() => setIsApiReady(false));
               }
               console.log(t.msgImportSuccess);
+              // Trigger sync after manual restore
+              handleTriggerSync();
           } catch (err: any) { console.error(t.msgImportFail, err.message); }
       };
       reader.readAsText(file);
@@ -325,6 +390,8 @@ const App: React.FC = () => {
           setCacheExpirationDays(30); 
           setDbDeleteConfirming(false);
           console.log(t.msgDbCleared);
+          // Sync clear
+          handleTriggerSync();
       } else {
           setDbDeleteConfirming(true);
           setTimeout(() => setDbDeleteConfirming(false), 4000);
@@ -384,6 +451,8 @@ const App: React.FC = () => {
         } else {
              setClients(prev => [...prev, { ...newClientData, id: uuid() }]);
         }
+        // Sync Clients
+        setTimeout(handleTriggerSync, 100);
     }
     setIsModalOpen(false);
   };
@@ -403,10 +472,12 @@ const App: React.FC = () => {
 
   const handleDeleteClient = (id: string) => {
       setClients(prev => prev.filter(c => c.id !== id));
+      setTimeout(handleTriggerSync, 100);
   };
   
   const handleBulkDeleteClients = (ids: Set<string>) => {
       setClients(prev => prev.filter(c => !ids.has(c.id)));
+      setTimeout(handleTriggerSync, 100);
   };
 
   const handleBulkValidateClients = async (ids: Set<string>) => {
@@ -429,6 +500,7 @@ const App: React.FC = () => {
           } catch(e) {}
       }
       setClients(updatedClients);
+      setTimeout(handleTriggerSync, 100);
   };
 
   const handleAddClientsToRoute = (selectedClients: Client[]) => {
@@ -491,6 +563,7 @@ const App: React.FC = () => {
           }));
           setClients(prev => [...prev, ...newClients]);
           console.log(`${t.msgImportSuccess} (${newClients.length})`);
+          setTimeout(handleTriggerSync, 100);
       } catch (e: any) {
           console.error(e);
           alert(e.message);
@@ -515,6 +588,7 @@ const App: React.FC = () => {
           setCacheExpirationDays(newSettings.cacheExpirationDays);
       }
       setSettings(newSettings);
+      setTimeout(handleTriggerSync, 100);
   };
 
   const handleDeleteClick = () => {
@@ -683,7 +757,11 @@ const App: React.FC = () => {
 
       setReturnTrip({ address: settings.startAddress, segmentDistance: roundedReturn, exactDistanceKm: returnDist, segmentDuration: returnDur, arrivalTime: returnArrivalTime, totalOdometer: commitOdometer ? currentOdo : undefined });
       setCalcStatus(CalculationStatus.COMPLETE);
-      if (commitOdometer) setSettings(prev => ({ ...prev, currentOdometer: currentOdo }));
+      if (commitOdometer) {
+          setSettings(prev => ({ ...prev, currentOdometer: currentOdo }));
+          // Odometer update is a setting change, might want to sync if it's considered master data. 
+          // For now, let's treat it as transient until manually saved settings.
+      }
       console.log("Route calculation completed successfully.");
     } catch (err: any) { console.error(err); setErrorMsg(err.message || "An unknown error occurred during calculation."); setCalcStatus(CalculationStatus.ERROR); setStartTrip(null); }
   };
@@ -741,6 +819,24 @@ const App: React.FC = () => {
              <input type="file" ref={fileInputRef} accept=".xlsx" className="hidden" onChange={handleExcelUpload} />
              <input type="file" ref={importDbInputRef} accept=".json" className="hidden" onChange={handleImportDB} />
             <div className="flex items-center gap-1 bg-gray-50 dark:bg-gray-700/50 p-1 rounded-lg border border-gray-200 dark:border-gray-600">
+                {/* Auth/Sync Button */}
+                {user ? (
+                    <div className="flex items-center gap-1 bg-blue-50 dark:bg-blue-900/30 p-1 rounded-md border border-blue-100 dark:border-blue-800">
+                        <button onClick={handleTriggerSync} className={`p-2 rounded-md transition-colors ${isSyncing ? 'animate-spin text-blue-600' : 'text-blue-600 hover:bg-blue-100 dark:text-blue-400 dark:hover:bg-blue-800'}`} title="Sync Now">
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                        </button>
+                        <button onClick={handleLogout} className="p-2 text-blue-600 hover:bg-blue-100 dark:text-blue-400 dark:hover:bg-blue-800 rounded-md transition-colors" title={`Logout ${user.email}`}>
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                        </button>
+                    </div>
+                ) : (
+                    <button type="button" onClick={handleLogin} className="p-2 text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600 rounded-md transition-all shadow-sm flex items-center gap-1" title="Sign In to Sync">
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg>
+                    </button>
+                )}
+                
+                <div className="w-px h-5 bg-gray-300 dark:bg-gray-500 mx-1"></div>
+
                 <button type="button" onClick={handleExportDB} className="p-2 text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600 rounded-md transition-all shadow-sm" title={t.exportDb}>
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
                 </button>
@@ -867,7 +963,16 @@ const App: React.FC = () => {
 
       <VisitModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={saveItem} initialData={editingItem} lang={settings.language} mode={editMode} />
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} settings={settings} onSave={saveSettings} />
-      <SavedRoutesModal isOpen={isSavedRoutesOpen} onClose={() => setIsSavedRoutesOpen(false)} currentVisits={visits} currentStart={startTrip} currentReturn={returnTrip} onLoadRoute={handleLoadSavedRoute} lang={settings.language} />
+      <SavedRoutesModal 
+        isOpen={isSavedRoutesOpen} 
+        onClose={() => setIsSavedRoutesOpen(false)} 
+        currentVisits={visits} 
+        currentStart={startTrip} 
+        currentReturn={returnTrip} 
+        onLoadRoute={handleLoadSavedRoute} 
+        lang={settings.language} 
+        onRoutesChanged={handleTriggerSync}
+      />
       <ClientDbModal 
           isOpen={isClientDbOpen} 
           onClose={() => setIsClientDbOpen(false)} 
