@@ -5,14 +5,13 @@ import { getFirestore, doc, setDoc, getDoc, Firestore } from "firebase/firestore
 import { BackupData } from "../types";
 
 // --- HARDCODED CONFIGURATION ---
-// TODO: Replace these placeholders with your actual Firebase project configuration
 const firebaseConfig = {
-  apiKey: "REPLACE_WITH_YOUR_API_KEY",
-  authDomain: "REPLACE_WITH_YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "REPLACE_WITH_YOUR_PROJECT_ID",
-  storageBucket: "REPLACE_WITH_YOUR_PROJECT_ID.firebasestorage.app",
-  messagingSenderId: "REPLACE_WITH_YOUR_SENDER_ID",
-  appId: "REPLACE_WITH_YOUR_APP_ID"
+  apiKey: "***REMOVED***",
+  authDomain: "proj-visopt.firebaseapp.com",
+  projectId: "proj-visopt",
+  storageBucket: "proj-visopt.firebasestorage.app",
+  messagingSenderId: "1048476373474",
+  appId: "1:1048476373474:web:f629e9f83179f98970e9bb"
 };
 
 let app: FirebaseApp | undefined;
@@ -39,8 +38,7 @@ try {
 export const FirebaseService = {
   
   isConfigured: () => {
-      // Check if initialized and config is not the default placeholder
-      return !!auth && !!db && firebaseConfig.apiKey !== "REPLACE_WITH_YOUR_API_KEY";
+      return !!auth && !!db;
   },
 
   /**
