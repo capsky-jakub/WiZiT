@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { AppSettings } from '../types';
 import { checkAddress } from '../services/googleMapsService';
@@ -89,6 +90,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, s
         <h3 ref={handleRef} className="text-xl font-semibold mb-4 text-gray-800 dark:text-white select-none">{t.settingsTitle}</h3>
         
         <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Google Maps API Key */}
           <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-md border border-blue-100 dark:border-blue-800">
              <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-1">
                  {t.lblApiKey} <span className="text-red-500">*</span>
@@ -117,11 +119,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, s
              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t.lblApiKeyDesc}</p>
           </div>
 
+          {/* Address */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t.lblAddress}</label>
             <div className="relative">
                 <textarea 
-                rows={3}
+                rows={2}
                 required
                 className={`w-full border rounded-md p-2 focus:ring-2 outline-none resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white
                     ${validationStatus.isValid === false ? 'border-red-300 focus:ring-red-200' : 'border-gray-300 dark:border-gray-600 focus:ring-google-blue'}`}

@@ -1,9 +1,19 @@
 
 import { initializeApp, FirebaseApp, getApps } from "firebase/app";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, User, Auth, onAuthStateChanged } from "firebase/auth";
-// Switched to firestore/lite for REST-only communication (No WebSockets/WebChannel)
 import { getFirestore, doc, setDoc, getDoc, Firestore } from "firebase/firestore/lite";
 import { BackupData } from "../types";
+
+// --- HARDCODED CONFIGURATION ---
+// TODO: Replace these placeholders with your actual Firebase project configuration
+const firebaseConfig = {
+  apiKey: "REPLACE_WITH_YOUR_API_KEY",
+  authDomain: "REPLACE_WITH_YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "REPLACE_WITH_YOUR_PROJECT_ID",
+  storageBucket: "REPLACE_WITH_YOUR_PROJECT_ID.firebasestorage.app",
+  messagingSenderId: "REPLACE_WITH_YOUR_SENDER_ID",
+  appId: "REPLACE_WITH_YOUR_APP_ID"
+};
 
 let app: FirebaseApp | undefined;
 let auth: Auth | undefined;
@@ -11,38 +21,26 @@ let db: Firestore | undefined;
 
 const COLLECTION = "localstorage";
 
+// Initialize immediately
+try {
+    if (getApps().length > 0) {
+        app = getApps()[0];
+    } else {
+        app = initializeApp(firebaseConfig);
+    }
+    
+    auth = getAuth(app);
+    db = getFirestore(app);
+    console.log("[Cloud] Firebase initialized");
+} catch (e) {
+    console.error("[Cloud] Firebase Initialization Failed. Check services/firebaseService.ts config.", e);
+}
+
 export const FirebaseService = {
   
-  /**
-   * Initialize Firebase with a dynamic configuration string.
-   * Returns true if successful.
-   */
-  initialize: (configStr: string): boolean => {
-      try {
-          if (!configStr || configStr.trim() === '') return false;
-          
-          const config = JSON.parse(configStr);
-          
-          // Prevent re-initialization if already active to avoid duplicate app errors
-          if (getApps().length > 0) {
-              app = getApps()[0];
-          } else {
-              app = initializeApp(config);
-          }
-          
-          auth = getAuth(app);
-          // Initialize Firestore Lite
-          db = getFirestore(app);
-          console.log("[Cloud] Firebase initialized successfully (Lite Mode)");
-          return true;
-      } catch (e) {
-          console.error("[Cloud] Firebase Init Failed. Check your JSON config.", e);
-          return false;
-      }
-  },
-
   isConfigured: () => {
-      return !!auth && !!db;
+      // Check if initialized and config is not the default placeholder
+      return !!auth && !!db && firebaseConfig.apiKey !== "REPLACE_WITH_YOUR_API_KEY";
   },
 
   /**
@@ -50,14 +48,14 @@ export const FirebaseService = {
    */
   subscribeAuth: (callback: (user: User | null) => void) => {
       if (!auth) {
-          console.warn("[Cloud] Subscribe attempted before initialization");
+          console.warn("[Cloud] Subscribe attempted before initialization or invalid config");
           return () => {};
       }
       return onAuthStateChanged(auth, callback);
   },
 
   signIn: async () => {
-    if (!auth) throw new Error("Firebase not configured. Please enter your configuration JSON in Settings.");
+    if (!auth) throw new Error("Firebase not initialized. Check console for errors.");
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);

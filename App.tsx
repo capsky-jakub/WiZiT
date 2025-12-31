@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Visit, Client, AppSettings, CalculationStatus, ReturnTrip, StartTrip, SavedRoute } from './types';
 import { VisitList } from './components/VisitList';
@@ -45,6 +46,7 @@ const App: React.FC = () => {
   // Cloud Sync State
   const [user, setUser] = useState<User | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isFirebaseReady, setIsFirebaseReady] = useState(false);
   
   const [settings, setSettings] = useState<AppSettings>({
     startAddress: "Dlouhá 1113, 530 06 Pardubice, Česko",
@@ -85,36 +87,43 @@ const App: React.FC = () => {
   // --- Auth & Sync Logic ---
 
   useEffect(() => {
-    // Modular SDK auth state change listener
-    const unsubscribe = FirebaseService.subscribeAuth((currentUser) => {
-      setUser(currentUser);
-      if (currentUser) {
-        handleSyncFromCloud(currentUser);
-      }
-    });
-    return () => unsubscribe();
+    // Check if hardcoded config is active
+    const ready = FirebaseService.isConfigured();
+    setIsFirebaseReady(ready);
+
+    if (ready) {
+        const unsubscribe = FirebaseService.subscribeAuth((currentUser) => {
+            setUser(currentUser);
+            if (currentUser) {
+                handleSyncFromCloud(currentUser);
+            }
+        });
+        return () => unsubscribe();
+    }
   }, []);
 
   const handleSyncFromCloud = async (currentUser: User) => {
     setIsSyncing(true);
-    const result = await FirebaseService.syncDown(currentUser);
-    if (result.updated && result.data) {
-        // Update React State from Cloud Data
-        if (result.data.clients) setClients(result.data.clients);
-        if (result.data.settings) {
-            setSettings(result.data.settings);
-            // Re-apply API key if needed
-            if (result.data.settings.googleApiKey) {
-                setRuntimeApiKey(result.data.settings.googleApiKey);
-                loadGoogleMapsScript(result.data.settings.googleApiKey)
-                    .then(() => setIsApiReady(true))
-                    .catch(() => setIsApiReady(false));
+    try {
+        const result = await FirebaseService.syncDown(currentUser);
+        if (result.updated && result.data) {
+            // Update React State from Cloud Data
+            if (result.data.clients) setClients(result.data.clients);
+            if (result.data.settings) {
+                setSettings(result.data.settings);
+                // Re-apply API key if needed
+                if (result.data.settings.googleApiKey) {
+                    setRuntimeApiKey(result.data.settings.googleApiKey);
+                    loadGoogleMapsScript(result.data.settings.googleApiKey)
+                        .then(() => setIsApiReady(true))
+                        .catch(() => setIsApiReady(false));
+                }
             }
+            setCompilationInfo("Configuration synced from Cloud");
+            setTimeout(() => setCompilationInfo(null), 3000);
         }
-        // Saved Routes and LMOD are just in LocalStorage, no top-level state to update immediately
-        // unless modals are open (handled by modals reading LS on open)
-        setCompilationInfo("Configuration synced from Cloud");
-        setTimeout(() => setCompilationInfo(null), 3000);
+    } catch (e) {
+        console.error("Sync down error", e);
     }
     setIsSyncing(false);
   };
@@ -128,9 +137,14 @@ const App: React.FC = () => {
   };
 
   const handleLogin = async () => {
+      if (!isFirebaseReady) {
+          alert("Firebase is not configured. Please edit services/firebaseService.ts to add your keys.");
+          return;
+      }
       try {
           await FirebaseService.signIn();
-      } catch (e) {
+      } catch (e: any) {
+          alert(`Login failed: ${e.message}`);
           console.error("Login failed", e);
       }
   };
@@ -201,6 +215,7 @@ const App: React.FC = () => {
                 .then(() => setIsApiReady(true))
                 .catch(e => { console.error("API Load Error:", e); setIsApiReady(false); });
         }
+
       } catch (e) { console.error("Failed to load settings", e); }
     } else {
         if (DEFAULT_DEV_API_KEY) {
@@ -832,6 +847,7 @@ const App: React.FC = () => {
                 ) : (
                     <button type="button" onClick={handleLogin} className="p-2 text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600 rounded-md transition-all shadow-sm flex items-center gap-1" title="Sign In to Sync">
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg>
+                        <span className="text-xs font-semibold hidden md:inline">{isFirebaseReady ? 'Sync' : 'Setup Sync'}</span>
                     </button>
                 )}
                 
