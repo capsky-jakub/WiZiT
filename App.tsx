@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Visit, Client, AppSettings, CalculationStatus, ReturnTrip, StartTrip, SavedRoute } from './types';
 import { VisitList } from './components/VisitList';
@@ -14,8 +13,8 @@ import { solveTSP } from './services/tspSolver';
 import { setCacheExpirationDays } from './services/distanceCache';
 import { translations } from './services/translations';
 import { isClientScheduledForDate, sortVisitsByTime } from './services/scheduler';
-import { FirebaseService, auth } from './services/firebaseService';
-import { onAuthStateChanged, User } from 'firebase/auth';
+import { FirebaseService } from './services/firebaseService';
+import { User } from 'firebase/auth';
 
 const DEFAULT_DEV_API_KEY = "AIzaSyAGs1LRYdwFOAxC_jctVh7Lz2evdATfKEk"; 
 
@@ -87,7 +86,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     // Modular SDK auth state change listener
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = FirebaseService.subscribeAuth((currentUser) => {
       setUser(currentUser);
       if (currentUser) {
         handleSyncFromCloud(currentUser);

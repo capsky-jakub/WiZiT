@@ -1,37 +1,74 @@
 
-import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, User } from "firebase/auth";
-import { getFirestore, doc, setDoc, getDoc } from "firebase/firestore";
+import { initializeApp, FirebaseApp, getApps } from "firebase/app";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, User, Auth, onAuthStateChanged } from "firebase/auth";
+// Switched to firestore/lite for REST-only communication (No WebSockets/WebChannel)
+import { getFirestore, doc, setDoc, getDoc, Firestore } from "firebase/firestore/lite";
 import { BackupData } from "../types";
 
-const firebaseConfig = {
-  apiKey: "***REMOVED***",
-  authDomain: "proj-visopt.firebaseapp.com",
-  projectId: "proj-visopt",
-  storageBucket: "proj-visopt.firebasestorage.app",
-  messagingSenderId: "1048476373474",
-  appId: "1:1048476373474:web:f629e9f83179f98970e9bb"
-};
-
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-const db = getFirestore(app);
-const provider = new GoogleAuthProvider();
+let app: FirebaseApp | undefined;
+let auth: Auth | undefined;
+let db: Firestore | undefined;
 
 const COLLECTION = "localstorage";
 
 export const FirebaseService = {
   
+  /**
+   * Initialize Firebase with a dynamic configuration string.
+   * Returns true if successful.
+   */
+  initialize: (configStr: string): boolean => {
+      try {
+          if (!configStr || configStr.trim() === '') return false;
+          
+          const config = JSON.parse(configStr);
+          
+          // Prevent re-initialization if already active to avoid duplicate app errors
+          if (getApps().length > 0) {
+              app = getApps()[0];
+          } else {
+              app = initializeApp(config);
+          }
+          
+          auth = getAuth(app);
+          // Initialize Firestore Lite
+          db = getFirestore(app);
+          console.log("[Cloud] Firebase initialized successfully (Lite Mode)");
+          return true;
+      } catch (e) {
+          console.error("[Cloud] Firebase Init Failed. Check your JSON config.", e);
+          return false;
+      }
+  },
+
+  isConfigured: () => {
+      return !!auth && !!db;
+  },
+
+  /**
+   * Subscribe to auth state changes safely.
+   */
+  subscribeAuth: (callback: (user: User | null) => void) => {
+      if (!auth) {
+          console.warn("[Cloud] Subscribe attempted before initialization");
+          return () => {};
+      }
+      return onAuthStateChanged(auth, callback);
+  },
+
   signIn: async () => {
+    if (!auth) throw new Error("Firebase not configured. Please enter your configuration JSON in Settings.");
+    const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Firebase Sign In Error", error);
-      throw error;
+      throw new Error(error.message || "Sign in failed");
     }
   },
 
   signOut: async () => {
+    if (!auth) return;
     try {
       await signOut(auth);
     } catch (error) {
@@ -43,7 +80,7 @@ export const FirebaseService = {
    * Syncs local data to Firestore (Upload)
    */
   syncUp: async (user: User) => {
-    if (!user || !user.email) return;
+    if (!user || !user.email || !db) return;
 
     try {
       const clients = JSON.parse(localStorage.getItem('odocalc_db_clients') || '[]');
@@ -67,6 +104,7 @@ export const FirebaseService = {
       console.log(`[Cloud] Synced UP successfully for ${user.email}`);
     } catch (e) {
       console.error("[Cloud] Sync UP failed", e);
+      throw e;
     }
   },
 
@@ -75,7 +113,7 @@ export const FirebaseService = {
    * Returns true if data was updated, false otherwise.
    */
   syncDown: async (user: User): Promise<{ updated: boolean, data?: BackupData }> => {
-    if (!user || !user.email) return { updated: false };
+    if (!user || !user.email || !db) return { updated: false };
 
     try {
       const docRef = doc(db, COLLECTION, user.email);
@@ -101,6 +139,7 @@ export const FirebaseService = {
       }
     } catch (e) {
       console.error("[Cloud] Sync DOWN failed", e);
+      throw e;
     }
     return { updated: false };
   }
