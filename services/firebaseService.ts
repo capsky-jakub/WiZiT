@@ -29,7 +29,7 @@ try {
     }
     
     auth = getAuth(app);
-    db = getFirestore(app);
+    db = getFirestore(app, "dbvisopt");
     console.log("[Cloud] Firebase initialized");
 } catch (e) {
     console.error("[Cloud] Firebase Initialization Failed. Check services/firebaseService.ts config.", e);
