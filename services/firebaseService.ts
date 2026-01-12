@@ -21,7 +21,6 @@ let db: Firestore | undefined;
 const COLLECTION = "localstorage";
 
 // Initialize immediately
-// NOTE - test comment...
 try {
     if (getApps().length > 0) {
         app = getApps()[0];
@@ -30,7 +29,7 @@ try {
     }
     
     auth = getAuth(app);
-    db = getFirestore(app, "dbvisopt");
+    db = getFirestore(app);
     console.log("[Cloud] Firebase initialized");
 } catch (e) {
     console.error("[Cloud] Firebase Initialization Failed. Check services/firebaseService.ts config.", e);
