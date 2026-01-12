@@ -14,19 +14,23 @@ const getDist = (a: string, b: string): number => {
 };
 
 // Calculate total path distance for a given sequence of visits
-const calculateTotalDistance = (startAddr: string, sequence: Visit[]): number => {
-    if (sequence.length === 0) return 0;
+// Supports both Closed Loop (start==end) and Open Path (start!=end)
+const calculateTotalDistance = (startAddr: string, sequence: Visit[], endAddr: string): number => {
+    if (sequence.length === 0) return getDist(startAddr, endAddr);
 
     let total = getDist(startAddr, sequence[0].address);
     for (let i = 0; i < sequence.length - 1; i++) {
         total += getDist(sequence[i].address, sequence[i+1].address);
     }
-    // Return to start
-    total += getDist(sequence[sequence.length - 1].address, startAddr);
+    // Return to start or proceed to end target
+    total += getDist(sequence[sequence.length - 1].address, endAddr);
     return total;
 };
 
-export const solveTSP = (startAddress: string, visits: Visit[]): Visit[] => {
+export const solveTSP = (startAddress: string, visits: Visit[], endAddress?: string): Visit[] => {
+    // If endAddress is not provided, we assume a closed loop back to startAddress
+    const effectiveEnd = endAddress ?? startAddress;
+
     if (visits.length <= 1) return visits;
 
     // 1. NEAREST NEIGHBOR (Initial Solution)
@@ -66,7 +70,7 @@ export const solveTSP = (startAddress: string, visits: Visit[]): Visit[] => {
         iterations++;
 
         // The path array represents the sequence of visits.
-        // We simulate the full loop: Start -> Path[0]...Path[N] -> Start
+        // We simulate the full path: Start -> Path[0]...Path[N] -> End
         
         for (let i = 0; i < path.length - 1; i++) {
             for (let k = i + 1; k < path.length; k++) {
@@ -83,8 +87,8 @@ export const solveTSP = (startAddress: string, visits: Visit[]): Visit[] => {
                     ...path.slice(k + 1)
                 ];
 
-                const currentCost = calculateTotalDistance(startAddress, currentSeq);
-                const newCost = calculateTotalDistance(startAddress, newSeq);
+                const currentCost = calculateTotalDistance(startAddress, currentSeq, effectiveEnd);
+                const newCost = calculateTotalDistance(startAddress, newSeq, effectiveEnd);
 
                 if (newCost < currentCost) {
                     path = newSeq;

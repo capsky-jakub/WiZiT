@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Visit, Client, AppSettings, CalculationStatus, ReturnTrip, StartTrip, SavedRoute } from './types';
-import { VisitList } from './components/VisitList';
+import { VisitList, ResultMode } from './components/VisitList';
 import { VisitModal } from './components/VisitModal';
 import { SettingsModal } from './components/SettingsModal';
 import { HelpModal } from './components/HelpModal';
@@ -57,7 +57,7 @@ const App: React.FC = () => {
     isDarkMode: true,
     googleApiKey: DEFAULT_DEV_API_KEY,
     cacheExpirationDays: 30,
-    language: 'cs'
+    language: 'en'
   });
 
   const t = translations[settings.language];
@@ -80,6 +80,7 @@ const App: React.FC = () => {
   const [dbDeleteConfirming, setDbDeleteConfirming] = useState(false);
   const [planReloadConfirming, setPlanReloadConfirming] = useState(false);
   const [isApiReady, setIsApiReady] = useState(false);
+  const [resultMode, setResultMode] = useState<ResultMode>('standard'); 
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const importDbInputRef = useRef<HTMLInputElement>(null);
@@ -202,7 +203,7 @@ const App: React.FC = () => {
         const loaded = JSON.parse(savedSettings);
         if (!loaded.departureTime) loaded.departureTime = "08:00:00";
         if (!loaded.cacheExpirationDays) loaded.cacheExpirationDays = 30;
-        if (!loaded.language) loaded.language = 'cs';
+        if (!loaded.language) loaded.language = 'en';
         if (!loaded.googleApiKey && DEFAULT_DEV_API_KEY) loaded.googleApiKey = DEFAULT_DEV_API_KEY;
 
         setSettings(loaded);
@@ -315,6 +316,7 @@ const App: React.FC = () => {
     setStartTrip(null);
     setReturnTrip(null);
     setCalcStatus(CalculationStatus.IDLE);
+    setResultMode('standard'); // Reset mode
     if (isMapOpen) setIsMapOpen(false); 
     return cleared;
   };
@@ -645,7 +647,30 @@ const App: React.FC = () => {
   const handleLoadSampleData = async (data: any[]) => {
       try {
           const formatted = data.map(d => ({ name: d.name, surname: d.surname, address: d.address, order: d.order, visitDuration: d.visitDuration }));
-          await processAndAddVisits(formatted);
+          
+          // 1. Add to Visits
+          const addedVisits = await processAndAddVisits(formatted);
+
+          // 2. Add to Clients DB (Populate)
+          const newClients: Client[] = addedVisits.map(v => ({
+             id: uuid(),
+             name: v.name,
+             surname: v.surname,
+             address: v.address,
+             defaultDuration: v.visitDuration,
+             isAddressValid: v.isAddressValid, 
+             visitRepetition: { type: 'WEEKLY', daysOfWeek: [] }
+          }));
+
+          setClients(prev => {
+              // Simple duplicate check by name+surname
+              const existingKeys = new Set(prev.map(c => `${c.name}|${c.surname}`));
+              const uniqueNew = newClients.filter(c => !existingKeys.has(`${c.name}|${c.surname}`));
+              return [...prev, ...uniqueNew];
+          });
+          
+          setTimeout(handleTriggerSync, 100);
+
       } catch (err: any) { console.error("Sample Load Failed:", err.message); }
   };
 
@@ -656,7 +681,7 @@ const App: React.FC = () => {
     console.log(`Route "${route.name}" loaded manually.`);
   };
 
-  const processAndAddVisits = async (newRawVisits: Omit<Visit, 'id'>[]) => {
+  const processAndAddVisits = async (newRawVisits: Omit<Visit, 'id'>[]): Promise<Visit[]> => {
       let newVisits = newRawVisits.map(v => ({ ...v, id: uuid(), isSkipped: false }));
       const validatedVisits = await Promise.all(newVisits.map(async (v) => {
           const check = await checkAddress(v.address);
@@ -667,6 +692,7 @@ const App: React.FC = () => {
       const cleared = clearCalculation(sorted);
       setVisits(reindexVisits(cleared));
       console.log(`${t.msgImportSuccess} (${validatedVisits.length})`);
+      return validatedVisits;
   };
 
   const handleValidate = async () => {
@@ -697,7 +723,8 @@ const App: React.FC = () => {
       finally { setCalcStatus(CalculationStatus.IDLE); }
   };
 
-  const runCalculation = async (visitsOverride?: Visit[], commitOdometer: boolean = true) => {
+  // mode: 'standard' (Commit), 'preview' (No commit, Cyan), 'optimal' (No commit, Green)
+  const runCalculation = async (visitsOverride?: Visit[], mode: ResultMode = 'standard') => {
     if (!isApiReady) return;
     const sourceVisits = visitsOverride || visits;
     const activeVisits = sourceVisits.filter(v => !v.isSkipped);
@@ -709,6 +736,9 @@ const App: React.FC = () => {
     setStartTrip(null);
     setReturnTrip(null);
     
+    setResultMode(mode);
+    const commitOdometer = mode === 'standard';
+
     const processingAllVisits = [...sourceVisits];
     let currentOdo = settings.currentOdometer;
     let currentLoc = settings.startAddress;
@@ -757,8 +787,10 @@ const App: React.FC = () => {
         processingAllVisits[i].exactDistanceKm = distanceKm; 
         processingAllVisits[i].segmentDuration = durationSeconds;
         processingAllVisits[i].arrivalTime = arrivalTime;
-        if (commitOdometer) processingAllVisits[i].totalOdometer = currentOdo;
-        else processingAllVisits[i].totalOdometer = undefined;
+        
+        // Use calculated odometer regardless of commit flag to allow preview
+        processingAllVisits[i].totalOdometer = currentOdo;
+        
         setVisits([...processingAllVisits]); 
         currentLoc = routeDest;
         await sleep(50);
@@ -770,12 +802,11 @@ const App: React.FC = () => {
       currentOdo += roundedReturn;
       const returnArrivalTime = addSecondsToTime(currentClock, returnDur);
 
-      setReturnTrip({ address: settings.startAddress, segmentDistance: roundedReturn, exactDistanceKm: returnDist, segmentDuration: returnDur, arrivalTime: returnArrivalTime, totalOdometer: commitOdometer ? currentOdo : undefined });
+      setReturnTrip({ address: settings.startAddress, segmentDistance: roundedReturn, exactDistanceKm: returnDist, segmentDuration: returnDur, arrivalTime: returnArrivalTime, totalOdometer: currentOdo });
       setCalcStatus(CalculationStatus.COMPLETE);
+      
       if (commitOdometer) {
           setSettings(prev => ({ ...prev, currentOdometer: currentOdo }));
-          // Odometer update is a setting change, might want to sync if it's considered master data. 
-          // For now, let's treat it as transient until manually saved settings.
       }
       console.log("Route calculation completed successfully.");
     } catch (err: any) { console.error(err); setErrorMsg(err.message || "An unknown error occurred during calculation."); setCalcStatus(CalculationStatus.ERROR); setStartTrip(null); }
@@ -783,8 +814,13 @@ const App: React.FC = () => {
 
   const handleOptimizeRoute = async () => {
       if (!isApiReady) return;
+
       const activeVisits = visits.filter(v => !v.isSkipped);
+      // If less than 2 active visits, no reordering makes sense locally usually, 
+      // but strictly speaking a block of 2 needs optimization. 
+      // If only 1 visit total, optimize is no-op.
       if (activeVisits.length < 2) return;
+
       if (!settings.startAddress) return;
 
       setCalcStatus(CalculationStatus.ROUTING);
@@ -792,17 +828,57 @@ const App: React.FC = () => {
       setProgress({ current: 0, total: 100, message: 'Checking cached distances...' });
 
       try {
+          // Prepare matrix for all active points to ensure we have coverage for any permutation
           const allAddresses = [settings.startAddress, ...activeVisits.map(v => v.address)];
           await ensureMatrixData(allAddresses, (msg) => { setProgress(prev => ({ ...prev, message: msg })); });
-          setProgress({ current: 90, total: 100, message: 'Solving TSP...' });
+          
+          setProgress({ current: 90, total: 100, message: 'Optimizing route...' });
           await sleep(100);
-          const optimizedActive = solveTSP(settings.startAddress, activeVisits);
+
+          // Determine selection: if none selected, treat all as selected (legacy behavior)
+          const effectiveSelectedIds = selectedIds.size > 0 ? selectedIds : new Set(activeVisits.map(v => v.id));
+
+          let newActiveVisits = [...activeVisits];
+          let i = 0;
+          
+          while (i < newActiveVisits.length) {
+              if (effectiveSelectedIds.has(newActiveVisits[i].id)) {
+                  // Found start of a selected block
+                  let j = i;
+                  while (j < newActiveVisits.length && effectiveSelectedIds.has(newActiveVisits[j].id)) {
+                      j++;
+                  }
+                  // Block is [i ... j-1]
+                  const block = newActiveVisits.slice(i, j);
+                  
+                  if (block.length >= 2) {
+                      // Determine context
+                      const contextStart = (i === 0) ? settings.startAddress : newActiveVisits[i-1].address;
+                      // End context: if at end of list, wrap to start (Round Trip), else next node
+                      const contextEnd = (j === newActiveVisits.length) ? settings.startAddress : newActiveVisits[j].address;
+                      
+                      const optimizedBlock = solveTSP(contextStart, block, contextEnd);
+                      
+                      // Apply changes
+                      for (let k = 0; k < optimizedBlock.length; k++) {
+                          newActiveVisits[i + k] = optimizedBlock[k];
+                      }
+                  }
+                  i = j;
+              } else {
+                  i++;
+              }
+          }
+
           const skippedVisits = visits.filter(v => v.isSkipped);
-          const newOrder = [...optimizedActive, ...skippedVisits];
-          const reindexed = reindexVisits(clearCalculation(newOrder));
+          const finalOrder = [...newActiveVisits, ...skippedVisits];
+          
+          const reindexed = reindexVisits(clearCalculation(finalOrder));
           setVisits(reindexed);
-          await runCalculation(reindexed, false);
-          console.log("Route optimized successfully.");
+          
+          // Use 'optimal' mode for calculation to show Green results
+          await runCalculation(reindexed, 'optimal');
+          console.log("Route optimized successfully (Block-based).");
       } catch (err: any) { console.error(err); setErrorMsg(`${t.msgOptFail}: ${err.message}`); setCalcStatus(CalculationStatus.ERROR); }
   };
 
@@ -812,7 +888,7 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 md:p-8 transition-colors duration-200 font-sans">
-      <div className="max-w-screen-2xl mx-auto space-y-6">
+      <div className="w-[90%] max-w-none mx-auto space-y-6">
         <header className="flex flex-col md:flex-row md:items-center justify-between bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
           <div className="mb-4 md:mb-0">
             <h1 className="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
@@ -932,9 +1008,13 @@ const App: React.FC = () => {
                     </button>
                     <button type="button" onClick={handleOptimizeRoute} disabled={calcStatus === CalculationStatus.ROUTING || calcStatus === CalculationStatus.VALIDATING || shouldDisableActions} className={`px-3 py-2 text-white rounded-lg font-medium text-sm transition-colors shadow-sm flex items-center gap-2 ${calcStatus === CalculationStatus.ROUTING || calcStatus === CalculationStatus.VALIDATING || shouldDisableActions ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'}`}>
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                        <span className="hidden md:inline">{t.optimal}</span>
+                        <span className="hidden md:inline">{selectedIds.size > 0 ? `${t.optimal} (${selectedIds.size})` : t.optimal}</span>
                     </button>
-                    <button type="button" onClick={() => runCalculation(undefined, true)} disabled={calcStatus === CalculationStatus.ROUTING || calcStatus === CalculationStatus.VALIDATING || shouldDisableActions} className={`px-4 py-2 text-white rounded-lg font-medium text-sm transition-colors shadow-sm flex items-center gap-2 ${calcStatus === CalculationStatus.ROUTING || calcStatus === CalculationStatus.VALIDATING || shouldDisableActions ? 'bg-gray-400 cursor-not-allowed' : 'bg-google-blue hover:bg-blue-700'}`}>
+                    <button type="button" onClick={() => runCalculation(undefined, 'preview')} disabled={calcStatus === CalculationStatus.ROUTING || calcStatus === CalculationStatus.VALIDATING || shouldDisableActions} className={`px-3 py-2 text-white rounded-lg font-medium text-sm transition-colors shadow-sm flex items-center gap-2 ${calcStatus === CalculationStatus.ROUTING || calcStatus === CalculationStatus.VALIDATING || shouldDisableActions ? 'bg-gray-400 cursor-not-allowed' : 'bg-google-blue hover:bg-blue-700'}`}>
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                        <span className="hidden md:inline">{t.precalc}</span>
+                    </button>
+                    <button type="button" onClick={() => runCalculation(undefined, 'standard')} disabled={calcStatus === CalculationStatus.ROUTING || calcStatus === CalculationStatus.VALIDATING || shouldDisableActions} className={`px-4 py-2 text-gray-900 rounded-lg font-medium text-sm transition-colors shadow-sm flex items-center gap-2 ${calcStatus === CalculationStatus.ROUTING || calcStatus === CalculationStatus.VALIDATING || shouldDisableActions ? 'bg-gray-400 cursor-not-allowed' : 'bg-google-yellow hover:bg-yellow-500'}`}>
                       {calcStatus === CalculationStatus.ROUTING ? (
                          <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                       ) : (
@@ -950,6 +1030,7 @@ const App: React.FC = () => {
               onToggleSelect={(id) => { const newSet = new Set(selectedIds); if (newSet.has(id)) newSet.delete(id); else newSet.add(id); setSelectedIds(newSet); }}
               onToggleAll={(checked) => { if (checked) setSelectedIds(new Set(visits.map(v => v.id))); else setSelectedIds(new Set()); }}
               lang={settings.language} departureTime={settings.departureTime}
+              resultMode={resultMode}
             />
 
             {compilationInfo && (
