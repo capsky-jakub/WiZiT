@@ -21,6 +21,7 @@ let db: Firestore | undefined;
 const COLLECTION = "localstorage";
 
 // Initialize immediately
+// NOTE - test comment...
 try {
     if (getApps().length > 0) {
         app = getApps()[0];
