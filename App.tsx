@@ -123,17 +123,40 @@ const App: React.FC = () => {
             setCompilationInfo("Configuration synced from Cloud");
             setTimeout(() => setCompilationInfo(null), 3000);
         }
-    } catch (e) {
-        console.error("Sync down error", e);
+    } catch (e: any) {
+        if (e.message === "PERMISSION_DENIED") {
+            console.warn("User not authorized for Firestore access.");
+            setCompilationInfo("Sync unavailable: Unauthorized");
+            setTimeout(() => setCompilationInfo(null), 3000);
+        } else {
+            console.error("Sync down error", e);
+        }
+    } finally {
+        setIsSyncing(false);
     }
-    setIsSyncing(false);
   };
 
   const handleTriggerSync = async () => {
       if (user) {
           setIsSyncing(true);
-          await FirebaseService.syncUp(user);
-          setIsSyncing(false);
+          try {
+              // We try to sync UP first
+              await FirebaseService.syncUp(user);
+              // Then sync DOWN to ensure consistency (optional, but good for versioning)
+              await FirebaseService.syncDown(user);
+              
+              setCompilationInfo("Sync completed successfully");
+              setTimeout(() => setCompilationInfo(null), 2000);
+          } catch (e: any) {
+              if (e.message === "PERMISSION_DENIED") {
+                  alert("Access Denied: Your account is not authorized to sync data with the cloud database.");
+              } else {
+                  console.error("Manual sync failed", e);
+                  alert(`Sync failed: ${e.message}`);
+              }
+          } finally {
+              setIsSyncing(false);
+          }
       }
   };
 

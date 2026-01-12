@@ -98,8 +98,11 @@ export const FirebaseService = {
       localStorage.setItem('odocalc_last_modified', payload.timestamp.toString());
       
       console.log(`[Cloud] Synced UP successfully for ${user.email}`);
-    } catch (e) {
+    } catch (e: any) {
       console.error("[Cloud] Sync UP failed", e);
+      if (e.code === 'permission-denied' || (e.message && e.message.includes('permission-denied'))) {
+          throw new Error("PERMISSION_DENIED");
+      }
       throw e;
     }
   },
@@ -133,8 +136,11 @@ export const FirebaseService = {
           return { updated: true, data: cloudData };
         }
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error("[Cloud] Sync DOWN failed", e);
+      if (e.code === 'permission-denied' || (e.message && e.message.includes('permission-denied'))) {
+          throw new Error("PERMISSION_DENIED");
+      }
       throw e;
     }
     return { updated: false };
