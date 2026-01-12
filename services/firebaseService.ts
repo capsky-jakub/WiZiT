@@ -100,13 +100,7 @@ export const FirebaseService = {
       console.log(`[Cloud] Synced UP successfully for ${user.email}`);
     } catch (e: any) {
       console.error("[Cloud] Sync UP failed", e);
-      const msg = e.message || '';
-      // Check for code 'permission-denied' OR specific message text from Lite SDK
-      if (
-          e.code === 'permission-denied' || 
-          msg.includes('permission-denied') || 
-          msg.includes('Missing or insufficient permissions')
-      ) {
+      if (e.code === 'permission-denied' || (e.message && e.message.includes('permission-denied'))) {
           throw new Error("PERMISSION_DENIED");
       }
       throw e;
@@ -144,13 +138,7 @@ export const FirebaseService = {
       }
     } catch (e: any) {
       console.error("[Cloud] Sync DOWN failed", e);
-      const msg = e.message || '';
-      // Check for code 'permission-denied' OR specific message text from Lite SDK
-      if (
-          e.code === 'permission-denied' || 
-          msg.includes('permission-denied') || 
-          msg.includes('Missing or insufficient permissions')
-      ) {
+      if (e.code === 'permission-denied' || (e.message && e.message.includes('permission-denied'))) {
           throw new Error("PERMISSION_DENIED");
       }
       throw e;

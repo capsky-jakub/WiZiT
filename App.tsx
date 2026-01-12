@@ -47,7 +47,6 @@ const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isFirebaseReady, setIsFirebaseReady] = useState(false);
-  const [permissionDenied, setPermissionDenied] = useState(false);
   
   const [settings, setSettings] = useState<AppSettings>({
     startAddress: "Dlouhá 1113, 530 06 Pardubice, Česko",
@@ -97,12 +96,7 @@ const App: React.FC = () => {
         const unsubscribe = FirebaseService.subscribeAuth((currentUser) => {
             setUser(currentUser);
             if (currentUser) {
-                // Reset permission state on new login
-                setPermissionDenied(false); 
-                // Initial sync attempt, catch unhandled promise rejection here
-                handleSyncFromCloud(currentUser).catch(err => console.error("Unhandled sync error", err));
-            } else {
-                setPermissionDenied(false);
+                handleSyncFromCloud(currentUser);
             }
         });
         return () => unsubscribe();
@@ -132,8 +126,7 @@ const App: React.FC = () => {
     } catch (e: any) {
         if (e.message === "PERMISSION_DENIED") {
             console.warn("User not authorized for Firestore access.");
-            setPermissionDenied(true);
-            setCompilationInfo("Sync disabled: Unauthorized");
+            setCompilationInfo("Sync unavailable: Unauthorized");
             setTimeout(() => setCompilationInfo(null), 3000);
         } else {
             console.error("Sync down error", e);
@@ -145,11 +138,6 @@ const App: React.FC = () => {
 
   const handleTriggerSync = async () => {
       if (user) {
-          if (permissionDenied) {
-              alert("Access Denied: You are not authorized to sync.");
-              return;
-          }
-
           setIsSyncing(true);
           try {
               // We try to sync UP first
@@ -161,7 +149,6 @@ const App: React.FC = () => {
               setTimeout(() => setCompilationInfo(null), 2000);
           } catch (e: any) {
               if (e.message === "PERMISSION_DENIED") {
-                  setPermissionDenied(true);
                   alert("Access Denied: Your account is not authorized to sync data with the cloud database.");
               } else {
                   console.error("Manual sync failed", e);
@@ -189,7 +176,6 @@ const App: React.FC = () => {
   const handleLogout = async () => {
       await FirebaseService.signOut();
       setUser(null);
-      setPermissionDenied(false);
   };
 
   // --- Start of Logic ---
@@ -949,24 +935,9 @@ const App: React.FC = () => {
             <div className="flex items-center gap-1 bg-gray-50 dark:bg-gray-700/50 p-1 rounded-lg border border-gray-200 dark:border-gray-600">
                 {/* Auth/Sync Button */}
                 {user ? (
-                    <div className={`flex items-center gap-1 p-1 rounded-md border ${permissionDenied ? 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800' : 'bg-blue-50 border-blue-100 dark:bg-blue-900/30 dark:border-blue-800'}`}>
-                        <button 
-                            onClick={handleTriggerSync} 
-                            disabled={permissionDenied || isSyncing}
-                            className={`p-2 rounded-md transition-colors ${
-                                permissionDenied 
-                                    ? 'text-red-400 cursor-not-allowed' 
-                                    : isSyncing 
-                                        ? 'animate-spin text-blue-600' 
-                                        : 'text-blue-600 hover:bg-blue-100 dark:text-blue-400 dark:hover:bg-blue-800'
-                            }`} 
-                            title={permissionDenied ? "Sync Disabled: Unauthorized" : "Sync Now"}
-                        >
-                            {permissionDenied ? (
-                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
-                            ) : (
-                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-                            )}
+                    <div className="flex items-center gap-1 bg-blue-50 dark:bg-blue-900/30 p-1 rounded-md border border-blue-100 dark:border-blue-800">
+                        <button onClick={handleTriggerSync} className={`p-2 rounded-md transition-colors ${isSyncing ? 'animate-spin text-blue-600' : 'text-blue-600 hover:bg-blue-100 dark:text-blue-400 dark:hover:bg-blue-800'}`} title="Sync Now">
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
                         </button>
                         <button onClick={handleLogout} className="p-2 text-blue-600 hover:bg-blue-100 dark:text-blue-400 dark:hover:bg-blue-800 rounded-md transition-colors" title={`Logout ${user.email}`}>
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
