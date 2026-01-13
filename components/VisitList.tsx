@@ -194,17 +194,17 @@ const SortableRow: React.FC<SortableRowProps> = ({ visit, isSelected, onToggleSe
            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
         </button>
       </td>
-      <td {...listeners} className="cursor-move px-4 py-1 whitespace-nowrap text-base text-gray-500 dark:text-gray-400 font-mono text-center touch-manipulation">
+      <td {...listeners} className="cursor-move px-2 py-1 whitespace-nowrap text-base text-gray-500 dark:text-gray-400 font-mono text-center touch-manipulation">
         {visit.order > 0 ? visit.order : '-'}
       </td>
-      <td {...listeners} className="cursor-move px-4 py-1 whitespace-nowrap text-base font-medium text-gray-900 dark:text-white touch-manipulation">
+      <td {...listeners} className="cursor-move px-2 py-1 whitespace-nowrap text-base font-medium text-gray-900 dark:text-white touch-manipulation">
         {visit.name}
       </td>
-      <td {...listeners} className="cursor-move px-4 py-1 whitespace-nowrap text-base text-gray-900 dark:text-gray-200 touch-manipulation">
+      <td {...listeners} className="cursor-move px-2 py-1 whitespace-nowrap text-base text-gray-900 dark:text-gray-200 touch-manipulation">
         {visit.surname}
       </td>
-      <td {...listeners} className="cursor-move px-4 py-1 whitespace-nowrap text-base text-gray-500 dark:text-gray-400 max-w-xs truncate touch-manipulation" title={visit.address}>
-        {visit.address}
+      <td {...listeners} className="cursor-move px-2 py-1 text-base text-gray-500 dark:text-gray-400 touch-manipulation" title={visit.address}>
+        <div className="truncate max-w-sm md:max-w-none">{visit.address}</div>
       </td>
       <td className="px-2 py-1 whitespace-nowrap text-center">
         {visit.isAddressValid === true && <svg className="w-5 h-5 text-green-500 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>}
@@ -213,43 +213,43 @@ const SortableRow: React.FC<SortableRowProps> = ({ visit, isSelected, onToggleSe
       </td>
       
       {/* Odometer */}
-      <td className={`px-4 py-1 whitespace-nowrap text-base text-right font-mono ${odometerClass}`}>
+      <td className={`px-2 py-1 whitespace-nowrap text-base text-right font-mono ${odometerClass}`}>
         {showOdometer ? visit.totalOdometer : '—'}
       </td>
       
-      {/* Distance (Merged) */}
-      <td className={`px-4 py-1 whitespace-nowrap text-base text-right font-mono ${resultClass}`}>
+      {/* Distance (Formatted: +Xkm /Y) */}
+      <td className={`px-2 py-1 whitespace-nowrap text-base text-right font-mono ${resultClass}`}>
         {hasCalc ? (
             <>
-                +{visit.segmentDistance}km <span className="text-xs">({formatExactDist(visit.exactDistanceKm)}km)</span>
+                +{visit.segmentDistance}km <span className="text-xs">/{formatExactDist(visit.exactDistanceKm)}</span>
             </>
         ) : '—'}
       </td>
       
       {/* Travel Time */}
-      <td className={`px-4 py-1 whitespace-nowrap text-base text-right font-mono ${hasCalc ? resultClass : 'text-gray-300 dark:text-gray-600'}`}>
+      <td className={`px-2 py-1 whitespace-nowrap text-base text-right font-mono ${hasCalc ? resultClass : 'text-gray-300 dark:text-gray-600'}`}>
         {hasCalc ? formatDuration(visit.segmentDuration) : '—'}
       </td>
       
       {/* Arrival Time (Calculated) */}
-      <td className={`px-4 py-1 whitespace-nowrap text-base text-right font-mono ${visit.arrivalTime ? resultClass : 'text-gray-300 dark:text-gray-600'}`}>
+      <td className={`px-2 py-1 whitespace-nowrap text-base text-right font-mono ${visit.arrivalTime ? resultClass : 'text-gray-300 dark:text-gray-600'}`}>
          {formatTime(visit.arrivalTime)}
       </td>
 
       {/* Planned Time (Static) */}
-      <td className="px-4 py-1 whitespace-nowrap text-base text-right font-mono text-gray-500 dark:text-gray-400">
+      <td className="px-2 py-1 whitespace-nowrap text-base text-right font-mono text-gray-500 dark:text-gray-400">
          {visit.preferredTime || '—'}
       </td>
 
       {/* Pause (Diff) */}
-      <td className={`px-4 py-1 whitespace-nowrap text-base text-right font-mono ${pauseData?.colorClass || 'text-gray-300 dark:text-gray-600'}`}>
+      <td className={`px-2 py-1 whitespace-nowrap text-base text-right font-mono ${pauseData?.colorClass || 'text-gray-300 dark:text-gray-600'}`}>
          {pauseData ? pauseData.label : '—'}
       </td>
       
-      <td className={`px-4 py-1 whitespace-nowrap text-base text-right font-mono ${visit.visitDuration > 0 ? 'text-gray-700 dark:text-gray-300' : 'text-gray-300 dark:text-gray-600'}`}>
+      <td className={`px-2 py-1 whitespace-nowrap text-base text-right font-mono ${visit.visitDuration > 0 ? 'text-gray-700 dark:text-gray-300' : 'text-gray-300 dark:text-gray-600'}`}>
          {formatDuration((visit.visitDuration || 0) * 60)}
       </td>
-      <td className="px-4 py-1 whitespace-nowrap text-right text-base font-medium">
+      <td className="px-2 py-1 whitespace-nowrap text-right text-base font-medium">
         <div className="flex justify-end items-center gap-2">
             <button 
               type="button" onClick={(e) => { e.stopPropagation(); onEdit(visit); }} onPointerDown={(e) => e.stopPropagation()}
@@ -275,7 +275,7 @@ const SortableRow: React.FC<SortableRowProps> = ({ visit, isSelected, onToggleSe
 
 // --- Main List Component ---
 export const VisitList: React.FC<VisitListProps> = ({ 
-  visits, startTrip, returnTrip, selectedIds, onToggleSelect, onToggleAll, onEdit, onReorder, onToggleSkip, onDelete, lang, departureTime, resultMode = 'standard'
+  visits, startTrip, returnTrip, selectedIds, onToggleSelect, onToggleAll, onEdit, onReorder, onToggleSkip, onDelete, lang, departureTime, resultMode = 'standard' as ResultMode
 }) => {
   const allSelected = visits.length > 0 && selectedIds.size === visits.length;
   const t = translations[lang];
@@ -304,8 +304,8 @@ export const VisitList: React.FC<VisitListProps> = ({
   const showTotals = startTrip && (activeVisits.length > 0 || returnTrip);
 
   // Result classes for Return Trip
-  const returnResultClass = getResultColor(resultMode, !returnTrip);
-  const returnOdometerClass = getResultColor(resultMode, !returnTrip?.totalOdometer);
+  const returnResultClass = getResultColor(resultMode as ResultMode, !returnTrip);
+  const returnOdometerClass = getResultColor(resultMode as ResultMode, !returnTrip?.totalOdometer);
 
   // Theme for Totals Row
   const totalTheme = React.useMemo(() => {
@@ -344,19 +344,19 @@ export const VisitList: React.FC<VisitListProps> = ({
                 <input type="checkbox" checked={allSelected} onChange={(e) => onToggleAll(e.target.checked)} className="h-4 w-4 text-google-blue focus:ring-google-blue border-gray-300 dark:border-gray-600 rounded cursor-pointer dark:bg-gray-700" />
               </th>
               <th className="px-2 py-1 text-center text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-8">{t.colSkip}</th>
-              <th className="px-4 py-1 text-center text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-16">{t.colOrder}</th>
-              <th className="px-4 py-1 text-left text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t.colName}</th>
-              <th className="px-4 py-1 text-left text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t.colSurname}</th>
-              <th className="px-4 py-1 text-left text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/3">{t.colAddress}</th>
-              <th className="px-4 py-1 text-center text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-12">{t.colValid}</th>
-              <th className="px-4 py-1 text-right text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-gray-800 dark:text-gray-200">{t.colOdometer}</th>
-              <th className="px-4 py-1 text-right text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t.colDistance}</th>
-              <th className="px-4 py-1 text-right text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t.colTime}</th>
-              <th className="px-4 py-1 text-right text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t.colPlan}</th>
-              <th className="px-4 py-1 text-right text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t.colPlanned}</th>
-              <th className="px-4 py-1 text-right text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t.colPause}</th>
-              <th className="px-4 py-1 text-right text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t.colDurat}</th>
-              <th className="px-4 py-1 text-right text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t.colActions}</th>
+              <th className="px-2 py-1 text-center text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-12">{t.colOrder}</th>
+              <th className="px-2 py-1 text-left text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t.colName}</th>
+              <th className="px-2 py-1 text-left text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t.colSurname}</th>
+              <th className="px-2 py-1 text-left text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t.colAddress}</th>
+              <th className="px-2 py-1 text-center text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-12">{t.colValid}</th>
+              <th className="px-2 py-1 text-right text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-gray-800 dark:text-gray-200">{t.colOdometer}</th>
+              <th className="px-2 py-1 text-right text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t.colDistance}</th>
+              <th className="px-2 py-1 text-right text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t.colTime}</th>
+              <th className="px-2 py-1 text-right text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t.colPlan}</th>
+              <th className="px-2 py-1 text-right text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t.colPlanned}</th>
+              <th className="px-2 py-1 text-right text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t.colPause}</th>
+              <th className="px-2 py-1 text-right text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t.colDurat}</th>
+              <th className="px-2 py-1 text-right text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t.colActions}</th>
             </tr>
           </thead>
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -364,19 +364,20 @@ export const VisitList: React.FC<VisitListProps> = ({
             {startTrip && (
               <tr className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
                 <td></td><td></td><td></td>
-                <td className="px-4 py-1 text-center text-base font-bold text-gray-500 dark:text-gray-400">{t.start}</td>
-                <td colSpan={2} className="px-4 py-1 text-base font-bold text-gray-500 dark:text-gray-400">{t.departure}</td>
-                <td className="px-4 py-1 text-base text-gray-900 dark:text-gray-100 truncate" title={startTrip.address}>{startTrip.address}</td>
+                {/* START/END text disposed */}
+                <td className="px-2 py-1 text-center text-base font-bold text-gray-500 dark:text-gray-400"></td>
+                <td colSpan={2} className="px-2 py-1 text-base font-bold text-gray-500 dark:text-gray-400">{t.departure}</td>
+                <td className="px-2 py-1 text-base text-gray-900 dark:text-gray-100 truncate max-w-sm md:max-w-none" title={startTrip.address}>{startTrip.address}</td>
                 <td className="px-2 py-1 text-center"><svg className="w-5 h-5 text-green-500 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg></td>
                 {/* Start Odometer is Fixed Input -> Gray/Black */}
-                <td className="px-4 py-1 text-right text-base font-bold text-gray-900 dark:text-gray-100 font-mono">{startTrip.odometer}</td>
-                <td className="px-4 py-1 text-right text-base font-bold text-gray-300 dark:text-gray-600 font-mono"></td>
-                <td className="px-4 py-1 text-right text-base font-bold text-gray-300 dark:text-gray-600 font-mono"></td>
+                <td className="px-2 py-1 text-right text-base font-bold text-gray-900 dark:text-gray-100 font-mono">{startTrip.odometer}</td>
+                <td className="px-2 py-1 text-right text-base font-bold text-gray-300 dark:text-gray-600 font-mono"></td>
+                <td className="px-2 py-1 text-right text-base font-bold text-gray-300 dark:text-gray-600 font-mono"></td>
                 {/* Start Plan is Fixed Input -> Gray/Blue-Gray/Indigo-Gray, keeping neutral or slightly distinct */}
-                <td className="px-4 py-1 text-right text-base font-bold text-gray-600 dark:text-gray-400 font-mono whitespace-nowrap">{formatTime(departureTime)}</td>
-                <td className="px-4 py-1 text-right text-base font-bold text-gray-300 dark:text-gray-600 font-mono"></td>
-                <td className="px-4 py-1 text-right text-base font-bold text-gray-300 dark:text-gray-600 font-mono"></td>
-                <td className="px-4 py-1 text-right text-base font-bold text-gray-300 dark:text-gray-600 font-mono"></td>
+                <td className="px-2 py-1 text-right text-base font-bold text-gray-600 dark:text-gray-400 font-mono whitespace-nowrap">{formatTime(departureTime)}</td>
+                <td className="px-2 py-1 text-right text-base font-bold text-gray-300 dark:text-gray-600 font-mono"></td>
+                <td className="px-2 py-1 text-right text-base font-bold text-gray-300 dark:text-gray-600 font-mono"></td>
+                <td className="px-2 py-1 text-right text-base font-bold text-gray-300 dark:text-gray-600 font-mono"></td>
                 <td></td>
               </tr>
             )}
@@ -398,22 +399,23 @@ export const VisitList: React.FC<VisitListProps> = ({
             {returnTrip && visits.length > 0 && (
               <tr className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
                 <td colSpan={3}></td>
-                <td className="px-4 py-1 text-center text-base font-bold text-gray-500 dark:text-gray-400">{t.end}</td>
-                <td colSpan={2} className="px-4 py-1 text-base font-bold text-gray-500 dark:text-gray-400">{t.return}</td>
-                <td className="px-4 py-1 text-base text-gray-900 dark:text-gray-100 truncate" title={returnTrip.address}>{returnTrip.address}</td>
+                {/* START/END text disposed */}
+                <td className="px-2 py-1 text-center text-base font-bold text-gray-500 dark:text-gray-400"></td>
+                <td colSpan={2} className="px-2 py-1 text-base font-bold text-gray-500 dark:text-gray-400">{t.return}</td>
+                <td className="px-2 py-1 text-base text-gray-900 dark:text-gray-100 truncate max-w-sm md:max-w-none" title={returnTrip.address}>{returnTrip.address}</td>
                 <td className="px-2 py-1 text-center"><svg className="w-5 h-5 text-green-500 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg></td>
                 
-                <td className={`px-4 py-1 text-right text-base font-mono ${returnOdometerClass}`}>
+                <td className={`px-2 py-1 text-right text-base font-mono ${returnOdometerClass}`}>
                     {returnTrip.totalOdometer !== undefined ? returnTrip.totalOdometer : '—'}
                 </td>
-                <td className={`px-4 py-1 whitespace-nowrap text-right text-base font-mono ${returnResultClass}`}>
-                    +{returnTrip.segmentDistance}km <span className="text-xs">({formatExactDist(returnTrip.exactDistanceKm)}km)</span>
+                <td className={`px-2 py-1 whitespace-nowrap text-right text-base font-mono ${returnResultClass}`}>
+                    +{returnTrip.segmentDistance}km <span className="text-xs">/{formatExactDist(returnTrip.exactDistanceKm)}</span>
                 </td>
-                 <td className={`px-4 py-1 text-right text-base font-mono ${returnResultClass}`}>{formatDuration(returnTrip.segmentDuration)}</td>
-                <td className={`px-4 py-1 text-right text-base font-mono ${returnResultClass}`}>{formatTime(returnTrip.arrivalTime)}</td>
-                <td className="px-4 py-1 text-right text-base font-bold text-gray-300 dark:text-gray-600 font-mono"></td>
-                <td className="px-4 py-1 text-right text-base font-bold text-gray-300 dark:text-gray-600 font-mono"></td>
-                <td className="px-4 py-1 text-right text-base font-bold text-gray-300 dark:text-gray-600 font-mono"></td>
+                 <td className={`px-2 py-1 text-right text-base font-mono ${returnResultClass}`}>{formatDuration(returnTrip.segmentDuration)}</td>
+                <td className={`px-2 py-1 text-right text-base font-mono ${returnResultClass}`}>{formatTime(returnTrip.arrivalTime)}</td>
+                <td className="px-2 py-1 text-right text-base font-bold text-gray-300 dark:text-gray-600 font-mono"></td>
+                <td className="px-2 py-1 text-right text-base font-bold text-gray-300 dark:text-gray-600 font-mono"></td>
+                <td className="px-2 py-1 text-right text-base font-bold text-gray-300 dark:text-gray-600 font-mono"></td>
                 <td></td>
               </tr>
             )}
@@ -421,17 +423,17 @@ export const VisitList: React.FC<VisitListProps> = ({
              {showTotals && (
               <tr className={totalTheme.row}>
                 <td colSpan={3}></td>
-                <td className={`px-4 py-2 text-center text-lg font-black uppercase ${totalTheme.label}`}>{t.total}</td>
+                <td className={`px-2 py-2 text-center text-lg font-black uppercase ${totalTheme.label}`}>{t.total}</td>
                 <td colSpan={4}></td>
-                <td className={`px-4 py-2 text-right text-lg font-bold font-mono ${totalTheme.text}`}></td>
-                <td className={`px-4 py-2 whitespace-nowrap text-right text-lg font-black font-mono text-base ${totalTheme.text}`}>
-                    {totalDistance}km <span className="text-xs">({formatExactDist(totalExactDistance)}km)</span>
+                <td className={`px-2 py-2 text-right text-lg font-bold font-mono ${totalTheme.text}`}></td>
+                <td className={`px-2 py-2 whitespace-nowrap text-right text-lg font-black font-mono text-base ${totalTheme.text}`}>
+                    {totalDistance}km <span className="text-xs">/{formatExactDist(totalExactDistance)}</span>
                 </td>
-                <td className={`px-4 py-2 text-right text-lg font-black font-mono text-base whitespace-nowrap ${totalTheme.text}`}>{formatDuration(totalDuration)}</td>
-                <td className={`px-4 py-2 text-right text-lg font-black font-mono text-base whitespace-nowrap ${totalTheme.text}`}>{formatTime(returnTrip?.arrivalTime)}</td>
-                <td className={`px-4 py-2 text-right text-lg font-black font-mono text-base whitespace-nowrap ${totalTheme.text}`}></td>
-                <td className={`px-4 py-2 text-right text-lg font-black font-mono text-base whitespace-nowrap ${totalTheme.text}`}></td>
-                <td className={`px-4 py-2 text-right text-lg font-black font-mono text-base whitespace-nowrap ${totalTheme.text}`}>{formatDuration(totalServiceTime)}</td>
+                <td className={`px-2 py-2 text-right text-lg font-black font-mono text-base whitespace-nowrap ${totalTheme.text}`}>{formatDuration(totalDuration)}</td>
+                <td className={`px-2 py-2 text-right text-lg font-black font-mono text-base whitespace-nowrap ${totalTheme.text}`}>{formatTime(returnTrip?.arrivalTime)}</td>
+                <td className={`px-2 py-2 text-right text-lg font-black font-mono text-base whitespace-nowrap ${totalTheme.text}`}></td>
+                <td className={`px-2 py-2 text-right text-lg font-black font-mono text-base whitespace-nowrap ${totalTheme.text}`}></td>
+                <td className={`px-2 py-2 text-right text-lg font-black font-mono text-base whitespace-nowrap ${totalTheme.text}`}>{formatDuration(totalServiceTime)}</td>
                 <td></td>
               </tr>
             )}

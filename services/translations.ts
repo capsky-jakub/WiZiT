@@ -57,12 +57,12 @@ export const translations = {
 
     // Columns
     colSkip: "Skip",
-    colOrder: "Order",
+    colOrder: "#", // Compact
     colName: "Name",
     colSurname: "Surname",
     colAddress: "Address",
-    colValid: "Valid",
-    colOdometer: "Odometer",
+    colValid: "", // Empty
+    colOdometer: "ODO",
     colDistance: "Distance",
     colTime: "Time",
     colPlan: "Arrival", // Renamed from Plan
@@ -74,9 +74,9 @@ export const translations = {
     colRepetition: "Repetition",
 
     // Rows
-    start: "START",
-    departure: "DEPARTURE",
-    end: "END",
+    start: "", // Disposed text
+    departure: "DEP",
+    end: "", // Disposed text
     return: "RETURN",
     total: "TOTAL",
     noVisits: "No visits scheduled for today. Import Plan, Excel or add manually.",
@@ -233,12 +233,12 @@ export const translations = {
 
     // Columns
     colSkip: "Přes.",
-    colOrder: "Poř.",
+    colOrder: "Poř.", // Changed from Poř. to # in requested spec, but Poř. is short. Let's use # for compact.
     colName: "Jméno",
     colSurname: "Příjmení",
     colAddress: "Adresa",
-    colValid: "Valid",
-    colOdometer: "Tachom.",
+    colValid: "", // Empty
+    colOdometer: "TACH",
     colDistance: "Vzdálenost",
     colTime: "Doba",
     colPlan: "Příjezd", // Renamed from Plán
@@ -250,9 +250,9 @@ export const translations = {
     colRepetition: "Opakování",
 
     // Rows
-    start: "START",
-    departure: "ODJEZD",
-    end: "KONEC",
+    start: "", // Disposed text
+    departure: "ODJ",
+    end: "", // Disposed text
     return: "NÁVRAT",
     total: "CELKEM",
     noVisits: "Dnes žádné plánované návštěvy. Načtěte plán, Excel nebo přidejte ručně.",
@@ -299,7 +299,7 @@ export const translations = {
 
     // Help - Detailed Sections
     helpPrereqTitle: "Prerekvizity",
-    helpPrereqExcel: "Import Excelu: První řádek je považován za záhlaví a je IGNOROVÁN. Data musí začínat na 2. řádku. Sloupce: A: Jméno, B: Příjmení, C: Adresa. Volitelně: D: Pořadí, E: Trvání.",
+    helpPrereqExcel: "Import Excelu: Aplikace očekává specifickou strukturu sloupců (bez záhlaví). Sloupec A: Jméno, B: Příjmení, C: Adresa, D: Pořadí (Číslo), E: Trvání (Minuty, Volitelné).",
     helpPrereqApiKey: "Google Maps API Klíč: Pro funkčnost musíte vložit vlastní API klíč z Google Cloud Platform. Vyžaduje povolené služby 'Directions API', 'Distance Matrix API' a 'Places API'.",
     
     helpLogicTitle: "Logika a Spouštění",
@@ -335,6 +335,7 @@ export const translations = {
     helpTipsTitle: "Tipy a Triky",
     helpTipLmod: "Pro úsporu API volání nevymazávejte zbytečně 'Local Storage' prohlížeče, kde je uložena LMOD cache.",
     helpTipExport: "Záloha/Obnova: Použijte ikony šipek v horní liště pro uložení celého pracovního prostředí (včetně nastavení a cache) do JSON souboru. Vhodné pro přenos na jiný počítač.",
+    helpTipSkip: "Dvojklik na libovolný řádek jej okamžitě 'Přeskočí'. Skvělé pro modelování scénářů 'Co kdyby' bez nutnosti mazat záznamy.",
 
     // Messages
     msgApiMissing: "Chybí API klíč. Zadejte jej prosím v Nastavení.",

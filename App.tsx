@@ -70,6 +70,7 @@ const App: React.FC = () => {
   const [isMapOpen, setIsMapOpen] = useState(false);
   const [isSavedRoutesOpen, setIsSavedRoutesOpen] = useState(false);
   const [compilationInfo, setCompilationInfo] = useState<string | null>(null);
+  const [msgType, setMsgType] = useState<'success' | 'warning'>('success');
   
   const [editingItem, setEditingItem] = useState<Visit | Client | null>(null);
   const [editMode, setEditMode] = useState<'visit' | 'client'>('visit');
@@ -130,6 +131,7 @@ const App: React.FC = () => {
                         .catch(() => setIsApiReady(false));
                 }
             }
+            setMsgType('success');
             setCompilationInfo("Configuration synced from Cloud");
             setTimeout(() => setCompilationInfo(null), 3000);
         }
@@ -138,15 +140,18 @@ const App: React.FC = () => {
     } catch (e: any) {
         if (e.message === "PERMISSION_DENIED") {
             console.warn("User not authorized for Firestore access.");
-            alert("Authorization Failed: You do not have access to the cloud database.");
             
-            // Auto Logout Logic
+            // Auto Logout Logic but show message in UI instead of alert
+            setMsgType('warning');
+            setCompilationInfo("Authorization Failed: You do not have access to the cloud database.");
+            
             await FirebaseService.signOut();
-            setUser(null); // Force state clear immediately
-            return; // Don't process finally block state updates that might conflict
+            setUser(null); 
+            // The message will persist for a few seconds
+            setTimeout(() => setCompilationInfo(null), 5000);
+            return;
         } else {
             console.error("Sync down error", e);
-            // On other errors (e.g. network), we stop verifying and let user see the UI (perhaps to retry)
             setIsVerifying(false);
         }
     } finally {
@@ -163,13 +168,16 @@ const App: React.FC = () => {
               // Then sync DOWN to ensure consistency (optional, but good for versioning)
               await FirebaseService.syncDown(user);
               
+              setMsgType('success');
               setCompilationInfo("Sync completed successfully");
               setTimeout(() => setCompilationInfo(null), 2000);
           } catch (e: any) {
               if (e.message === "PERMISSION_DENIED") {
-                  alert("Access Revoked: You no longer have access.");
+                  setMsgType('warning');
+                  setCompilationInfo("Access Revoked: You no longer have access.");
                   await FirebaseService.signOut();
                   setUser(null);
+                  setTimeout(() => setCompilationInfo(null), 5000);
               } else {
                   console.error("Manual sync failed", e);
                   alert(`Sync failed: ${e.message}`);
@@ -296,6 +304,7 @@ const App: React.FC = () => {
                 setVisits(dayRoute.visits);
                 if (dayRoute.startTrip) setStartTrip(dayRoute.startTrip);
                 if (dayRoute.returnTrip) setReturnTrip(dayRoute.returnTrip);
+                setMsgType('success');
                 setCompilationInfo(`Auto-loaded saved route: ${dayRoute.name}`);
                 setTimeout(() => setCompilationInfo(null), 5000);
                 routeLoaded = true;
@@ -309,6 +318,7 @@ const App: React.FC = () => {
         const dailyRoute = loadDailyPlan(dbClients);
         setVisits(dailyRoute);
         if (dailyRoute.length > 0) {
+                setMsgType('success');
                 setCompilationInfo(`${translations[currentSettings.language].msgDailyCompilation}: ${dailyRoute.length}`);
                 setTimeout(() => setCompilationInfo(null), 5000);
         }
@@ -596,6 +606,7 @@ const App: React.FC = () => {
           const dailyRoute = loadDailyPlan(sourceClients);
           const cleared = clearCalculation(dailyRoute);
           setVisits(reindexVisits(cleared));
+          setMsgType('success');
           setCompilationInfo(t.msgPlanReloaded);
           setTimeout(() => setCompilationInfo(null), 3000);
           setPlanReloadConfirming(false);
@@ -931,7 +942,7 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 md:p-8 transition-colors duration-200 font-sans">
-      <div className="w-[90%] max-w-none mx-auto space-y-6">
+      <div className="w-[95%] max-w-none mx-auto space-y-6">
         <header className="flex flex-col md:flex-row md:items-center justify-between bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
           <div className="mb-4 md:mb-0">
             <h1 className="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
@@ -1084,11 +1095,23 @@ const App: React.FC = () => {
             />
 
             {compilationInfo && (
-              <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 p-4 rounded-lg flex items-center gap-3 animate-fade-in-down">
-                 <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+              <div className={`
+                  p-4 rounded-lg flex items-center gap-3 animate-fade-in-down border
+                  ${msgType === 'warning' 
+                      ? 'bg-yellow-50 dark:bg-yellow-900/30 border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-300' 
+                      : 'bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-800 text-green-700 dark:text-green-300'
+                  }
+              `}>
+                 {msgType === 'warning' ? (
+                     <svg className="w-6 h-6 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                 ) : (
+                     <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                 )}
                  <div>
-                    <span className="font-bold">{t.msgDailyInfo}</span>
-                    <span className="ml-2 text-sm opacity-80">{compilationInfo}</span>
+                    <span className="font-bold">
+                        {msgType === 'warning' ? 'Status Alert' : t.msgDailyInfo}
+                    </span>
+                    <span className="ml-2 text-sm opacity-90 font-medium">{compilationInfo}</span>
                  </div>
               </div>
             )}
