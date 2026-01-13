@@ -72,9 +72,9 @@ const getResultColor = (mode: ResultMode = 'standard', isPlaceholder: boolean = 
             return 'text-google-blue dark:text-blue-400 italic font-bold';
         case 'optimal': // Optimal -> Green
             return 'text-green-600 dark:text-green-400 italic font-bold';
-        case 'standard': // Calculate -> Yellow
+        case 'standard': // Calculate -> White/Black (High Contrast)
         default:
-            return 'text-yellow-600 dark:text-yellow-400 font-bold';
+            return 'text-gray-900 dark:text-white font-black'; // Changed from yellow
     }
 };
 
@@ -323,12 +323,12 @@ export const VisitList: React.FC<VisitListProps> = ({
                   label: "text-green-800 dark:text-green-300",
                   text: "text-green-700 dark:text-green-400"
               };
-          case 'standard': // Yellow
+          case 'standard': // White/Gray (High Contrast)
           default:
               return {
-                  row: `bg-yellow-50 dark:bg-yellow-900/20 ${commonBorder} [&>td]:border-google-yellow`,
-                  label: "text-yellow-800 dark:text-yellow-300",
-                  text: "text-yellow-700 dark:text-yellow-400"
+                  row: `bg-white dark:bg-gray-700 ${commonBorder} [&>td]:border-gray-400 dark:[&>td]:border-gray-500`, // Changed from yellow-50
+                  label: "text-gray-900 dark:text-white", // Changed from yellow
+                  text: "text-gray-900 dark:text-white" // Changed from yellow
               };
       }
   }, [resultMode]);

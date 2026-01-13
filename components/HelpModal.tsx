@@ -11,7 +11,7 @@ interface HelpModalProps {
 }
 
 // --- Button Graphics Helper ---
-type ButtonVariant = 'teal-outline' | 'orange' | 'google-blue' | 'green' | 'yellow' | 'teal-solid' | 'gray' | 'white-border';
+type ButtonVariant = 'teal-outline' | 'orange' | 'google-blue' | 'green' | 'yellow' | 'teal-solid' | 'gray' | 'white-border' | 'standard-white';
 
 const ButtonBadge: React.FC<{ variant: ButtonVariant, icon?: React.ReactNode, text: string }> = ({ variant, icon, text }) => {
   let classes = "inline-flex items-center gap-2 px-3 py-1 rounded-lg text-sm font-medium shadow-sm select-none mx-1 align-middle my-1";
@@ -32,8 +32,9 @@ const ButtonBadge: React.FC<{ variant: ButtonVariant, icon?: React.ReactNode, te
     case 'green':
       classes += " bg-green-600 text-white";
       break;
-    case 'yellow':
-      classes += " bg-google-yellow text-gray-900";
+    case 'yellow': // Deprecated style, mapped to standard
+    case 'standard-white':
+      classes += " bg-white border border-gray-300 text-gray-900 dark:bg-gray-100";
       break;
     case 'teal-solid':
       classes += " bg-teal-600 text-white";
@@ -256,7 +257,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang, onL
 
                 {/* Calculation Modes */}
                 <section>
-                    <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-4 flex items-center gap-2 border-l-4 border-yellow-500 pl-3">
+                    <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-4 flex items-center gap-2 border-l-4 border-gray-500 pl-3">
                         {t.helpCalcTitle}
                     </h3>
                     <div className="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-xl border border-gray-100 dark:border-gray-700 text-sm space-y-4">
@@ -272,7 +273,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang, onL
                          </div>
 
                          <div className="flex items-start gap-2">
-                            <div className="mt-1"><ButtonBadge variant="yellow" icon={Icons.calculate} text={t.calculate} /></div>
+                            <div className="mt-1"><ButtonBadge variant="standard-white" icon={Icons.calculate} text={t.calculate} /></div>
                             <div className="mt-2 text-gray-600 dark:text-gray-400">{t.helpCalcCalculate}</div>
                          </div>
 

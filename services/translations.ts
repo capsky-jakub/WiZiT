@@ -5,8 +5,8 @@ export type Language = 'cs' | 'en';
 export const translations = {
   en: {
     appTitle: "Wiz!T",
-    subTitle: "Route Optimization Wizard",
-    footerBrand: "The evolution of OdoCalc",
+    subTitle: "Plan, Optimize, Visit...",
+    footerBrand: "VISOPT_APP_VERSION",
     keyMissing: "Key Missing",
     
     // Buttons
@@ -181,8 +181,8 @@ export const translations = {
   },
   cs: {
     appTitle: "Wiz!T",
-    subTitle: "Kouzelník pro optimalizaci tras",
-    footerBrand: "Evoluce aplikace OdoCalc",
+    subTitle: "Plan, Optimize, Visit...",
+    footerBrand: "VISOPT_APP_VERSION",
     keyMissing: "Chybí klíč",
     
     // Buttons
