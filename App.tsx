@@ -47,6 +47,7 @@ const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isFirebaseReady, setIsFirebaseReady] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false); // Auth check state
   
   const [settings, setSettings] = useState<AppSettings>({
     startAddress: "Dlouhá 1113, 530 06 Pardubice, Česko",
@@ -94,9 +95,18 @@ const App: React.FC = () => {
 
     if (ready) {
         const unsubscribe = FirebaseService.subscribeAuth((currentUser) => {
-            setUser(currentUser);
             if (currentUser) {
-                handleSyncFromCloud(currentUser);
+                // User signed in -> Set User -> Start Verification
+                setUser(currentUser);
+                setIsVerifying(true);
+                handleSyncFromCloud(currentUser).catch(err => {
+                    console.error("Initial sync unhandled", err);
+                    setIsVerifying(false);
+                });
+            } else {
+                // User signed out -> Clear User -> Stop Verification
+                setUser(null);
+                setIsVerifying(false);
             }
         });
         return () => unsubscribe();
@@ -123,13 +133,21 @@ const App: React.FC = () => {
             setCompilationInfo("Configuration synced from Cloud");
             setTimeout(() => setCompilationInfo(null), 3000);
         }
+        // If successful (or no update needed), verification passes
+        setIsVerifying(false);
     } catch (e: any) {
         if (e.message === "PERMISSION_DENIED") {
             console.warn("User not authorized for Firestore access.");
-            setCompilationInfo("Sync unavailable: Unauthorized");
-            setTimeout(() => setCompilationInfo(null), 3000);
+            alert("Authorization Failed: You do not have access to the cloud database.");
+            
+            // Auto Logout Logic
+            await FirebaseService.signOut();
+            setUser(null); // Force state clear immediately
+            return; // Don't process finally block state updates that might conflict
         } else {
             console.error("Sync down error", e);
+            // On other errors (e.g. network), we stop verifying and let user see the UI (perhaps to retry)
+            setIsVerifying(false);
         }
     } finally {
         setIsSyncing(false);
@@ -149,7 +167,9 @@ const App: React.FC = () => {
               setTimeout(() => setCompilationInfo(null), 2000);
           } catch (e: any) {
               if (e.message === "PERMISSION_DENIED") {
-                  alert("Access Denied: Your account is not authorized to sync data with the cloud database.");
+                  alert("Access Revoked: You no longer have access.");
+                  await FirebaseService.signOut();
+                  setUser(null);
               } else {
                   console.error("Manual sync failed", e);
                   alert(`Sync failed: ${e.message}`);
@@ -933,16 +953,23 @@ const App: React.FC = () => {
              <input type="file" ref={fileInputRef} accept=".xlsx" className="hidden" onChange={handleExcelUpload} />
              <input type="file" ref={importDbInputRef} accept=".json" className="hidden" onChange={handleImportDB} />
             <div className="flex items-center gap-1 bg-gray-50 dark:bg-gray-700/50 p-1 rounded-lg border border-gray-200 dark:border-gray-600">
-                {/* Auth/Sync Button */}
+                {/* Auth/Sync Button Group */}
                 {user ? (
-                    <div className="flex items-center gap-1 bg-blue-50 dark:bg-blue-900/30 p-1 rounded-md border border-blue-100 dark:border-blue-800">
-                        <button onClick={handleTriggerSync} className={`p-2 rounded-md transition-colors ${isSyncing ? 'animate-spin text-blue-600' : 'text-blue-600 hover:bg-blue-100 dark:text-blue-400 dark:hover:bg-blue-800'}`} title="Sync Now">
-                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-                        </button>
-                        <button onClick={handleLogout} className="p-2 text-blue-600 hover:bg-blue-100 dark:text-blue-400 dark:hover:bg-blue-800 rounded-md transition-colors" title={`Logout ${user.email}`}>
-                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-                        </button>
-                    </div>
+                    isVerifying ? (
+                        <div className="flex items-center gap-2 p-2 px-3">
+                            <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+                            <span className="text-xs text-blue-600 font-medium">Verifying...</span>
+                        </div>
+                    ) : (
+                        <div className="flex items-center gap-1 bg-blue-50 dark:bg-blue-900/30 p-1 rounded-md border border-blue-100 dark:border-blue-800 animate-fade-in">
+                            <button onClick={handleTriggerSync} className={`p-2 rounded-md transition-colors ${isSyncing ? 'animate-spin text-blue-600' : 'text-blue-600 hover:bg-blue-100 dark:text-blue-400 dark:hover:bg-blue-800'}`} title="Sync Now">
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                            </button>
+                            <button onClick={handleLogout} className="p-2 text-blue-600 hover:bg-blue-100 dark:text-blue-400 dark:hover:bg-blue-800 rounded-md transition-colors" title={`Logout ${user.email}`}>
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                            </button>
+                        </div>
+                    )
                 ) : (
                     <button type="button" onClick={handleLogin} className="p-2 text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600 rounded-md transition-all shadow-sm flex items-center gap-1" title="Sign In to Sync">
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg>
