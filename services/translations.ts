@@ -6,7 +6,7 @@ export const translations = {
   en: {
     appTitle: "Wiz!T",
     subTitle: "Plan, Optimize, Visit...",
-    footerBrand: "VISOPT_APP_VERSION",
+    footerBrand: "v25.0522.1430",
     keyMissing: "Key Missing",
     
     // Buttons
@@ -90,7 +90,7 @@ export const translations = {
     helpTitle: "User Guide",
 
     // Settings
-    lblApiKey: "Google Maps API Key",
+    lblApiKey: "Key", // Changed from Google Maps API Key
     lblApiKeyDesc: "Required for routing and validation. Saved locally.",
     lblAddress: "Start / End Address",
     lblOdometer: "Current Odometer",
@@ -159,6 +159,7 @@ export const translations = {
     helpTipsTitle: "Tips & Tricks",
     helpTipLmod: "To save API usage, do not clear your browser's 'Local Storage' unnecessarily, as this holds the LMOD cache.",
     helpTipExport: "Export/Import: Use the arrow icons in the top bar to save your entire workspace (including settings and cache) to a JSON file. Useful for moving to another computer.",
+    helpTipSkip: "Double-click any row to instantly 'Skip' it. This is great for 'What-If' scenarios to see how the route changes without deleting the visit.",
 
     // Messages
     msgApiMissing: "API Key Missing. Please enter your Google Maps API Key in Settings.",
@@ -182,7 +183,7 @@ export const translations = {
   cs: {
     appTitle: "Wiz!T",
     subTitle: "Plan, Optimize, Visit...",
-    footerBrand: "VISOPT_APP_VERSION",
+    footerBrand: "v25.0522.1430",
     keyMissing: "Chybí klíč",
     
     // Buttons
@@ -233,7 +234,7 @@ export const translations = {
 
     // Columns
     colSkip: "Přes.",
-    colOrder: "Poř.", // Changed from Poř. to # in requested spec, but Poř. is short. Let's use # for compact.
+    colOrder: "#", // Changed from Poř. to # in requested spec, but Poř. is short. Let's use # for compact.
     colName: "Jméno",
     colSurname: "Příjmení",
     colAddress: "Adresa",
@@ -266,7 +267,7 @@ export const translations = {
     helpTitle: "Uživatelská příručka",
 
     // Settings
-    lblApiKey: "Google Maps API Klíč",
+    lblApiKey: "Klíč", // Changed from Google Maps API Klíč
     lblApiKeyDesc: "Vyžadováno pro výpočty. Uloženo lokálně.",
     lblAddress: "Startovní / Cílová adresa",
     lblOdometer: "Aktuální stav tachometru",

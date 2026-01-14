@@ -1,4 +1,5 @@
 
+
 export interface Visit {
   id: string; // Unique ID for React keys and selection tracking
   name: string;
@@ -99,4 +100,9 @@ export interface BackupData {
   savedRoutes: SavedRoute[];
   lmod: any; // Cache object
   timestamp: number; // Last modified time
+  
+  // Session Data (Synced)
+  visits?: Visit[];
+  start?: StartTrip | null;
+  return?: ReturnTrip | null;
 }

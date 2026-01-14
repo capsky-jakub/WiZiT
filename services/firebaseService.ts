@@ -1,4 +1,5 @@
 
+
 import { initializeApp, FirebaseApp, getApps } from "firebase/app";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, User, Auth, onAuthStateChanged } from "firebase/auth";
 import { getFirestore, doc, setDoc, getDoc, Firestore } from "firebase/firestore/lite";
@@ -84,12 +85,21 @@ export const FirebaseService = {
       const savedRoutes = JSON.parse(localStorage.getItem('odocalc_saved_routes') || '[]');
       const lmod = JSON.parse(localStorage.getItem('odocalc_lmod') || '{}');
       
+      // Include Session Data
+      const visits = JSON.parse(localStorage.getItem('odocalc_visits') || '[]');
+      const start = JSON.parse(localStorage.getItem('odocalc_start') || 'null');
+      const ret = JSON.parse(localStorage.getItem('odocalc_return') || 'null');
+
       const payload: BackupData = {
         clients,
         settings,
         savedRoutes,
         lmod,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        // Session
+        visits,
+        start,
+        return: ret
       };
 
       await setDoc(doc(db, COLLECTION, user.email), payload);
@@ -136,6 +146,15 @@ export const FirebaseService = {
           localStorage.setItem('odocalc_settings', JSON.stringify(cloudData.settings || {}));
           localStorage.setItem('odocalc_saved_routes', JSON.stringify(cloudData.savedRoutes || []));
           localStorage.setItem('odocalc_lmod', JSON.stringify(cloudData.lmod || {}));
+          
+          // Restore Session Data
+          if (cloudData.visits) localStorage.setItem('odocalc_visits', JSON.stringify(cloudData.visits));
+          if (cloudData.start) localStorage.setItem('odocalc_start', JSON.stringify(cloudData.start));
+          else localStorage.removeItem('odocalc_start'); // Clean up if null
+          
+          if (cloudData.return) localStorage.setItem('odocalc_return', JSON.stringify(cloudData.return));
+          else localStorage.removeItem('odocalc_return');
+
           localStorage.setItem('odocalc_last_modified', cloudData.timestamp.toString());
           
           console.log(`[Cloud] Synced DOWN successfully. Local updated.`);

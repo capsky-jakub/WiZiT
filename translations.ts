@@ -161,7 +161,7 @@ export const translations = {
 
     // Columns
     colSkip: "Přes.",
-    colOrder: "Poř.",
+    colOrder: "#",
     colName: "Jméno",
     colSurname: "Příjmení",
     colAddress: "Adresa",

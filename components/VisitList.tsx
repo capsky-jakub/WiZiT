@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Visit, ReturnTrip, StartTrip } from '../types';
 import { translations, Language } from '../services/translations';
 import {
@@ -277,6 +277,9 @@ const SortableRow: React.FC<SortableRowProps> = ({ visit, isSelected, onToggleSe
 export const VisitList: React.FC<VisitListProps> = ({ 
   visits, startTrip, returnTrip, selectedIds, onToggleSelect, onToggleAll, onEdit, onReorder, onToggleSkip, onDelete, lang, departureTime, resultMode = 'standard' as ResultMode
 }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortConfig, setSortConfig] = useState<{ key: keyof Visit, direction: 'asc' | 'desc' } | null>(null);
+
   const allSelected = visits.length > 0 && selectedIds.size === visits.length;
   const t = translations[lang];
 
@@ -286,6 +289,9 @@ export const VisitList: React.FC<VisitListProps> = ({
   );
 
   const handleDragEnd = (event: DragEndEvent) => {
+    // If search is active, we disable DnD or warn
+    if (searchTerm) return; 
+
     const { active, over } = event;
     if (over && active.id !== over.id) {
       const oldIndex = visits.findIndex((v) => v.id === active.id);
@@ -294,6 +300,47 @@ export const VisitList: React.FC<VisitListProps> = ({
       onReorder(newOrder);
     }
   };
+
+  // Sorting Logic: Reorders the actual list
+  const handleSort = (key: keyof Visit) => {
+      let direction: 'asc' | 'desc' = 'asc';
+      if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+          direction = 'desc';
+      }
+      setSortConfig({ key, direction });
+
+      // Perform sort on current visits and trigger update
+      // Note: "Order" column (index in array) will change to reflect the new sequence
+      const sorted = [...visits].sort((a, b) => {
+          let valA: any = a[key];
+          let valB: any = b[key];
+
+          // Handle special cases / nulls
+          if (valA === undefined || valA === null) valA = '';
+          if (valB === undefined || valB === null) valB = '';
+
+          if (typeof valA === 'string') valA = valA.toLowerCase();
+          if (typeof valB === 'string') valB = valB.toLowerCase();
+
+          if (valA < valB) return direction === 'asc' ? -1 : 1;
+          if (valA > valB) return direction === 'asc' ? 1 : -1;
+          return 0;
+      });
+      
+      onReorder(sorted);
+  };
+
+  // Filter Logic
+  const filteredVisits = visits.filter(v => {
+      if (!searchTerm) return true;
+      const term = searchTerm.toLowerCase();
+      return (
+          v.name.toLowerCase().includes(term) ||
+          v.surname.toLowerCase().includes(term) ||
+          v.address.toLowerCase().includes(term) ||
+          (v.preferredTime && v.preferredTime.includes(term))
+      );
+  });
 
   const activeVisits = visits.filter(v => !v.isSkipped);
   const totalDistance = activeVisits.reduce((acc, v) => acc + (v.segmentDistance || 0), 0) + (returnTrip?.segmentDistance || 0);
@@ -333,113 +380,142 @@ export const VisitList: React.FC<VisitListProps> = ({
       }
   }, [resultMode]);
 
-  return (
-    <div className="overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm bg-white dark:bg-gray-800 w-full transition-colors">
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-          <thead className="bg-gray-50 dark:bg-gray-900 transition-colors">
-            <tr>
-              <th scope="col" className="px-2 py-1 w-8"></th>
-              <th scope="col" className="px-2 py-1 text-center w-8">
-                <input type="checkbox" checked={allSelected} onChange={(e) => onToggleAll(e.target.checked)} className="h-4 w-4 text-google-blue focus:ring-google-blue border-gray-300 dark:border-gray-600 rounded cursor-pointer dark:bg-gray-700" />
-              </th>
-              <th className="px-2 py-1 text-center text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-8">{t.colSkip}</th>
-              <th className="px-2 py-1 text-center text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-12">{t.colOrder}</th>
-              <th className="px-2 py-1 text-left text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t.colName}</th>
-              <th className="px-2 py-1 text-left text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t.colSurname}</th>
-              <th className="px-2 py-1 text-left text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t.colAddress}</th>
-              <th className="px-2 py-1 text-center text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-12">{t.colValid}</th>
-              <th className="px-2 py-1 text-right text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-gray-800 dark:text-gray-200">{t.colOdometer}</th>
-              <th className="px-2 py-1 text-right text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t.colDistance}</th>
-              <th className="px-2 py-1 text-right text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t.colTime}</th>
-              <th className="px-2 py-1 text-right text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t.colPlan}</th>
-              <th className="px-2 py-1 text-right text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t.colPlanned}</th>
-              <th className="px-2 py-1 text-right text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t.colPause}</th>
-              <th className="px-2 py-1 text-right text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t.colDurat}</th>
-              <th className="px-2 py-1 text-right text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t.colActions}</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-            
-            {startTrip && (
-              <tr className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-                <td></td><td></td><td></td>
-                {/* START/END text disposed */}
-                <td className="px-2 py-1 text-center text-base font-bold text-gray-500 dark:text-gray-400"></td>
-                <td colSpan={2} className="px-2 py-1 text-base font-bold text-gray-500 dark:text-gray-400">{t.departure}</td>
-                <td className="px-2 py-1 text-base text-gray-900 dark:text-gray-100 truncate max-w-sm md:max-w-none" title={startTrip.address}>{startTrip.address}</td>
-                <td className="px-2 py-1 text-center"><svg className="w-5 h-5 text-green-500 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg></td>
-                {/* Start Odometer is Fixed Input -> Gray/Black */}
-                <td className="px-2 py-1 text-right text-base font-bold text-gray-900 dark:text-gray-100 font-mono">{startTrip.odometer}</td>
-                <td className="px-2 py-1 text-right text-base font-bold text-gray-300 dark:text-gray-600 font-mono"></td>
-                <td className="px-2 py-1 text-right text-base font-bold text-gray-300 dark:text-gray-600 font-mono"></td>
-                {/* Start Plan is Fixed Input -> Gray/Blue-Gray/Indigo-Gray, keeping neutral or slightly distinct */}
-                <td className="px-2 py-1 text-right text-base font-bold text-gray-600 dark:text-gray-400 font-mono whitespace-nowrap">{formatTime(departureTime)}</td>
-                <td className="px-2 py-1 text-right text-base font-bold text-gray-300 dark:text-gray-600 font-mono"></td>
-                <td className="px-2 py-1 text-right text-base font-bold text-gray-300 dark:text-gray-600 font-mono"></td>
-                <td className="px-2 py-1 text-right text-base font-bold text-gray-300 dark:text-gray-600 font-mono"></td>
-                <td></td>
-              </tr>
-            )}
+  // Header Sort Icon
+  const SortIcon = ({ column }: { column: keyof Visit }) => {
+      if (sortConfig?.key !== column) return <span className="opacity-20 ml-1">⇅</span>;
+      return <span className="ml-1 text-google-blue">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>;
+  };
 
-            {visits.length === 0 ? (
-              <tr><td colSpan={16} className="px-6 py-10 text-center text-base text-gray-500 dark:text-gray-400 italic">{t.noVisits}</td></tr>
-            ) : (
-              <SortableContext items={visits.map(v => v.id)} strategy={verticalListSortingStrategy}>
-                {visits.map((visit) => (
-                  <SortableRow 
-                    key={visit.id} visit={visit} isSelected={selectedIds.has(visit.id)}
-                    onToggleSelect={onToggleSelect} onEdit={onEdit} onToggleSkip={onToggleSkip} onDelete={onDelete}
-                    resultMode={resultMode}
-                  />
-                ))}
-              </SortableContext>
-            )}
-            
-            {returnTrip && visits.length > 0 && (
-              <tr className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
-                <td colSpan={3}></td>
-                {/* START/END text disposed */}
-                <td className="px-2 py-1 text-center text-base font-bold text-gray-500 dark:text-gray-400"></td>
-                <td colSpan={2} className="px-2 py-1 text-base font-bold text-gray-500 dark:text-gray-400">{t.return}</td>
-                <td className="px-2 py-1 text-base text-gray-900 dark:text-gray-100 truncate max-w-sm md:max-w-none" title={returnTrip.address}>{returnTrip.address}</td>
-                <td className="px-2 py-1 text-center"><svg className="w-5 h-5 text-green-500 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg></td>
+  const ThSortable = ({ column, label, width, align = 'left', colorClass = '' }: { column: keyof Visit, label: string, width?: string, align?: string, colorClass?: string }) => (
+      <th 
+        className={`px-2 py-1 text-${align} text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors select-none ${width || ''} ${colorClass}`}
+        onClick={() => handleSort(column)}
+      >
+          {label} <SortIcon column={column} />
+      </th>
+  );
+
+  return (
+    <div className="w-full">
+        {/* Search Bar */}
+        <div className="mb-2 relative">
+            <input 
+                type="text" 
+                placeholder={t.search}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-google-blue outline-none shadow-sm"
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+            />
+            <svg className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+        </div>
+
+        <div className="overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm bg-white dark:bg-gray-800 w-full transition-colors">
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead className="bg-gray-50 dark:bg-gray-900 transition-colors">
+                <tr>
+                <th scope="col" className="px-2 py-1 w-8"></th>
+                <th scope="col" className="px-2 py-1 text-center w-8">
+                    <input type="checkbox" checked={allSelected} onChange={(e) => onToggleAll(e.target.checked)} className="h-4 w-4 text-google-blue focus:ring-google-blue border-gray-300 dark:border-gray-600 rounded cursor-pointer dark:bg-gray-700" />
+                </th>
+                <th className="px-2 py-1 text-center text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-8">{t.colSkip}</th>
+                <ThSortable column="order" label={t.colOrder} width="w-12" align="center" />
+                <ThSortable column="name" label={t.colName} />
+                <ThSortable column="surname" label={t.colSurname} />
+                <ThSortable column="address" label={t.colAddress} />
+                <ThSortable column="isAddressValid" label={t.colValid} width="w-12" align="center" />
+                <th className="px-2 py-1 text-right text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-gray-800 dark:text-gray-200">{t.colOdometer}</th>
+                <th className="px-2 py-1 text-right text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t.colDistance}</th>
+                <th className="px-2 py-1 text-right text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t.colTime}</th>
+                <th className="px-2 py-1 text-right text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t.colPlan}</th>
+                <ThSortable column="preferredTime" label={t.colPlanned} align="right" />
+                <th className="px-2 py-1 text-right text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t.colPause}</th>
+                <ThSortable column="visitDuration" label={t.colDurat} align="right" />
+                <th className="px-2 py-1 text-right text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t.colActions}</th>
+                </tr>
+            </thead>
+            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                 
-                <td className={`px-2 py-1 text-right text-base font-mono ${returnOdometerClass}`}>
-                    {returnTrip.totalOdometer !== undefined ? returnTrip.totalOdometer : '—'}
-                </td>
-                <td className={`px-2 py-1 whitespace-nowrap text-right text-base font-mono ${returnResultClass}`}>
-                    +{returnTrip.segmentDistance}km <span className="text-xs">/{formatExactDist(returnTrip.exactDistanceKm)}</span>
-                </td>
-                 <td className={`px-2 py-1 text-right text-base font-mono ${returnResultClass}`}>{formatDuration(returnTrip.segmentDuration)}</td>
-                <td className={`px-2 py-1 text-right text-base font-mono ${returnResultClass}`}>{formatTime(returnTrip.arrivalTime)}</td>
-                <td className="px-2 py-1 text-right text-base font-bold text-gray-300 dark:text-gray-600 font-mono"></td>
-                <td className="px-2 py-1 text-right text-base font-bold text-gray-300 dark:text-gray-600 font-mono"></td>
-                <td className="px-2 py-1 text-right text-base font-bold text-gray-300 dark:text-gray-600 font-mono"></td>
-                <td></td>
-              </tr>
-            )}
-            
-             {showTotals && (
-              <tr className={totalTheme.row}>
-                <td colSpan={3}></td>
-                <td className={`px-2 py-2 text-center text-lg font-black uppercase ${totalTheme.label}`}>{t.total}</td>
-                <td colSpan={4}></td>
-                <td className={`px-2 py-2 text-right text-lg font-bold font-mono ${totalTheme.text}`}></td>
-                <td className={`px-2 py-2 whitespace-nowrap text-right text-lg font-black font-mono text-base ${totalTheme.text}`}>
-                    {totalDistance}km <span className="text-xs">/{formatExactDist(totalExactDistance)}</span>
-                </td>
-                <td className={`px-2 py-2 text-right text-lg font-black font-mono text-base whitespace-nowrap ${totalTheme.text}`}>{formatDuration(totalDuration)}</td>
-                <td className={`px-2 py-2 text-right text-lg font-black font-mono text-base whitespace-nowrap ${totalTheme.text}`}>{formatTime(returnTrip?.arrivalTime)}</td>
-                <td className={`px-2 py-2 text-right text-lg font-black font-mono text-base whitespace-nowrap ${totalTheme.text}`}></td>
-                <td className={`px-2 py-2 text-right text-lg font-black font-mono text-base whitespace-nowrap ${totalTheme.text}`}></td>
-                <td className={`px-2 py-2 text-right text-lg font-black font-mono text-base whitespace-nowrap ${totalTheme.text}`}>{formatDuration(totalServiceTime)}</td>
-                <td></td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </DndContext>
+                {startTrip && (
+                <tr className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                    <td></td><td></td><td></td>
+                    {/* START/END text disposed */}
+                    <td className="px-2 py-1 text-center text-base font-bold text-gray-500 dark:text-gray-400"></td>
+                    <td colSpan={2} className="px-2 py-1 text-base font-bold text-gray-500 dark:text-gray-400">{t.departure}</td>
+                    <td className="px-2 py-1 text-base text-gray-900 dark:text-gray-100 truncate max-w-sm md:max-w-none" title={startTrip.address}>{startTrip.address}</td>
+                    <td className="px-2 py-1 text-center"><svg className="w-5 h-5 text-green-500 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg></td>
+                    {/* Start Odometer is Fixed Input -> Gray/Black */}
+                    <td className="px-2 py-1 text-right text-base font-bold text-gray-900 dark:text-gray-100 font-mono">{startTrip.odometer}</td>
+                    <td className="px-2 py-1 text-right text-base font-bold text-gray-300 dark:text-gray-600 font-mono"></td>
+                    <td className="px-2 py-1 text-right text-base font-bold text-gray-300 dark:text-gray-600 font-mono"></td>
+                    {/* Start Plan is Fixed Input -> Gray/Blue-Gray/Indigo-Gray, keeping neutral or slightly distinct */}
+                    <td className="px-2 py-1 text-right text-base font-bold text-gray-600 dark:text-gray-400 font-mono whitespace-nowrap">{formatTime(departureTime)}</td>
+                    <td className="px-2 py-1 text-right text-base font-bold text-gray-300 dark:text-gray-600 font-mono"></td>
+                    <td className="px-2 py-1 text-right text-base font-bold text-gray-300 dark:text-gray-600 font-mono"></td>
+                    <td className="px-2 py-1 text-right text-base font-bold text-gray-300 dark:text-gray-600 font-mono"></td>
+                    <td></td>
+                </tr>
+                )}
+
+                {filteredVisits.length === 0 ? (
+                <tr><td colSpan={16} className="px-6 py-10 text-center text-base text-gray-500 dark:text-gray-400 italic">{visits.length === 0 ? t.noVisits : "No matching visits found."}</td></tr>
+                ) : (
+                <SortableContext items={filteredVisits.map(v => v.id)} strategy={verticalListSortingStrategy}>
+                    {filteredVisits.map((visit) => (
+                    <SortableRow 
+                        key={visit.id} visit={visit} isSelected={selectedIds.has(visit.id)}
+                        onToggleSelect={onToggleSelect} onEdit={onEdit} onToggleSkip={onToggleSkip} onDelete={onDelete}
+                        resultMode={resultMode}
+                    />
+                    ))}
+                </SortableContext>
+                )}
+                
+                {returnTrip && visits.length > 0 && (
+                <tr className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+                    <td colSpan={3}></td>
+                    {/* START/END text disposed */}
+                    <td className="px-2 py-1 text-center text-base font-bold text-gray-500 dark:text-gray-400"></td>
+                    <td colSpan={2} className="px-2 py-1 text-base font-bold text-gray-500 dark:text-gray-400">{t.return}</td>
+                    <td className="px-2 py-1 text-base text-gray-900 dark:text-gray-100 truncate max-w-sm md:max-w-none" title={returnTrip.address}>{returnTrip.address}</td>
+                    <td className="px-2 py-1 text-center"><svg className="w-5 h-5 text-green-500 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg></td>
+                    
+                    <td className={`px-2 py-1 text-right text-base font-mono ${returnOdometerClass}`}>
+                        {returnTrip.totalOdometer !== undefined ? returnTrip.totalOdometer : '—'}
+                    </td>
+                    <td className={`px-2 py-1 whitespace-nowrap text-right text-base font-mono ${returnResultClass}`}>
+                        +{returnTrip.segmentDistance}km <span className="text-xs">/{formatExactDist(returnTrip.exactDistanceKm)}</span>
+                    </td>
+                    <td className={`px-2 py-1 text-right text-base font-mono ${returnResultClass}`}>{formatDuration(returnTrip.segmentDuration)}</td>
+                    <td className={`px-2 py-1 text-right text-base font-mono ${returnResultClass}`}>{formatTime(returnTrip.arrivalTime)}</td>
+                    <td className="px-2 py-1 text-right text-base font-bold text-gray-300 dark:text-gray-600 font-mono"></td>
+                    <td className="px-2 py-1 text-right text-base font-bold text-gray-300 dark:text-gray-600 font-mono"></td>
+                    <td className="px-2 py-1 text-right text-base font-bold text-gray-300 dark:text-gray-600 font-mono"></td>
+                    <td></td>
+                </tr>
+                )}
+                
+                {showTotals && (
+                <tr className={totalTheme.row}>
+                    <td colSpan={3}></td>
+                    <td className={`px-2 py-2 text-center text-lg font-black uppercase ${totalTheme.label}`}>{t.total}</td>
+                    <td colSpan={4}></td>
+                    <td className={`px-2 py-2 text-right text-lg font-bold font-mono ${totalTheme.text}`}></td>
+                    <td className={`px-2 py-2 whitespace-nowrap text-right text-lg font-black font-mono text-base ${totalTheme.text}`}>
+                        {totalDistance}km <span className="text-xs">/{formatExactDist(totalExactDistance)}</span>
+                    </td>
+                    <td className={`px-2 py-2 text-right text-lg font-black font-mono text-base whitespace-nowrap ${totalTheme.text}`}>{formatDuration(totalDuration)}</td>
+                    <td className={`px-2 py-2 text-right text-lg font-black font-mono text-base whitespace-nowrap ${totalTheme.text}`}>{formatTime(returnTrip?.arrivalTime)}</td>
+                    <td className={`px-2 py-2 text-right text-lg font-black font-mono text-base whitespace-nowrap ${totalTheme.text}`}></td>
+                    <td className={`px-2 py-2 text-right text-lg font-black font-mono text-base whitespace-nowrap ${totalTheme.text}`}></td>
+                    <td className={`px-2 py-2 text-right text-lg font-black font-mono text-base whitespace-nowrap ${totalTheme.text}`}>{formatDuration(totalServiceTime)}</td>
+                    <td></td>
+                </tr>
+                )}
+            </tbody>
+            </table>
+        </DndContext>
+        </div>
     </div>
   );
 };

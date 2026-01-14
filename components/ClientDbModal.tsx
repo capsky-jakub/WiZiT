@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Client } from '../types';
 import { translations, Language } from '../services/translations';
@@ -24,6 +25,10 @@ export const ClientDbModal: React.FC<ClientDbModalProps> = ({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(false);
+  
+  // Sorting state
+  const [sortConfig, setSortConfig] = useState<{ key: keyof Client | 'repetition', direction: 'asc' | 'desc' } | null>(null);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const t = translations[lang];
   const { nodeRef, handleRef } = useDraggable<HTMLDivElement>(isOpen);
@@ -41,11 +46,74 @@ export const ClientDbModal: React.FC<ClientDbModalProps> = ({
       setBulkDeleteConfirm(false);
   }, [selectedIds]);
 
-  const filteredClients = clients.filter(c => 
-    c.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    c.surname.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    c.address.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Helper to format Repetition string
+  const formatRepetition = (c: Client) => {
+      const rep = c.visitRepetition;
+      if (!rep) return '—';
+      if (rep.type === 'WEEKLY') {
+          if (!rep.daysOfWeek || rep.daysOfWeek.length === 0) return t.optWeekly;
+          const daysShort = rep.daysOfWeek.sort().map(d => t.days[d]).join(', ');
+          return `${t.optWeekly}: ${daysShort}`;
+      }
+      if (rep.type === 'DATE') {
+          return `${t.optDate}: ${rep.specificDate || '?'}`;
+      }
+      if (rep.type === 'INTERVAL') {
+          return `${t.optInterval}: ${rep.intervalDays || '?'} days`;
+      }
+      return '—';
+  };
+
+  // Sorting Logic
+  const handleSort = (key: keyof Client | 'repetition') => {
+      let direction: 'asc' | 'desc' = 'asc';
+      if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+          direction = 'desc';
+      }
+      setSortConfig({ key, direction });
+  };
+
+  const getSortedClients = () => {
+      if (!sortConfig) return clients;
+      
+      return [...clients].sort((a, b) => {
+          let valA: any = '';
+          let valB: any = '';
+
+          if (sortConfig.key === 'repetition') {
+              valA = formatRepetition(a);
+              valB = formatRepetition(b);
+          } else {
+              valA = a[sortConfig.key];
+              valB = b[sortConfig.key];
+          }
+
+          if (valA === undefined || valA === null) valA = '';
+          if (valB === undefined || valB === null) valB = '';
+
+          if (typeof valA === 'string') valA = valA.toLowerCase();
+          if (typeof valB === 'string') valB = valB.toLowerCase();
+
+          if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
+          if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
+          return 0;
+      });
+  };
+
+  // Filter Logic (Search across all columns)
+  const filteredClients = getSortedClients().filter(c => {
+      const search = searchTerm.toLowerCase();
+      const repString = formatRepetition(c).toLowerCase();
+      
+      return (
+        (c.name && c.name.toLowerCase().includes(search)) || 
+        (c.surname && c.surname.toLowerCase().includes(search)) || 
+        (c.address && c.address.toLowerCase().includes(search)) ||
+        (c.visitStartAt && c.visitStartAt.toLowerCase().includes(search)) ||
+        (c.defaultDuration && c.defaultDuration.toString().includes(search)) ||
+        repString.includes(search)
+      );
+  });
 
   const handleToggleSelect = (id: string) => {
     const newSet = new Set(selectedIds);
@@ -104,23 +172,20 @@ export const ClientDbModal: React.FC<ClientDbModalProps> = ({
       });
   };
 
-  // Helper to format Repetition
-  const formatRepetition = (c: Client) => {
-      const rep = c.visitRepetition;
-      if (!rep) return '—';
-      if (rep.type === 'WEEKLY') {
-          if (!rep.daysOfWeek || rep.daysOfWeek.length === 0) return t.optWeekly;
-          const daysShort = rep.daysOfWeek.sort().map(d => t.days[d]).join(', ');
-          return `${t.optWeekly}: ${daysShort}`;
-      }
-      if (rep.type === 'DATE') {
-          return `${t.optDate}: ${rep.specificDate || '?'}`;
-      }
-      if (rep.type === 'INTERVAL') {
-          return `${t.optInterval}: ${rep.intervalDays || '?'} days`;
-      }
-      return '—';
+  // Header Sort Icon
+  const SortIcon = ({ column }: { column: keyof Client | 'repetition' }) => {
+      if (sortConfig?.key !== column) return <span className="opacity-20 ml-1">⇅</span>;
+      return <span className="ml-1 text-google-blue">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>;
   };
+
+  const ThSortable = ({ column, label, width }: { column: keyof Client | 'repetition', label: string, width?: string }) => (
+      <th 
+        className={`px-4 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors select-none ${width || ''}`}
+        onClick={() => handleSort(column)}
+      >
+          {label} <SortIcon column={column} />
+      </th>
+  );
 
   if (!isOpen) return null;
 
@@ -193,13 +258,13 @@ export const ClientDbModal: React.FC<ClientDbModalProps> = ({
                         <th className="px-4 py-3 w-8">
                              <input type="checkbox" onChange={e => handleToggleAll(e.target.checked)} className="rounded text-google-blue focus:ring-google-blue cursor-pointer" />
                         </th>
-                        <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t.colName}</th>
-                        <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t.colSurname}</th>
-                        <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/4">{t.colAddress}</th>
+                        <ThSortable column="name" label={t.colName} />
+                        <ThSortable column="surname" label={t.colSurname} />
+                        <ThSortable column="address" label={t.colAddress} width="w-1/4" />
                         <th className="px-4 py-3 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t.colValid}</th>
-                        <th className="px-4 py-3 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-indigo-600 dark:text-indigo-400">{t.colPrefTime}</th>
-                        <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t.colRepetition}</th>
-                        <th className="px-4 py-3 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t.colDurat}</th>
+                        <ThSortable column="visitStartAt" label={t.colPrefTime} />
+                        <ThSortable column="repetition" label={t.colRepetition} />
+                        <ThSortable column="defaultDuration" label={t.colDurat} />
                         <th className="px-4 py-3 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t.colActions}</th>
                     </tr>
                 </thead>

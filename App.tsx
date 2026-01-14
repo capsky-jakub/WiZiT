@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Visit, Client, AppSettings, CalculationStatus, ReturnTrip, StartTrip, SavedRoute } from './types';
 import { VisitList, ResultMode } from './components/VisitList';
@@ -49,6 +48,10 @@ const App: React.FC = () => {
   const [isFirebaseReady, setIsFirebaseReady] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false); // Auth check state
   
+  // Auto-Sync Ref
+  const autoSyncTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isInitialLoad = useRef(true); // Prevent sync on initial render
+
   const [settings, setSettings] = useState<AppSettings>({
     startAddress: "Dlouhá 1113, 530 06 Pardubice, Česko",
     currentOdometer: 0,
@@ -131,8 +134,14 @@ const App: React.FC = () => {
                         .catch(() => setIsApiReady(false));
                 }
             }
+            
+            // Restore Session Data
+            if (result.data.visits) setVisits(result.data.visits);
+            if (result.data.start) setStartTrip(result.data.start);
+            if (result.data.return) setReturnTrip(result.data.return);
+
             setMsgType('success');
-            setCompilationInfo("Configuration synced from Cloud");
+            setCompilationInfo("Configuration & Session synced from Cloud");
             setTimeout(() => setCompilationInfo(null), 3000);
         }
         // If successful (or no update needed), verification passes
@@ -314,15 +323,27 @@ const App: React.FC = () => {
 
     if (!routeLoaded && dbClients.length > 0) {
         // Priority B: Dynamic
-        console.log("%c[VisOpt] Priority B: Dynamic Compilation", 'color: #1a73e8; font-weight: bold;');
-        const dailyRoute = loadDailyPlan(dbClients);
-        setVisits(dailyRoute);
-        if (dailyRoute.length > 0) {
-                setMsgType('success');
-                setCompilationInfo(`${translations[currentSettings.language].msgDailyCompilation}: ${dailyRoute.length}`);
-                setTimeout(() => setCompilationInfo(null), 5000);
+        // Check if we already have visits (from legacy load or session restore) to avoid overwriting
+        // Actually, logic is: IF no saved route found AND we have clients -> check daily plan
+        
+        // However, we also have "Priority C: Fallback to last session". 
+        // If the last session has data, we might prefer that over a new dynamic compilation unless user explicitly asks.
+        // But the prompt says "Startup Loading Priority".
+        
+        const lastSessionVisits = localStorage.getItem('odocalc_visits');
+        const hasSessionData = lastSessionVisits && JSON.parse(lastSessionVisits).length > 0;
+
+        if (!hasSessionData) {
+             console.log("%c[VisOpt] Priority B: Dynamic Compilation", 'color: #1a73e8; font-weight: bold;');
+             const dailyRoute = loadDailyPlan(dbClients);
+             if (dailyRoute.length > 0) {
+                 setVisits(dailyRoute);
+                 setMsgType('success');
+                 setCompilationInfo(`${translations[currentSettings.language].msgDailyCompilation}: ${dailyRoute.length}`);
+                 setTimeout(() => setCompilationInfo(null), 5000);
+                 routeLoaded = true;
+             }
         }
-        routeLoaded = true;
     }
 
     if (!routeLoaded) {
@@ -342,8 +363,29 @@ const App: React.FC = () => {
         const savedReturn = localStorage.getItem('odocalc_return');
         if (savedReturn) try { setReturnTrip(JSON.parse(savedReturn)); } catch (e) {} 
     }
+    
+    // Mark initial load as done after a brief delay
+    setTimeout(() => { isInitialLoad.current = false; }, 1000);
 
   }, []);
+
+  // --- Auto-Sync Effect ---
+  // Watches visits, startTrip, and returnTrip for changes and triggers sync after debounce
+  useEffect(() => {
+      // Don't auto-sync if not logged in or during initial load or during verify
+      if (!isFirebaseReady || !user || isSyncing || isVerifying || isInitialLoad.current) return;
+
+      if (autoSyncTimeout.current) clearTimeout(autoSyncTimeout.current);
+
+      autoSyncTimeout.current = setTimeout(() => {
+          console.debug("[AutoSync] Triggering sync due to session modification...");
+          handleTriggerSync();
+      }, 2000); // 2 second debounce
+
+      return () => {
+          if (autoSyncTimeout.current) clearTimeout(autoSyncTimeout.current);
+      };
+  }, [visits, startTrip, returnTrip]); // Dependencies for auto-sync
 
   useEffect(() => {
     localStorage.setItem('odocalc_visits', JSON.stringify(visits));
@@ -972,17 +1014,17 @@ const App: React.FC = () => {
                             <span className="text-xs text-blue-600 font-medium">Verifying...</span>
                         </div>
                     ) : (
-                        <div className="flex items-center gap-1 bg-blue-50 dark:bg-blue-900/30 p-1 rounded-md border border-blue-100 dark:border-blue-800 animate-fade-in">
-                            <button onClick={handleTriggerSync} className={`p-2 rounded-md transition-colors ${isSyncing ? 'animate-spin text-blue-600' : 'text-blue-600 hover:bg-blue-100 dark:text-blue-400 dark:hover:bg-blue-800'}`} title="Sync Now">
+                        <div className="flex items-center gap-1 bg-green-50 dark:bg-green-900/30 p-1 rounded-md border border-green-100 dark:border-green-800 animate-fade-in">
+                            <button onClick={handleTriggerSync} className={`p-2 rounded-md transition-colors ${isSyncing ? 'animate-spin text-green-600' : 'text-green-600 hover:bg-green-100 dark:text-green-400 dark:hover:bg-green-800'}`} title="Sync Now">
                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
                             </button>
-                            <button onClick={handleLogout} className="p-2 text-blue-600 hover:bg-blue-100 dark:text-blue-400 dark:hover:bg-blue-800 rounded-md transition-colors" title={`Logout ${user.email}`}>
+                            <button onClick={handleLogout} className="p-2 text-green-600 hover:bg-green-100 dark:text-green-400 dark:hover:bg-green-800 rounded-md transition-colors" title={`Logout ${user.email}`}>
                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
                             </button>
                         </div>
                     )
                 ) : (
-                    <button type="button" onClick={handleLogin} className="p-2 text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600 rounded-md transition-all shadow-sm flex items-center gap-1" title="Sign In to Sync">
+                    <button type="button" onClick={handleLogin} className="p-2 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-800 rounded-md transition-all shadow-sm flex items-center gap-1" title="Sign In to Sync">
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg>
                         <span className="text-xs font-semibold hidden md:inline">{isFirebaseReady ? 'Sync' : 'Setup Sync'}</span>
                     </button>
