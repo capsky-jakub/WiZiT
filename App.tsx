@@ -72,7 +72,10 @@ const App: React.FC = () => {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isMapOpen, setIsMapOpen] = useState(false);
   const [isSavedRoutesOpen, setIsSavedRoutesOpen] = useState(false);
+  
+  // Notification State
   const [compilationInfo, setCompilationInfo] = useState<string | null>(null);
+  const [msgTitle, setMsgTitle] = useState<string>('');
   const [msgType, setMsgType] = useState<'success' | 'warning'>('success');
   
   const [editingItem, setEditingItem] = useState<Visit | Client | null>(null);
@@ -141,6 +144,7 @@ const App: React.FC = () => {
             if (result.data.return) setReturnTrip(result.data.return);
 
             setMsgType('success');
+            setMsgTitle("Cloud Sync");
             setCompilationInfo("Configuration & Session synced from Cloud");
             setTimeout(() => setCompilationInfo(null), 3000);
         }
@@ -152,6 +156,7 @@ const App: React.FC = () => {
             
             // Auto Logout Logic but show message in UI instead of alert
             setMsgType('warning');
+            setMsgTitle("Authorization Error");
             setCompilationInfo("Authorization Failed: You do not have access to the cloud database.");
             
             await FirebaseService.signOut();
@@ -178,11 +183,13 @@ const App: React.FC = () => {
               await FirebaseService.syncDown(user);
               
               setMsgType('success');
+              setMsgTitle("Cloud Sync");
               setCompilationInfo("Sync completed successfully");
               setTimeout(() => setCompilationInfo(null), 2000);
           } catch (e: any) {
               if (e.message === "PERMISSION_DENIED") {
                   setMsgType('warning');
+                  setMsgTitle("Access Revoked");
                   setCompilationInfo("Access Revoked: You no longer have access.");
                   await FirebaseService.signOut();
                   setUser(null);
@@ -314,6 +321,7 @@ const App: React.FC = () => {
                 if (dayRoute.startTrip) setStartTrip(dayRoute.startTrip);
                 if (dayRoute.returnTrip) setReturnTrip(dayRoute.returnTrip);
                 setMsgType('success');
+                setMsgTitle(translations[currentSettings.language].savedRoutes);
                 setCompilationInfo(`Auto-loaded saved route: ${dayRoute.name}`);
                 setTimeout(() => setCompilationInfo(null), 5000);
                 routeLoaded = true;
@@ -339,6 +347,7 @@ const App: React.FC = () => {
              if (dailyRoute.length > 0) {
                  setVisits(dailyRoute);
                  setMsgType('success');
+                 setMsgTitle(translations[currentSettings.language].msgDailyInfo);
                  setCompilationInfo(`${translations[currentSettings.language].msgDailyCompilation}: ${dailyRoute.length}`);
                  setTimeout(() => setCompilationInfo(null), 5000);
                  routeLoaded = true;
@@ -649,6 +658,7 @@ const App: React.FC = () => {
           const cleared = clearCalculation(dailyRoute);
           setVisits(reindexVisits(cleared));
           setMsgType('success');
+          setMsgTitle(t.msgDailyInfo);
           setCompilationInfo(t.msgPlanReloaded);
           setTimeout(() => setCompilationInfo(null), 3000);
           setPlanReloadConfirming(false);
@@ -1151,7 +1161,7 @@ const App: React.FC = () => {
                  )}
                  <div>
                     <span className="font-bold">
-                        {msgType === 'warning' ? 'Status Alert' : t.msgDailyInfo}
+                        {msgTitle || (msgType === 'warning' ? 'Status Alert' : 'Notification')}
                     </span>
                     <span className="ml-2 text-sm opacity-90 font-medium">{compilationInfo}</span>
                  </div>

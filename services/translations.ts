@@ -6,7 +6,7 @@ export const translations = {
   en: {
     appTitle: "Wiz!T",
     subTitle: "Plan, Optimize, Visit...",
-    footerBrand: "v25.0522.1430",
+    footerBrand: "VISOPT_APP_VERSION",
     keyMissing: "Key Missing",
     
     // Buttons
@@ -183,7 +183,7 @@ export const translations = {
   cs: {
     appTitle: "Wiz!T",
     subTitle: "Plan, Optimize, Visit...",
-    footerBrand: "v25.0522.1430",
+    footerBrand: "VISOPT_APP_VERSION",
     keyMissing: "Chybí klíč",
     
     // Buttons
