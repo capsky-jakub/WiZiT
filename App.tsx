@@ -76,7 +76,7 @@ const App: React.FC = () => {
   // Notification State
   const [compilationInfo, setCompilationInfo] = useState<string | null>(null);
   const [msgTitle, setMsgTitle] = useState<string>('');
-  const [msgType, setMsgType] = useState<'success' | 'warning'>('success');
+  const [msgType, setMsgType] = useState<'success' | 'warning' | 'error'>('success');
   
   const [editingItem, setEditingItem] = useState<Visit | Client | null>(null);
   const [editMode, setEditMode] = useState<'visit' | 'client'>('visit');
@@ -143,10 +143,7 @@ const App: React.FC = () => {
             if (result.data.start) setStartTrip(result.data.start);
             if (result.data.return) setReturnTrip(result.data.return);
 
-            setMsgType('success');
-            setMsgTitle("Cloud Sync");
-            setCompilationInfo("Configuration & Session synced from Cloud");
-            setTimeout(() => setCompilationInfo(null), 3000);
+            // Silent success - visual feedback via spinner only
         }
         // If successful (or no update needed), verification passes
         setIsVerifying(false);
@@ -182,10 +179,7 @@ const App: React.FC = () => {
               // Then sync DOWN to ensure consistency (optional, but good for versioning)
               await FirebaseService.syncDown(user);
               
-              setMsgType('success');
-              setMsgTitle("Cloud Sync");
-              setCompilationInfo("Sync completed successfully");
-              setTimeout(() => setCompilationInfo(null), 2000);
+              // Silent success - no message
           } catch (e: any) {
               if (e.message === "PERMISSION_DENIED") {
                   setMsgType('warning');
@@ -196,7 +190,10 @@ const App: React.FC = () => {
                   setTimeout(() => setCompilationInfo(null), 5000);
               } else {
                   console.error("Manual sync failed", e);
-                  alert(`Sync failed: ${e.message}`);
+                  setMsgType('error');
+                  setMsgTitle("Sync Error");
+                  setCompilationInfo(e.message || "Unknown error during sync");
+                  setTimeout(() => setCompilationInfo(null), 5000);
               }
           } finally {
               setIsSyncing(false);
@@ -1149,12 +1146,14 @@ const App: React.FC = () => {
             {compilationInfo && (
               <div className={`
                   p-4 rounded-lg flex items-center gap-3 animate-fade-in-down border
-                  ${msgType === 'warning' 
-                      ? 'bg-yellow-50 dark:bg-yellow-900/30 border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-300' 
-                      : 'bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-800 text-green-700 dark:text-green-300'
+                  ${msgType === 'error'
+                      ? 'bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-800 text-red-700 dark:text-red-300'
+                      : msgType === 'warning' 
+                          ? 'bg-yellow-50 dark:bg-yellow-900/30 border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-300' 
+                          : 'bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-800 text-green-700 dark:text-green-300'
                   }
               `}>
-                 {msgType === 'warning' ? (
+                 {msgType === 'warning' || msgType === 'error' ? (
                      <svg className="w-6 h-6 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
                  ) : (
                      <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
