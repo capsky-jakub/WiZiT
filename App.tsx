@@ -1,6 +1,8 @@
+
+
 import React, { useState, useEffect, useRef } from 'react';
-import { Visit, Client, AppSettings, CalculationStatus, ReturnTrip, StartTrip, SavedRoute, BackupData, SessionData } from './types';
-import { VisitList, ResultMode } from './components/VisitList';
+import { Visit, Client, AppSettings, CalculationStatus, ReturnTrip, StartTrip, SavedRoute, BackupData, SessionData, ResultMode } from './types';
+import { VisitList } from './components/VisitList';
 import { VisitModal } from './components/VisitModal';
 import { SettingsModal } from './components/SettingsModal';
 import { HelpModal } from './components/HelpModal';
@@ -141,11 +143,13 @@ const App: React.FC = () => {
               setVisits(data.visits);
               setStartTrip(data.start || null);
               setReturnTrip(data.return || null);
+              setResultMode('standard'); // Default for legacy
           } else {
               // New Object Structure
               setVisits(data.visits.stops || []);
               setStartTrip(data.visits.start || null);
               setReturnTrip(data.visits.return || null);
+              setResultMode(data.visits.resultMode || 'standard');
           }
       }
   };
@@ -405,6 +409,7 @@ const App: React.FC = () => {
                     setVisits(parsed.stops || []);
                     setStartTrip(parsed.start || null);
                     setReturnTrip(parsed.return || null);
+                    setResultMode(parsed.resultMode || 'standard');
                 }
             } catch (e) { console.error("Error loading session", e); }
         }
@@ -431,7 +436,7 @@ const App: React.FC = () => {
       return () => {
           if (autoSyncTimeout.current) clearTimeout(autoSyncTimeout.current);
       };
-  }, [visits, startTrip, returnTrip]); // Dependencies for auto-sync
+  }, [visits, startTrip, returnTrip, resultMode]); // Dependencies for auto-sync
 
   // --- Focus/Visibility Re-Sync Effect ---
   // Triggers sync when user comes back to the tab
@@ -465,7 +470,8 @@ const App: React.FC = () => {
     const sessionData: SessionData = {
         stops: visits,
         start: startTrip,
-        return: returnTrip
+        return: returnTrip,
+        resultMode: resultMode
     };
     
     localStorage.setItem('odocalc_visits', JSON.stringify(sessionData));
@@ -479,7 +485,7 @@ const App: React.FC = () => {
 
     if (settings.isDarkMode) document.documentElement.classList.add('dark');
     else document.documentElement.classList.remove('dark');
-  }, [visits, settings, startTrip, returnTrip, clients]);
+  }, [visits, settings, startTrip, returnTrip, clients, resultMode]);
 
   useEffect(() => { setDeleteConfirming(false); setPlanReloadConfirming(false); }, [selectedIds]);
 
@@ -560,10 +566,12 @@ const App: React.FC = () => {
                       setVisits(data.visits);
                       setStartTrip(data.start || null);
                       setReturnTrip(data.return || null);
+                      setResultMode('standard');
                   } else {
                       setVisits(data.visits.stops || []);
                       setStartTrip(data.visits.start || null);
                       setReturnTrip(data.visits.return || null);
+                      setResultMode(data.visits.resultMode || 'standard');
                   }
               }
 

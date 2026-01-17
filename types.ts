@@ -1,5 +1,7 @@
 
 
+
+
 export interface Visit {
   id: string; // Unique ID for React keys and selection tracking
   name: string;
@@ -93,11 +95,14 @@ export enum CalculationStatus {
   ERROR = 'ERROR'
 }
 
+export type ResultMode = 'standard' | 'preview' | 'optimal';
+
 // New Consolidated Session Structure
 export interface SessionData {
     stops: Visit[];
     start: StartTrip | null;
     return: ReturnTrip | null;
+    resultMode?: ResultMode;
 }
 
 // Payload for Cloud Sync

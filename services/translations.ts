@@ -4,8 +4,8 @@ export type Language = 'cs' | 'en';
 
 export const translations = {
   en: {
-    appTitle: "VisOpt",
-    subTitle: "Smart Visit Planning & Route Optimization",
+    appTitle: "Wiz!T",
+    subTitle: "Plan, Optimize, Visit...",
     footerBrand: "VISOPT_APP_VERSION",
     keyMissing: "Key Missing",
     
@@ -181,8 +181,8 @@ export const translations = {
     msgAddedToRoute: "clients added to route.",
   },
   cs: {
-    appTitle: "VisOpt",
-    subTitle: "Chytré plánování návštěv a optimalizace tras",
+    appTitle: "Wiz!T",
+    subTitle: "Plánuj, Optimalizuj, Navštěvuj...",
     footerBrand: "VISOPT_APP_VERSION",
     keyMissing: "Chybí klíč",
     

@@ -1,7 +1,5 @@
-
-
 import React, { useState } from 'react';
-import { Visit, ReturnTrip, StartTrip } from '../types';
+import { Visit, ReturnTrip, StartTrip, ResultMode } from '../types';
 import { translations, Language } from '../services/translations';
 import {
   DndContext, 
@@ -20,8 +18,6 @@ import {
   useSortable
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-
-export type ResultMode = 'standard' | 'preview' | 'optimal';
 
 interface VisitListProps {
   visits: Visit[];
@@ -276,7 +272,7 @@ const SortableRow: React.FC<SortableRowProps> = ({ visit, isSelected, onToggleSe
 
 // --- Main List Component ---
 export const VisitList: React.FC<VisitListProps> = ({ 
-  visits, startTrip, returnTrip, selectedIds, onToggleSelect, onToggleAll, onEdit, onReorder, onToggleSkip, onDelete, lang, departureTime, resultMode = 'standard' as ResultMode
+  visits, startTrip, returnTrip, selectedIds, onToggleSelect, onToggleAll, onEdit, onReorder, onToggleSkip, onDelete, lang, departureTime, resultMode
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState<{ key: keyof Visit, direction: 'asc' | 'desc' } | null>(null);
@@ -352,8 +348,8 @@ export const VisitList: React.FC<VisitListProps> = ({
   const showTotals = startTrip && (activeVisits.length > 0 || returnTrip);
 
   // Result classes for Return Trip
-  const returnResultClass = getResultColor(resultMode as ResultMode, !returnTrip);
-  const returnOdometerClass = getResultColor(resultMode as ResultMode, !returnTrip?.totalOdometer);
+  const returnResultClass = getResultColor(resultMode, !returnTrip);
+  const returnOdometerClass = getResultColor(resultMode, !returnTrip?.totalOdometer);
 
   // Theme for Totals Row
   const totalTheme = React.useMemo(() => {
