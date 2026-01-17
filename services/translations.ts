@@ -19,6 +19,7 @@ export const translations = {
     hideMap: "Hide Map",
     optimal: "Optimal",
     calculate: "Calculate",
+    precalc: "Pre-Calc",
     cancel: "Cancel",
     save: "Save",
     saveSettings: "Save Settings",
@@ -34,6 +35,7 @@ export const translations = {
     btnSaveCurrent: "Save Current List",
     btnCheckUpdates: "Check for updates",
     btnTryIt: "Try It",
+    search: "Search...",
 
     // Saved Routes Modal
     savedRoutesTitle: "Route Manager",
@@ -194,6 +196,7 @@ export const translations = {
     hideMap: "Skrýt mapu",
     optimal: "Optimální",
     calculate: "Spočítat",
+    precalc: "Předběžný",
     cancel: "Zrušit",
     save: "Uložit",
     saveSettings: "Uložit nastavení",
@@ -209,6 +212,7 @@ export const translations = {
     btnSaveCurrent: "Uložit aktuální",
     btnCheckUpdates: "Zkontrolovat aktualizace",
     btnTryIt: "Zkusit",
+    search: "Hledat...",
 
     // Saved Routes Modal
     savedRoutesTitle: "Správce tras",
