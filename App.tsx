@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Visit, Client, AppSettings, CalculationStatus, ReturnTrip, StartTrip, SavedRoute } from './types';
+import { Visit, Client, AppSettings, CalculationStatus, ReturnTrip, StartTrip, SavedRoute, BackupData } from './types';
 import { VisitList, ResultMode } from './components/VisitList';
 import { VisitModal } from './components/VisitModal';
 import { SettingsModal } from './components/SettingsModal';
@@ -120,29 +120,35 @@ const App: React.FC = () => {
     }
   }, []);
 
+  // Helper to apply cloud data to React State
+  const applyCloudData = (data: BackupData) => {
+      if (data.clients) setClients(data.clients);
+      if (data.settings) {
+          setSettings(data.settings);
+          // Re-apply API key if needed
+          if (data.settings.googleApiKey) {
+              setRuntimeApiKey(data.settings.googleApiKey);
+              loadGoogleMapsScript(data.settings.googleApiKey)
+                  .then(() => setIsApiReady(true))
+                  .catch(() => setIsApiReady(false));
+          }
+      }
+      
+      // Restore Session Data
+      if (data.visits) setVisits(data.visits);
+      if (data.start) setStartTrip(data.start);
+      else setStartTrip(null); // Ensure null if missing
+      
+      if (data.return) setReturnTrip(data.return);
+      else setReturnTrip(null); // Ensure null if missing
+  };
+
   const handleSyncFromCloud = async (currentUser: User) => {
     setIsSyncing(true);
     try {
         const result = await FirebaseService.syncDown(currentUser);
         if (result.updated && result.data) {
-            // Update React State from Cloud Data
-            if (result.data.clients) setClients(result.data.clients);
-            if (result.data.settings) {
-                setSettings(result.data.settings);
-                // Re-apply API key if needed
-                if (result.data.settings.googleApiKey) {
-                    setRuntimeApiKey(result.data.settings.googleApiKey);
-                    loadGoogleMapsScript(result.data.settings.googleApiKey)
-                        .then(() => setIsApiReady(true))
-                        .catch(() => setIsApiReady(false));
-                }
-            }
-            
-            // Restore Session Data
-            if (result.data.visits) setVisits(result.data.visits);
-            if (result.data.start) setStartTrip(result.data.start);
-            if (result.data.return) setReturnTrip(result.data.return);
-
+            applyCloudData(result.data);
             // Silent success - visual feedback via spinner only
         }
         // If successful (or no update needed), verification passes
@@ -174,10 +180,23 @@ const App: React.FC = () => {
       if (user) {
           setIsSyncing(true);
           try {
-              // We try to sync UP first
-              await FirebaseService.syncUp(user);
-              // Then sync DOWN to ensure consistency (optional, but good for versioning)
-              await FirebaseService.syncDown(user);
+              // 1. Try to sync DOWN first (Check if cloud is newer)
+              const downResult = await FirebaseService.syncDown(user);
+              
+              if (downResult.updated && downResult.data) {
+                  // Cloud was newer!
+                  // We update local state and DO NOT push back up (avoid overwriting valid cloud data with stale local data).
+                  console.log("[AutoSync] Cloud was newer. Updated local state.");
+                  applyCloudData(downResult.data);
+                  
+                  // Optional: Notify user that view updated?
+                  // For seamless experience, we usually keep it silent or show a small flash.
+                  // But since 'Sync completed successfully' bar was removed, the spinning icon is enough.
+              } else {
+                  // Cloud was NOT newer. It is safe to push local changes UP.
+                  console.log("[AutoSync] Local is newer or equal. Pushing changes.");
+                  await FirebaseService.syncUp(user);
+              }
               
               // Silent success - no message
           } catch (e: any) {
