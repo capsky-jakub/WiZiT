@@ -6,7 +6,7 @@ export const translations = {
   en: {
     appTitle: "VisOpt",
     subTitle: "Smart Visit Planning & Route Optimization",
-    footerBrand: "The evolution of OdoCalc",
+    footerBrand: "VISOPT_APP_VERSION",
     keyMissing: "Key Missing",
     
     // Buttons
@@ -181,7 +181,7 @@ export const translations = {
   cs: {
     appTitle: "VisOpt",
     subTitle: "Chytré plánování návštěv a optimalizace tras",
-    footerBrand: "Evoluce aplikace OdoCalc",
+    footerBrand: "VISOPT_APP_VERSION",
     keyMissing: "Chybí klíč",
     
     // Buttons
