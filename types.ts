@@ -121,3 +121,5 @@ export interface BackupData {
   start?: StartTrip | null;
   return?: ReturnTrip | null;
 }
+
+export type SyncCategory = 'clients' | 'settings' | 'savedRoutes' | 'lmod' | 'visits';

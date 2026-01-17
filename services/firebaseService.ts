@@ -1,9 +1,11 @@
 
 
+
+
 import { initializeApp, FirebaseApp, getApps } from "firebase/app";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, User, Auth, onAuthStateChanged } from "firebase/auth";
 import { getFirestore, doc, setDoc, getDoc, Firestore } from "firebase/firestore/lite";
-import { BackupData, SessionData } from "../types";
+import { BackupData, SessionData, SyncCategory } from "../types";
 
 // --- HARDCODED CONFIGURATION ---
 const firebaseConfig = {
@@ -74,57 +76,70 @@ export const FirebaseService = {
   },
 
   /**
-   * Syncs local data to Firestore (Upload)
+   * Syncs local data to Firestore (Upload).
+   * Supports Partial Updates via `categories`.
    */
-  syncUp: async (user: User) => {
+  syncUp: async (user: User, categories?: SyncCategory[]) => {
     if (!user || !user.email || !db) return;
 
     try {
-      const clients = JSON.parse(localStorage.getItem('odocalc_db_clients') || '[]');
-      const settings = JSON.parse(localStorage.getItem('odocalc_settings') || '{}');
-      const savedRoutes = JSON.parse(localStorage.getItem('odocalc_saved_routes') || '[]');
-      const lmod = JSON.parse(localStorage.getItem('odocalc_lmod') || '{}');
-      
-      // Load raw visits data - this is now a SessionData object in localStorage
-      const visitsRaw = localStorage.getItem('odocalc_visits');
-      let sessionData: SessionData | any[] = [];
-      
-      if (visitsRaw) {
-          try {
-              sessionData = JSON.parse(visitsRaw);
-          } catch(e) {
-              sessionData = [];
-          }
-      }
-      
-      // Fallback for legacy localstorage structure if it wasn't migrated yet
-      // (Though App.tsx should migrate it on save)
-      if (Array.isArray(sessionData)) {
-          const start = JSON.parse(localStorage.getItem('odocalc_start') || 'null');
-          const ret = JSON.parse(localStorage.getItem('odocalc_return') || 'null');
-          sessionData = {
-              stops: sessionData,
-              start: start,
-              return: ret
-          };
-      }
-
-      const payload: BackupData = {
-        clients,
-        settings,
-        savedRoutes,
-        lmod,
-        timestamp: Date.now(),
-        // Consolidate Session Data
-        visits: sessionData
+      const payload: Partial<BackupData> = {
+          timestamp: Date.now()
       };
 
-      await setDoc(doc(db, COLLECTION, user.email), payload);
+      // Helper to check if a category should be included
+      const shouldInclude = (cat: SyncCategory) => !categories || categories.includes(cat);
+
+      if (shouldInclude('clients')) {
+          payload.clients = JSON.parse(localStorage.getItem('odocalc_db_clients') || '[]');
+      }
+
+      if (shouldInclude('settings')) {
+          payload.settings = JSON.parse(localStorage.getItem('odocalc_settings') || '{}');
+      }
+
+      if (shouldInclude('savedRoutes')) {
+          payload.savedRoutes = JSON.parse(localStorage.getItem('odocalc_saved_routes') || '[]');
+      }
+
+      if (shouldInclude('lmod')) {
+          payload.lmod = JSON.parse(localStorage.getItem('odocalc_lmod') || '{}');
+      }
+
+      if (shouldInclude('visits')) {
+          // Load raw visits data - this is now a SessionData object in localStorage
+          const visitsRaw = localStorage.getItem('odocalc_visits');
+          let sessionData: SessionData | any[] = [];
+          
+          if (visitsRaw) {
+              try {
+                  sessionData = JSON.parse(visitsRaw);
+              } catch(e) {
+                  sessionData = [];
+              }
+          }
+          
+          // Fallback for legacy localstorage structure migration
+          if (Array.isArray(sessionData)) {
+              const start = JSON.parse(localStorage.getItem('odocalc_start') || 'null');
+              const ret = JSON.parse(localStorage.getItem('odocalc_return') || 'null');
+              sessionData = {
+                  stops: sessionData,
+                  start: start,
+                  return: ret
+              };
+          }
+          payload.visits = sessionData;
+      }
+
+      // Merge: true allows partial updates (only fields present in payload are updated)
+      await setDoc(doc(db, COLLECTION, user.email), payload, { merge: true });
       
       // Update local tracking timestamp
-      localStorage.setItem('odocalc_last_modified', payload.timestamp.toString());
+      localStorage.setItem('odocalc_last_modified', payload.timestamp!.toString());
       
-      console.log(`[Cloud] Synced UP successfully for ${user.email}`);
+      const mode = categories ? `PARTIAL [${categories.join(', ')}]` : "FULL";
+      console.log(`[Cloud] Synced UP (${mode}) successfully for ${user.email}`);
     } catch (e: any) {
       console.error("[Cloud] Sync UP failed", e);
       const msg = e.message || '';
@@ -143,6 +158,7 @@ export const FirebaseService = {
   /**
    * Syncs Cloud data to Local (Download)
    * Returns true if data was updated, false otherwise.
+   * Scenario 1: ALWAYS downloads full dataset when newer.
    */
   syncDown: async (user: User): Promise<{ updated: boolean, data?: BackupData }> => {
     if (!user || !user.email || !db) return { updated: false };
@@ -157,12 +173,12 @@ export const FirebaseService = {
 
         console.log(`[Cloud] Timestamp Check - Local: ${localTs}, Cloud: ${cloudData.timestamp}`);
 
-        // If Cloud is newer than Local, overwrite Local
+        // If Cloud is newer than Local, overwrite Local (Full Import)
         if (cloudData.timestamp > localTs) {
-          localStorage.setItem('odocalc_db_clients', JSON.stringify(cloudData.clients || []));
-          localStorage.setItem('odocalc_settings', JSON.stringify(cloudData.settings || {}));
-          localStorage.setItem('odocalc_saved_routes', JSON.stringify(cloudData.savedRoutes || []));
-          localStorage.setItem('odocalc_lmod', JSON.stringify(cloudData.lmod || {}));
+          if (cloudData.clients) localStorage.setItem('odocalc_db_clients', JSON.stringify(cloudData.clients));
+          if (cloudData.settings) localStorage.setItem('odocalc_settings', JSON.stringify(cloudData.settings));
+          if (cloudData.savedRoutes) localStorage.setItem('odocalc_saved_routes', JSON.stringify(cloudData.savedRoutes));
+          if (cloudData.lmod) localStorage.setItem('odocalc_lmod', JSON.stringify(cloudData.lmod));
           
           // Restore Session Data (Handle New Object vs Old Array)
           if (cloudData.visits) {

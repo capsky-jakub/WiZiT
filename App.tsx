@@ -1,7 +1,7 @@
 
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Visit, Client, AppSettings, CalculationStatus, ReturnTrip, StartTrip, SavedRoute, BackupData, SessionData, ResultMode } from './types';
+import { Visit, Client, AppSettings, CalculationStatus, ReturnTrip, StartTrip, SavedRoute, BackupData, SessionData, ResultMode, SyncCategory } from './types';
 import { VisitList } from './components/VisitList';
 import { VisitModal } from './components/VisitModal';
 import { SettingsModal } from './components/SettingsModal';
@@ -187,7 +187,38 @@ const App: React.FC = () => {
     }
   };
 
-  const handleTriggerSync = async () => {
+  /**
+   * Helper to perform a partial sync of specific categories.
+   * This corresponds to Scenario 2 (OUT): Only upload changed segments.
+   */
+  const handlePartialSync = async (categories: SyncCategory[]) => {
+      if (!isFirebaseReady || !user || isSyncing) return;
+      
+      setIsSyncing(true);
+      try {
+          // Directly upload the specific category with merge: true
+          await FirebaseService.syncUp(user, categories);
+      } catch (e: any) {
+          if (e.message === "PERMISSION_DENIED") {
+              setMsgType('warning');
+              setMsgTitle("Access Revoked");
+              setCompilationInfo("Sync Failed: Access Denied.");
+              await FirebaseService.signOut();
+              setUser(null);
+              setTimeout(() => setCompilationInfo(null), 5000);
+          } else {
+              console.error(`Partial sync failed for ${categories.join(',')}`, e);
+          }
+      } finally {
+          setIsSyncing(false);
+      }
+  };
+
+  /**
+   * Manual Trigger (Sync Button).
+   * Checks Cloud first (IN), then Full Upload (OUT) if needed.
+   */
+  const handleFullSyncCheck = async () => {
       if (isSyncing) return; // Prevent concurrent syncs
       if (user) {
           setIsSyncing(true);
@@ -196,17 +227,14 @@ const App: React.FC = () => {
               const downResult = await FirebaseService.syncDown(user);
               
               if (downResult.updated && downResult.data) {
-                  // Cloud was newer!
-                  // We update local state and DO NOT push back up (avoid overwriting valid cloud data with stale local data).
+                  // Cloud was newer! Update local.
                   console.log("[AutoSync] Cloud was newer. Updated local state.");
                   applyCloudData(downResult.data);
               } else {
-                  // Cloud was NOT newer. It is safe to push local changes UP.
+                  // Cloud was NOT newer. Safe to push local changes UP (Full Backup).
                   console.log("[AutoSync] Local is newer or equal. Pushing changes.");
                   await FirebaseService.syncUp(user);
               }
-              
-              // Silent success - no message
           } catch (e: any) {
               if (e.message === "PERMISSION_DENIED") {
                   setMsgType('warning');
@@ -430,7 +458,8 @@ const App: React.FC = () => {
 
       autoSyncTimeout.current = setTimeout(() => {
           console.debug("[AutoSync] Triggering sync due to session modification...");
-          handleTriggerSync();
+          // Visits/Session changes -> Partial Sync of 'visits'
+          handlePartialSync(['visits']);
       }, 2000); // 2 second debounce
 
       return () => {
@@ -447,7 +476,7 @@ const App: React.FC = () => {
           // If app is idle and authorized, try to sync down
           if (!isSyncing && !isVerifying) {
               console.log("[AutoSync] App focused/visible, checking for cloud updates...");
-              handleTriggerSync();
+              handleFullSyncCheck();
           }
       };
 
@@ -582,8 +611,8 @@ const App: React.FC = () => {
                     .catch(() => setIsApiReady(false));
               }
               console.log(t.msgImportSuccess);
-              // Trigger sync after manual restore
-              handleTriggerSync();
+              // Trigger sync after manual restore - using Full Sync check
+              handleFullSyncCheck();
           } catch (err: any) { console.error(t.msgImportFail, err.message); }
       };
       reader.readAsText(file);
@@ -619,8 +648,8 @@ const App: React.FC = () => {
           setCacheExpirationDays(30); 
           setDbDeleteConfirming(false);
           console.log(t.msgDbCleared);
-          // Sync clear
-          handleTriggerSync();
+          // Sync clear (Full update needed to clear cloud)
+          handleFullSyncCheck();
       } else {
           setDbDeleteConfirming(true);
           setTimeout(() => setDbDeleteConfirming(false), 4000);
@@ -680,8 +709,8 @@ const App: React.FC = () => {
         } else {
              setClients(prev => [...prev, { ...newClientData, id: uuid() }]);
         }
-        // Sync Clients
-        setTimeout(handleTriggerSync, 100);
+        // Partial Sync for Clients
+        setTimeout(() => handlePartialSync(['clients']), 100);
     }
     setIsModalOpen(false);
   };
@@ -701,12 +730,12 @@ const App: React.FC = () => {
 
   const handleDeleteClient = (id: string) => {
       setClients(prev => prev.filter(c => c.id !== id));
-      setTimeout(handleTriggerSync, 100);
+      setTimeout(() => handlePartialSync(['clients']), 100);
   };
   
   const handleBulkDeleteClients = (ids: Set<string>) => {
       setClients(prev => prev.filter(c => !ids.has(c.id)));
-      setTimeout(handleTriggerSync, 100);
+      setTimeout(() => handlePartialSync(['clients']), 100);
   };
 
   const handleBulkValidateClients = async (ids: Set<string>) => {
@@ -729,7 +758,7 @@ const App: React.FC = () => {
           } catch(e) {}
       }
       setClients(updatedClients);
-      setTimeout(handleTriggerSync, 100);
+      setTimeout(() => handlePartialSync(['clients']), 100);
   };
 
   const handleAddClientsToRoute = (selectedClients: Client[]) => {
@@ -794,7 +823,7 @@ const App: React.FC = () => {
           }));
           setClients(prev => [...prev, ...newClients]);
           console.log(`${t.msgImportSuccess} (${newClients.length})`);
-          setTimeout(handleTriggerSync, 100);
+          setTimeout(() => handlePartialSync(['clients']), 100);
       } catch (e: any) {
           console.error(e);
           alert(e.message);
@@ -819,7 +848,8 @@ const App: React.FC = () => {
           setCacheExpirationDays(newSettings.cacheExpirationDays);
       }
       setSettings(newSettings);
-      setTimeout(handleTriggerSync, 100);
+      // Partial Sync for Settings
+      setTimeout(() => handlePartialSync(['settings']), 100);
   };
 
   const handleDeleteClick = () => {
@@ -883,7 +913,7 @@ const App: React.FC = () => {
               return [...prev, ...uniqueNew];
           });
           
-          setTimeout(handleTriggerSync, 100);
+          setTimeout(() => handlePartialSync(['clients']), 100);
 
       } catch (err: any) { console.error("Sample Load Failed:", err.message); }
   };
@@ -1021,7 +1051,13 @@ const App: React.FC = () => {
       
       if (commitOdometer) {
           setSettings(prev => ({ ...prev, currentOdometer: currentOdo }));
+          // If we commit odometer, we updated settings
+          handlePartialSync(['settings']);
       }
+      
+      // Also update LMOD cache in cloud as we likely fetched new distances
+      handlePartialSync(['lmod']);
+
       console.log("Route calculation completed successfully.");
     } catch (err: any) { console.error(err); setErrorMsg(err.message || "An unknown error occurred during calculation."); setCalcStatus(CalculationStatus.ERROR); setStartTrip(null); }
   };
@@ -1133,7 +1169,7 @@ const App: React.FC = () => {
                         </div>
                     ) : (
                         <div className="flex items-center gap-1 bg-green-50 dark:bg-green-900/30 p-1 rounded-md border border-green-100 dark:border-green-800 animate-fade-in">
-                            <button onClick={handleTriggerSync} className={`p-2 rounded-md transition-colors ${isSyncing ? 'animate-spin text-green-600' : 'text-green-600 hover:bg-green-100 dark:text-green-400 dark:hover:bg-green-800'}`} title="Sync Now">
+                            <button onClick={handleFullSyncCheck} className={`p-2 rounded-md transition-colors ${isSyncing ? 'animate-spin text-green-600' : 'text-green-600 hover:bg-green-100 dark:text-green-400 dark:hover:bg-green-800'}`} title="Sync Now (Check Cloud)">
                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
                             </button>
                             <button onClick={handleLogout} className="p-2 text-green-600 hover:bg-green-100 dark:text-green-400 dark:hover:bg-green-800 rounded-md transition-colors" title={`Logout ${user.email}`}>
@@ -1303,7 +1339,7 @@ const App: React.FC = () => {
         currentReturn={returnTrip} 
         onLoadRoute={handleLoadSavedRoute} 
         lang={settings.language} 
-        onRoutesChanged={handleTriggerSync}
+        onRoutesChanged={() => handlePartialSync(['savedRoutes'])}
       />
       <ClientDbModal 
           isOpen={isClientDbOpen} 
