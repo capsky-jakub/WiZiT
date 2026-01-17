@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Visit, Client, AppSettings, CalculationStatus, ReturnTrip, StartTrip, SavedRoute, BackupData } from './types';
+import { Visit, Client, AppSettings, CalculationStatus, ReturnTrip, StartTrip, SavedRoute, BackupData, SessionData } from './types';
 import { VisitList, ResultMode } from './components/VisitList';
 import { VisitModal } from './components/VisitModal';
 import { SettingsModal } from './components/SettingsModal';
@@ -135,12 +135,19 @@ const App: React.FC = () => {
       }
       
       // Restore Session Data
-      if (data.visits) setVisits(data.visits);
-      if (data.start) setStartTrip(data.start);
-      else setStartTrip(null); // Ensure null if missing
-      
-      if (data.return) setReturnTrip(data.return);
-      else setReturnTrip(null); // Ensure null if missing
+      if (data.visits) {
+          if (Array.isArray(data.visits)) {
+              // Legacy Array support
+              setVisits(data.visits);
+              setStartTrip(data.start || null);
+              setReturnTrip(data.return || null);
+          } else {
+              // New Object Structure
+              setVisits(data.visits.stops || []);
+              setStartTrip(data.visits.start || null);
+              setReturnTrip(data.visits.return || null);
+          }
+      }
   };
 
   const handleSyncFromCloud = async (currentUser: User) => {
@@ -346,13 +353,22 @@ const App: React.FC = () => {
         // Priority B: Dynamic
         // Check if we already have visits (from legacy load or session restore) to avoid overwriting
         // Actually, logic is: IF no saved route found AND we have clients -> check daily plan
-        
-        // However, we also have "Priority C: Fallback to last session". 
-        // If the last session has data, we might prefer that over a new dynamic compilation unless user explicitly asks.
-        // But the prompt says "Startup Loading Priority".
+        // However, we check if the session is empty or old
         
         const lastSessionVisits = localStorage.getItem('odocalc_visits');
-        const hasSessionData = lastSessionVisits && JSON.parse(lastSessionVisits).length > 0;
+        let hasSessionData = false;
+        
+        if (lastSessionVisits) {
+            try {
+                const parsed = JSON.parse(lastSessionVisits);
+                // Check if new format (Object) or old (Array)
+                if (Array.isArray(parsed)) {
+                    hasSessionData = parsed.length > 0;
+                } else if (parsed && parsed.stops) {
+                    hasSessionData = parsed.stops.length > 0;
+                }
+            } catch(e) {}
+        }
 
         if (!hasSessionData) {
              console.log("%c[VisOpt] Priority B: Dynamic Compilation", 'color: #1a73e8; font-weight: bold;');
@@ -370,20 +386,28 @@ const App: React.FC = () => {
 
     if (!routeLoaded) {
         // Priority C: Fallback to last session if nothing else
-        const savedVisits = localStorage.getItem('odocalc_visits');
-        if (savedVisits) {
-            try { setVisits(JSON.parse(savedVisits)); } catch (e) {}
+        // NEW LOGIC: Support Object-based visits structure in localStorage
+        const savedVisitsRaw = localStorage.getItem('odocalc_visits');
+        if (savedVisitsRaw) {
+            try { 
+                const parsed = JSON.parse(savedVisitsRaw);
+                
+                if (Array.isArray(parsed)) {
+                    // LEGACY SUPPORT: Array format
+                    setVisits(parsed);
+                    // Try load separate keys
+                    const s = localStorage.getItem('odocalc_start');
+                    if (s) setStartTrip(JSON.parse(s));
+                    const r = localStorage.getItem('odocalc_return');
+                    if (r) setReturnTrip(JSON.parse(r));
+                } else {
+                    // NEW FORMAT: Object { stops: [], start: {}, return: {} }
+                    setVisits(parsed.stops || []);
+                    setStartTrip(parsed.start || null);
+                    setReturnTrip(parsed.return || null);
+                }
+            } catch (e) { console.error("Error loading session", e); }
         }
-    }
-
-    // Load Start/Return (Static trip data) - always load if not set by route
-    if (!startTrip) {
-        const savedStart = localStorage.getItem('odocalc_start');
-        if (savedStart) try { setStartTrip(JSON.parse(savedStart)); } catch (e) {} 
-    }
-    if (!returnTrip) {
-        const savedReturn = localStorage.getItem('odocalc_return');
-        if (savedReturn) try { setReturnTrip(JSON.parse(savedReturn)); } catch (e) {} 
     }
     
     // Mark initial load as done after a brief delay
@@ -435,15 +459,23 @@ const App: React.FC = () => {
       };
   }, [user, isSyncing, isVerifying]);
 
+  // --- Persistence Effect (Updated) ---
   useEffect(() => {
-    localStorage.setItem('odocalc_visits', JSON.stringify(visits));
+    // NEW LOGIC: Consolidate visits, start, and return into one object
+    const sessionData: SessionData = {
+        stops: visits,
+        start: startTrip,
+        return: returnTrip
+    };
+    
+    localStorage.setItem('odocalc_visits', JSON.stringify(sessionData));
+    
+    // Cleanup Legacy Keys if they exist
+    localStorage.removeItem('odocalc_start');
+    localStorage.removeItem('odocalc_return');
+    
     localStorage.setItem('odocalc_settings', JSON.stringify(settings));
     localStorage.setItem('odocalc_db_clients', JSON.stringify(clients));
-
-    if (startTrip) localStorage.setItem('odocalc_start', JSON.stringify(startTrip));
-    else localStorage.removeItem('odocalc_start');
-    if (returnTrip) localStorage.setItem('odocalc_return', JSON.stringify(returnTrip));
-    else localStorage.removeItem('odocalc_return');
 
     if (settings.isDarkMode) document.documentElement.classList.add('dark');
     else document.documentElement.classList.remove('dark');
@@ -470,12 +502,26 @@ const App: React.FC = () => {
               const val = localStorage.getItem(key);
               return val ? JSON.parse(val) : null;
           };
+          
+          // Helper to get session data robustly
+          const getSessionData = (): SessionData => {
+              const raw = localStorage.getItem('odocalc_visits');
+              if (!raw) return { stops: [], start: null, return: null };
+              const parsed = JSON.parse(raw);
+              if (Array.isArray(parsed)) {
+                   return { stops: parsed, start: getParsed('odocalc_start'), return: getParsed('odocalc_return') };
+              }
+              return parsed as SessionData;
+          };
+          
+          const session = getSessionData();
+
           const exportData = {
-              visits: getParsed('odocalc_visits'),
+              visits: session, // This will be the SessionData object
               clients: getParsed('odocalc_db_clients'),
               settings: getParsed('odocalc_settings'),
-              start: getParsed('odocalc_start'),
-              return: getParsed('odocalc_return'),
+              // We omit separate start/return keys in new export format
+              // but include them for legacy compat if needed? No, sticking to new format.
               lmod: getParsed('odocalc_lmod'),
               saved_routes: getParsed('odocalc_saved_routes'),
               timestamp: new Date().toISOString()
@@ -502,15 +548,25 @@ const App: React.FC = () => {
               const text = event.target?.result as string;
               const data = JSON.parse(text);
               if (!data.visits && !data.settings) throw new Error("Invalid backup file format");
+              
               if (data.lmod) localStorage.setItem('odocalc_lmod', JSON.stringify(data.lmod));
               if (data.saved_routes) localStorage.setItem('odocalc_saved_routes', JSON.stringify(data.saved_routes));
               if (data.settings) setSettings(data.settings);
               if (data.clients) setClients(data.clients);
+              
+              // Handle Session Import (New Object vs Old Array)
               if (data.visits) {
-                  setVisits(data.visits);
-                  setStartTrip(data.start || null);
-                  setReturnTrip(data.return || null);
+                  if (Array.isArray(data.visits)) {
+                      setVisits(data.visits);
+                      setStartTrip(data.start || null);
+                      setReturnTrip(data.return || null);
+                  } else {
+                      setVisits(data.visits.stops || []);
+                      setStartTrip(data.visits.start || null);
+                      setReturnTrip(data.visits.return || null);
+                  }
               }
+
               if (data.settings?.googleApiKey) {
                   setRuntimeApiKey(data.settings.googleApiKey);
                   loadGoogleMapsScript(data.settings.googleApiKey)
@@ -531,6 +587,11 @@ const App: React.FC = () => {
           localStorage.removeItem('odocalc_lmod');
           localStorage.removeItem('odocalc_saved_routes');
           localStorage.removeItem('odocalc_db_clients');
+          // Session cleanup
+          localStorage.removeItem('odocalc_visits');
+          localStorage.removeItem('odocalc_start');
+          localStorage.removeItem('odocalc_return');
+          
           setVisits([]);
           setClients([]);
           setStartTrip(null);

@@ -3,7 +3,7 @@
 import { initializeApp, FirebaseApp, getApps } from "firebase/app";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, User, Auth, onAuthStateChanged } from "firebase/auth";
 import { getFirestore, doc, setDoc, getDoc, Firestore } from "firebase/firestore/lite";
-import { BackupData } from "../types";
+import { BackupData, SessionData } from "../types";
 
 // --- HARDCODED CONFIGURATION ---
 const firebaseConfig = {
@@ -85,10 +85,29 @@ export const FirebaseService = {
       const savedRoutes = JSON.parse(localStorage.getItem('odocalc_saved_routes') || '[]');
       const lmod = JSON.parse(localStorage.getItem('odocalc_lmod') || '{}');
       
-      // Include Session Data
-      const visits = JSON.parse(localStorage.getItem('odocalc_visits') || '[]');
-      const start = JSON.parse(localStorage.getItem('odocalc_start') || 'null');
-      const ret = JSON.parse(localStorage.getItem('odocalc_return') || 'null');
+      // Load raw visits data - this is now a SessionData object in localStorage
+      const visitsRaw = localStorage.getItem('odocalc_visits');
+      let sessionData: SessionData | any[] = [];
+      
+      if (visitsRaw) {
+          try {
+              sessionData = JSON.parse(visitsRaw);
+          } catch(e) {
+              sessionData = [];
+          }
+      }
+      
+      // Fallback for legacy localstorage structure if it wasn't migrated yet
+      // (Though App.tsx should migrate it on save)
+      if (Array.isArray(sessionData)) {
+          const start = JSON.parse(localStorage.getItem('odocalc_start') || 'null');
+          const ret = JSON.parse(localStorage.getItem('odocalc_return') || 'null');
+          sessionData = {
+              stops: sessionData,
+              start: start,
+              return: ret
+          };
+      }
 
       const payload: BackupData = {
         clients,
@@ -96,10 +115,8 @@ export const FirebaseService = {
         savedRoutes,
         lmod,
         timestamp: Date.now(),
-        // Session
-        visits,
-        start,
-        return: ret
+        // Consolidate Session Data
+        visits: sessionData
       };
 
       await setDoc(doc(db, COLLECTION, user.email), payload);
@@ -147,13 +164,28 @@ export const FirebaseService = {
           localStorage.setItem('odocalc_saved_routes', JSON.stringify(cloudData.savedRoutes || []));
           localStorage.setItem('odocalc_lmod', JSON.stringify(cloudData.lmod || {}));
           
-          // Restore Session Data
-          if (cloudData.visits) localStorage.setItem('odocalc_visits', JSON.stringify(cloudData.visits));
-          if (cloudData.start) localStorage.setItem('odocalc_start', JSON.stringify(cloudData.start));
-          else localStorage.removeItem('odocalc_start'); // Clean up if null
-          
-          if (cloudData.return) localStorage.setItem('odocalc_return', JSON.stringify(cloudData.return));
-          else localStorage.removeItem('odocalc_return');
+          // Restore Session Data (Handle New Object vs Old Array)
+          if (cloudData.visits) {
+              // If it's the new format (Object with stops/start/return)
+              if (!Array.isArray(cloudData.visits) && 'stops' in cloudData.visits) {
+                  localStorage.setItem('odocalc_visits', JSON.stringify(cloudData.visits));
+                  // Clean up legacy keys
+                  localStorage.removeItem('odocalc_start');
+                  localStorage.removeItem('odocalc_return');
+              } 
+              // Legacy Array format from Cloud
+              else if (Array.isArray(cloudData.visits)) {
+                  // Construct new format locally to enforce migration
+                  const sessionData: SessionData = {
+                      stops: cloudData.visits as any[],
+                      start: cloudData.start || null,
+                      return: cloudData.return || null
+                  };
+                  localStorage.setItem('odocalc_visits', JSON.stringify(sessionData));
+                  localStorage.removeItem('odocalc_start');
+                  localStorage.removeItem('odocalc_return');
+              }
+          }
 
           localStorage.setItem('odocalc_last_modified', cloudData.timestamp.toString());
           

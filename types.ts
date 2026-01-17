@@ -93,6 +93,13 @@ export enum CalculationStatus {
   ERROR = 'ERROR'
 }
 
+// New Consolidated Session Structure
+export interface SessionData {
+    stops: Visit[];
+    start: StartTrip | null;
+    return: ReturnTrip | null;
+}
+
 // Payload for Cloud Sync
 export interface BackupData {
   clients: Client[];
@@ -102,7 +109,10 @@ export interface BackupData {
   timestamp: number; // Last modified time
   
   // Session Data (Synced)
-  visits?: Visit[];
+  // Can be legacy Array or new SessionData object
+  visits?: SessionData | Visit[]; 
+  
+  // Legacy fields (kept optional for importing old backups)
   start?: StartTrip | null;
   return?: ReturnTrip | null;
 }

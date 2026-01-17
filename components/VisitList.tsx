@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { Visit, ReturnTrip, StartTrip } from '../types';
 import { translations, Language } from '../services/translations';
@@ -388,7 +389,7 @@ export const VisitList: React.FC<VisitListProps> = ({
 
   const ThSortable = ({ column, label, width, align = 'left', colorClass = '' }: { column: keyof Visit, label: string, width?: string, align?: string, colorClass?: string }) => (
       <th 
-        className={`px-2 py-1 text-${align} text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors select-none ${width || ''} ${colorClass}`}
+        className={`px-2 py-1 text-${align} text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors select-none whitespace-nowrap ${width || ''} ${colorClass}`}
         onClick={() => handleSort(column)}
       >
           {label} <SortIcon column={column} />
@@ -418,20 +419,20 @@ export const VisitList: React.FC<VisitListProps> = ({
                 <th scope="col" className="px-2 py-1 text-center w-8">
                     <input type="checkbox" checked={allSelected} onChange={(e) => onToggleAll(e.target.checked)} className="h-4 w-4 text-google-blue focus:ring-google-blue border-gray-300 dark:border-gray-600 rounded cursor-pointer dark:bg-gray-700" />
                 </th>
-                <th className="px-2 py-1 text-center text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-8">{t.colSkip}</th>
+                <th className="px-2 py-1 text-center text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-8 whitespace-nowrap">{t.colSkip}</th>
                 <ThSortable column="order" label={t.colOrder} width="w-12" align="center" />
                 <ThSortable column="name" label={t.colName} />
                 <ThSortable column="surname" label={t.colSurname} />
                 <ThSortable column="address" label={t.colAddress} />
                 <ThSortable column="isAddressValid" label={t.colValid} width="w-12" align="center" />
-                <th className="px-2 py-1 text-right text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-gray-800 dark:text-gray-200">{t.colOdometer}</th>
-                <th className="px-2 py-1 text-right text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t.colDistance}</th>
-                <th className="px-2 py-1 text-right text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t.colTime}</th>
-                <th className="px-2 py-1 text-right text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t.colPlan}</th>
+                <th className="px-2 py-1 text-right text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-gray-800 dark:text-gray-200 whitespace-nowrap">{t.colOdometer}</th>
+                <th className="px-2 py-1 text-right text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">{t.colDistance}</th>
+                <th className="px-2 py-1 text-right text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">{t.colTime}</th>
+                <th className="px-2 py-1 text-right text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">{t.colPlan}</th>
                 <ThSortable column="preferredTime" label={t.colPlanned} align="right" />
-                <th className="px-2 py-1 text-right text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t.colPause}</th>
+                <th className="px-2 py-1 text-right text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">{t.colPause}</th>
                 <ThSortable column="visitDuration" label={t.colDurat} align="right" />
-                <th className="px-2 py-1 text-right text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t.colActions}</th>
+                <th className="px-2 py-1 text-right text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">{t.colActions}</th>
                 </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">

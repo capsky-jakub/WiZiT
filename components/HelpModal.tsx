@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { translations, Language } from '../services/translations';
 import { useDraggable } from '../hooks/useDraggable';
@@ -78,6 +77,13 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang, onL
     }
     return () => window.removeEventListener('keydown', handleEsc);
   }, [isOpen, onClose]);
+
+  const handleCheckUpdates = () => {
+    // Append a timestamp parameter to force a fresh request to the server, bypassing cache
+    const url = new URL(window.location.href);
+    url.searchParams.set('v', Date.now().toString());
+    window.location.href = url.toString();
+  };
 
   if (!isOpen) return null;
 
@@ -343,7 +349,15 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang, onL
         </div>
 
         <div className="mt-8 flex justify-between items-center border-t dark:border-gray-700 pt-4">
-            <span className="text-xs text-gray-400 font-mono italic">{t.footerBrand}</span>
+            <div className="flex items-center gap-3">
+                <span className="text-xs text-gray-400 font-mono italic">{t.footerBrand}</span>
+                <button 
+                    onClick={handleCheckUpdates} 
+                    className="px-2 py-1 text-xs font-medium bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded transition-colors shadow-sm"
+                >
+                    {t.btnCheckUpdates}
+                </button>
+            </div>
             <button onClick={onClose} className="px-8 py-2 bg-google-blue hover:bg-blue-700 text-white rounded-lg font-bold transition-all shadow-md transform hover:scale-105 active:scale-95">
               {t.close}
             </button>
