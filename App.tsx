@@ -177,6 +177,7 @@ const App: React.FC = () => {
   };
 
   const handleTriggerSync = async () => {
+      if (isSyncing) return; // Prevent concurrent syncs
       if (user) {
           setIsSyncing(true);
           try {
@@ -188,10 +189,6 @@ const App: React.FC = () => {
                   // We update local state and DO NOT push back up (avoid overwriting valid cloud data with stale local data).
                   console.log("[AutoSync] Cloud was newer. Updated local state.");
                   applyCloudData(downResult.data);
-                  
-                  // Optional: Notify user that view updated?
-                  // For seamless experience, we usually keep it silent or show a small flash.
-                  // But since 'Sync completed successfully' bar was removed, the spinning icon is enough.
               } else {
                   // Cloud was NOT newer. It is safe to push local changes UP.
                   console.log("[AutoSync] Local is newer or equal. Pushing changes.");
@@ -411,6 +408,32 @@ const App: React.FC = () => {
           if (autoSyncTimeout.current) clearTimeout(autoSyncTimeout.current);
       };
   }, [visits, startTrip, returnTrip]); // Dependencies for auto-sync
+
+  // --- Focus/Visibility Re-Sync Effect ---
+  // Triggers sync when user comes back to the tab
+  useEffect(() => {
+      if (!user) return;
+
+      const performSync = () => {
+          // If app is idle and authorized, try to sync down
+          if (!isSyncing && !isVerifying) {
+              console.log("[AutoSync] App focused/visible, checking for cloud updates...");
+              handleTriggerSync();
+          }
+      };
+
+      const onVisibilityChange = () => {
+          if (document.visibilityState === 'visible') performSync();
+      };
+
+      window.addEventListener('focus', performSync);
+      document.addEventListener('visibilitychange', onVisibilityChange);
+
+      return () => {
+          window.removeEventListener('focus', performSync);
+          document.removeEventListener('visibilitychange', onVisibilityChange);
+      };
+  }, [user, isSyncing, isVerifying]);
 
   useEffect(() => {
     localStorage.setItem('odocalc_visits', JSON.stringify(visits));
