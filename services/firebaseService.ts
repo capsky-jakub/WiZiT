@@ -2,6 +2,8 @@
 
 
 
+
+
 import { initializeApp, FirebaseApp, getApps } from "firebase/app";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, User, Auth, onAuthStateChanged } from "firebase/auth";
 import { getFirestore, doc, setDoc, getDoc, Firestore } from "firebase/firestore/lite";
@@ -160,7 +162,7 @@ export const FirebaseService = {
    * Returns true if data was updated, false otherwise.
    * Scenario 1: ALWAYS downloads full dataset when newer.
    */
-  syncDown: async (user: User): Promise<{ updated: boolean, data?: BackupData }> => {
+  syncDown: async (user: User): Promise<{ updated: boolean, data?: BackupData, synced?: boolean }> => {
     if (!user || !user.email || !db) return { updated: false };
 
     try {
@@ -173,7 +175,6 @@ export const FirebaseService = {
 
         console.log(`[Cloud] Timestamp Check - Local: ${localTs}, Cloud: ${cloudData.timestamp}`);
 
-        // If Cloud is newer than Local, overwrite Local (Full Import)
         if (cloudData.timestamp > localTs) {
           if (cloudData.clients) localStorage.setItem('odocalc_db_clients', JSON.stringify(cloudData.clients));
           if (cloudData.settings) localStorage.setItem('odocalc_settings', JSON.stringify(cloudData.settings));
@@ -207,6 +208,9 @@ export const FirebaseService = {
           
           console.log(`[Cloud] Synced DOWN successfully. Local updated.`);
           return { updated: true, data: cloudData };
+        } else if (cloudData.timestamp === localTs) {
+            console.log(`[Cloud] Timestamps equal. No sync needed.`);
+            return { updated: false, synced: true };
         }
       }
     } catch (e: any) {

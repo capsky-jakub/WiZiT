@@ -1,5 +1,7 @@
 
 
+
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Visit, Client, AppSettings, CalculationStatus, ReturnTrip, StartTrip, SavedRoute, BackupData, SessionData, ResultMode, SyncCategory } from './types';
 import { VisitList } from './components/VisitList';
@@ -215,8 +217,9 @@ const App: React.FC = () => {
   };
 
   /**
-   * Manual Trigger (Sync Button).
+   * Manual Trigger (Sync Button) or Check.
    * Checks Cloud first (IN), then Full Upload (OUT) if needed.
+   * Prevents redundant FULL uploads if timestamps match.
    */
   const handleFullSyncCheck = async () => {
       if (isSyncing) return; // Prevent concurrent syncs
@@ -230,9 +233,12 @@ const App: React.FC = () => {
                   // Cloud was newer! Update local.
                   console.log("[AutoSync] Cloud was newer. Updated local state.");
                   applyCloudData(downResult.data);
+              } else if (downResult.synced) {
+                  // Timestamps equal. Do nothing.
+                  console.log("[AutoSync] In sync. No action needed.");
               } else {
-                  // Cloud was NOT newer. Safe to push local changes UP (Full Backup).
-                  console.log("[AutoSync] Local is newer or equal. Pushing changes.");
+                  // Cloud was NOT newer AND not equal. Local is newer (or no cloud doc). Push changes.
+                  console.log("[AutoSync] Local is newer. Pushing changes.");
                   await FirebaseService.syncUp(user);
               }
           } catch (e: any) {
