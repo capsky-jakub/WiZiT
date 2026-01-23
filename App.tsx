@@ -1,7 +1,5 @@
 
 
-
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Visit, Client, AppSettings, CalculationStatus, ReturnTrip, StartTrip, SavedRoute, BackupData, SessionData, ResultMode, SyncCategory } from './types';
 import { VisitList } from './components/VisitList';
@@ -1052,17 +1050,41 @@ const App: React.FC = () => {
       currentOdo += roundedReturn;
       const returnArrivalTime = addSecondsToTime(currentClock, returnDur);
 
-      setReturnTrip({ address: settings.startAddress, segmentDistance: roundedReturn, exactDistanceKm: returnDist, segmentDuration: returnDur, arrivalTime: returnArrivalTime, totalOdometer: currentOdo });
+      const finalReturnTrip: ReturnTrip = { 
+          address: settings.startAddress, 
+          segmentDistance: roundedReturn, 
+          exactDistanceKm: returnDist, 
+          segmentDuration: returnDur, 
+          arrivalTime: returnArrivalTime, 
+          totalOdometer: currentOdo 
+      };
+
+      setReturnTrip(finalReturnTrip);
       setCalcStatus(CalculationStatus.COMPLETE);
       
+      // --- FORCE SYNC LOGIC (Categories to Sync) ---
+      const categoriesToSync: SyncCategory[] = ['visits', 'lmod'];
+      
       if (commitOdometer) {
-          setSettings(prev => ({ ...prev, currentOdometer: currentOdo }));
-          // If we commit odometer, we updated settings
-          handlePartialSync(['settings']);
+          const newSettings = { ...settings, currentOdometer: currentOdo };
+          setSettings(newSettings); // React State Update
+          // Explicitly save settings to LS to ensure sync picks up new odometer immediately
+          localStorage.setItem('odocalc_settings', JSON.stringify(newSettings));
+          categoriesToSync.push('settings');
       }
       
-      // Also update LMOD cache in cloud as we likely fetched new distances
-      handlePartialSync(['lmod']);
+      // Explicitly save Visits session to LS to ensure sync picks up new results immediately
+      // This bypasses the React state update delay and debounce
+      const sessionData: SessionData = {
+          stops: processingAllVisits,
+          start: initialStartData,
+          return: finalReturnTrip,
+          resultMode: mode
+      };
+      localStorage.setItem('odocalc_visits', JSON.stringify(sessionData));
+
+      // Trigger Immediate Partial Sync
+      handlePartialSync(categoriesToSync);
 
       console.log("Route calculation completed successfully.");
     } catch (err: any) { console.error(err); setErrorMsg(err.message || "An unknown error occurred during calculation."); setCalcStatus(CalculationStatus.ERROR); setStartTrip(null); }
