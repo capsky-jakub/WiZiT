@@ -18,7 +18,7 @@ import { isClientScheduledForDate, sortVisitsByTime } from './services/scheduler
 import { FirebaseService } from './services/firebaseService';
 import { User } from 'firebase/auth';
 
-const DEFAULT_DEV_API_KEY = "AIzaSyAGs1LRYdwFOAxC_jctVh7Lz2evdATfKEk"; 
+const DEFAULT_DEV_API_KEY = ""; 
 
 const uuid = () => Math.random().toString(36).substring(2, 9);
 const commercialRound = (num: number) => Math.floor(num + 0.5);

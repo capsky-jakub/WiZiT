@@ -1,5 +1,6 @@
 {
-  "name": "Wiz!T",
-  "description": "Smart route optimizer and visit planner with Excel integration.",
-  "requestFramePermissions": []
+  "name": "WiZiT",
+  "description": "Plan, Optimize Visit...",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
 }
