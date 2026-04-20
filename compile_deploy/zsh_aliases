@@ -1,10 +1,10 @@
-# --- VISOPT SHORTCUTS ---
+# --- WIZIT SHORTCUTS ---
 # Point this to where you saved the script
-export VISOPT_SCRIPT="/home/capsky-jakub/Dev/WebDev/WiZiT/compile_deploy/deploy.sh"
+export WIZIT_SCRIPT="/home/capsky-jakub/Dev/WebDev/WiZiT/compile_deploy/deploy.sh"
 
-alias vosbd='bash $VISOPT_SCRIPT sync-build-deploy'
-alias vosb='bash $VISOPT_SCRIPT sync-build'
-alias vobd='bash $VISOPT_SCRIPT build-deploy'
-alias vob='bash $VISOPT_SCRIPT build'
-alias vod='bash $VISOPT_SCRIPT deploy'
-alias vo='cd /home/capsky-jakub/Dev/WebDev/WiZiT'
+alias wisbd='bash $WIZIT_SCRIPT sync-build-deploy'
+alias wisb='bash $WIZIT_SCRIPT sync-build'
+alias wibd='bash $WIZIT_SCRIPT build-deploy'
+alias wib='bash $WIZIT_SCRIPT build'
+alias wid='bash $WIZIT_SCRIPT deploy'
+alias wi='cd /home/capsky-jakub/Dev/WebDev/WiZiT'

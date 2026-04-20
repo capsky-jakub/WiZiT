@@ -1,6 +1,6 @@
 
 {
-  "name": "visopt-odocalc",
+  "name": "wizit-odocalc",
   "version": "1.0.0",
   "description": "Smart route optimizer and visit planner",
   "main": "index.tsx",

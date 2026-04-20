@@ -1,59 +1,69 @@
-# Project Overview
+# WiZiT (wizit-odocalc) - Project Documentation
 
-**visopt-odocalc (WiZiT)** is a React-based frontend application built with Vite and TypeScript. It functions as a smart route optimizer and daily visit planner, likely tailored for field agents, sales reps, or delivery drivers. 
+## Project Overview
+WiZiT is a smart route optimizer and visit planner designed for mobile professionals. It allows users to manage a database of clients, schedule recurring visits, and calculate optimal driving routes between multiple locations using advanced algorithms and real-time mapping data.
 
-## Key Technologies
-- **Frontend Framework:** React 18
-- **Language:** TypeScript
-- **Build Tool:** Vite (configured with `vite-plugin-singlefile` to bundle the entire app into a single `index.html`)
-- **Routing & Maps:** Google Maps API (`services/googleMapsService.ts`)
-- **Optimization:** Custom TSP (Traveling Salesperson Problem) solver (`services/tspSolver.ts`)
-- **Backend/Cloud Sync:** Firebase (Auth & Firestore) for syncing local state to the cloud (`services/firebaseService.ts`)
-- **Data Handling:** LocalStorage for primary state persistence, with Excel import/export capabilities (`services/excelService.ts`)
-- **Styling:** Tailwind CSS (inferred from utility classes in UI components)
-- **Drag & Drop:** `@dnd-kit` for reorderable lists
+### Main Technologies
+- **Frontend:** React 18 (TypeScript), Vite
+- **Styling:** Vanilla CSS
+- **State Management:** React Hooks (useState, useEffect, useRef)
+- **Mapping & Routing:** Google Maps Platform (Distance Matrix, Places, Address Validation)
+- **Optimization:** Custom TSP (Traveling Salesperson Problem) solver (Nearest Neighbor + 2-OPT refinement)
+- **Backend & Sync:** Firebase (Authentication & Firestore)
+- **Drag & Drop:** `@dnd-kit`
+- **Excel Support:** Custom parser for client and visit data imports/exports
 
-## Architecture & State Management
-- The app operates primarily offline-first or local-first, storing state (`visits`, `settings`, `clients`, `saved_routes`) in `localStorage`.
-- Firebase is used purely for cloud backup and synchronization across devices, handling authentication and pushing/pulling JSON payloads to Firestore.
-- Business logic is heavily decoupled into the `services/` directory.
-- `App.tsx` serves as the central state orchestrator, managing large UI and data synchronization states.
+## Architecture
+The application follows a modular React architecture:
+- `App.tsx`: The central orchestrator managing global state, orchestration of calculations, and modal visibility.
+- `services/`: Encapsulates business logic and external API integrations.
+    - `googleMapsService.ts`: Handles geocoding, distance matrix calculations (including batch processing), and address validation.
+    - `tspSolver.ts`: Contains the optimization logic for route sequencing.
+    - `firebaseService.ts`: Manages cloud synchronization and user authentication.
+    - `distanceCache.ts`: Implements "LMOD" (Local Matrix Object Data), a persistent localStorage cache for distance data to minimize API costs and latency.
+    - `scheduler.ts`: Logic for determining which clients are due for a visit based on recurrence patterns.
+- `components/`: UI components organized by feature (Modals, Tables, Map views).
+- `types.ts`: Centralized TypeScript definitions for core entities like `Visit`, `Client`, `SavedRoute`, and `AppSettings`.
 
 ## Building and Running
 
-Ensure you have Node.js installed.
+### Development
+```bash
+# Install dependencies
+npm install
 
-1. **Install dependencies:**
-   ```bash
-   npm install
-   ```
+# Run the development server
+npm run dev
+```
 
-2. **Configuration:**
-   - The application relies on Google Maps and Firebase.
-   - For local development, set the `GEMINI_API_KEY` (if using AI features) in `.env.local` as per the README.
-   - Firebase configuration is hardcoded in `services/firebaseService.ts`, but ensure the corresponding project is accessible.
-   - Google Maps API key can be set in the application's UI settings or via `DEFAULT_DEV_API_KEY` in `App.tsx`.
+### Production Build
+```bash
+# Build the project using Vite
+npm run build
+```
 
-3. **Start Development Server:**
-   ```bash
-   npm run dev
-   ```
+### Deployment
+The project includes a custom deployment pipeline in `compile_deploy/deploy.sh`. This script handles:
+1. Cleaning the `dist` folder.
+2. Running the build.
+3. Version injection.
+4. API key sanitization (wiping dev keys and protecting specific production keys).
+5. Deploying to Google Cloud Storage (GCS).
 
-4. **Build for Production:**
-   ```bash
-   npm run build
-   ```
-   *Note: This produces a single `index.html` file in the `dist` folder.*
-
-5. **Preview Production Build:**
-   ```bash
-   npm run start
-   ```
+```bash
+# Example deployment command
+./compile_deploy/deploy.sh build-deploy
+```
 
 ## Development Conventions
+- **Type Safety:** Strict TypeScript usage is encouraged. All shared interfaces are defined in `types.ts`.
+- **API Optimization:** Always prefer using `DistanceCache` (LMOD) to avoid redundant Google Maps API calls. Batch operations in `googleMapsService.ts` should be used for large sets of addresses.
+- **Localization:** Use the `translations.ts` service for UI text. Support is currently provided for English (`en`) and Czech (`cs`).
+- **Idempotency:** Data mutations in `App.tsx` should ensure state consistency, especially when syncing with Firebase.
 
-- **Typing:** Strict TypeScript interfaces are defined in `types.ts` and heavily used throughout components and services.
-- **State Management:** Uses React hooks (`useState`, `useEffect`) and lifts state to the highest necessary component (often `App.tsx`).
-- **Services:** External API calls (Google Maps, Firebase) and complex logic (TSP solver, scheduling) are encapsulated in standalone service files.
-- **Styling:** Uses Tailwind CSS utility classes directly in components.
-- **Localization:** Internationalization is handled via a custom `translations.ts` dictionary, supporting English (`en`) and Czech (`cs`).
+## Key Files
+- `App.tsx`: Main entry point and state container.
+- `types.ts`: Data models and application state interfaces.
+- `services/tspSolver.ts`: Core optimization algorithm.
+- `services/distanceCache.ts`: Performance optimization via persistence.
+- `compile_deploy/deploy.sh`: Production lifecycle management.

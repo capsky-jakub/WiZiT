@@ -13,11 +13,11 @@ export const setRuntimeApiKey = (key: string) => {
 
 // Helper for console logging
 const logApiCall = (method: string, duration: number, details?: string) => {
-    console.debug(`%c[VisOpt API] ${method} took ${duration.toFixed(2)}ms ${details ? `(${details})` : ''}`, 'color: #1a73e8; font-weight: bold;');
+    console.debug(`%c[WiZiT API] ${method} took ${duration.toFixed(2)}ms ${details ? `(${details})` : ''}`, 'color: #1a73e8; font-weight: bold;');
 };
 
 const logCacheHit = (origin: string, dest: string) => {
-    console.debug(`%c[VisOpt LMOD] Cache hit: ${origin.split(',')[0]} -> ${dest.split(',')[0]}`, 'color: #34a853; font-style: italic;');
+    console.debug(`%c[WiZiT LMOD] Cache hit: ${origin.split(',')[0]} -> ${dest.split(',')[0]}`, 'color: #34a853; font-style: italic;');
 };
 
 /**
@@ -51,13 +51,13 @@ export const loadGoogleMapsScript = (apiKey: string): Promise<void> => {
         script.defer = true;
         
         script.onload = () => {
-            console.debug(`%c[VisOpt API] Google Maps Script Loaded Successfully`, 'color: #1a73e8; font-weight: bold;');
+            console.debug(`%c[WiZiT API] Google Maps Script Loaded Successfully`, 'color: #1a73e8; font-weight: bold;');
             resolve();
         };
         
         script.onerror = () => {
             const msg = "Failed to load Google Maps script. Check your API Key.";
-            console.error(`[VisOpt API] ${msg}`);
+            console.error(`[WiZiT API] ${msg}`);
             reject(new Error(msg));
         };
 
@@ -79,7 +79,7 @@ export const getRouteData = async (origin: string, dest: string): Promise<{ dist
   return new Promise((resolve, reject) => {
     if (!(window as any).google || !(window as any).google.maps) {
       const msg = "Google Maps SDK not loaded. Please enter API Key in Settings.";
-      console.warn(`[VisOpt API] ${msg}`);
+      console.warn(`[WiZiT API] ${msg}`);
       reject(msg);
       return;
     }
@@ -98,7 +98,7 @@ export const getRouteData = async (origin: string, dest: string): Promise<{ dist
         logApiCall('DistanceMatrix (Single)', end - start, `${origin.split(',')[0]} -> ${dest.split(',')[0]}`);
 
         if (status !== 'OK') {
-            console.error(`[VisOpt API] Matrix API Error: ${status}`);
+            console.error(`[WiZiT API] Matrix API Error: ${status}`);
             return reject(`Matrix API Error: ${status}`);
         }
 
@@ -151,7 +151,7 @@ export const ensureMatrixData = async (addresses: string[], onProgress?: (msg: s
             }
 
             if (!needsFetch) {
-                console.debug(`%c[VisOpt LMOD] Skipping batch ${i}-${j} (All cached)`, 'color: #34a853; opacity: 0.7;');
+                console.debug(`%c[WiZiT LMOD] Skipping batch ${i}-${j} (All cached)`, 'color: #34a853; opacity: 0.7;');
                 continue;
             }
 
@@ -171,7 +171,7 @@ export const ensureMatrixData = async (addresses: string[], onProgress?: (msg: s
                         logApiCall('DistanceMatrix (Batch)', end - start, `${originsChunk.length}x${destsChunk.length}`);
 
                         if (status !== 'OK') {
-                            console.error(`[VisOpt API] Batch Matrix API Error: ${status}`);
+                            console.error(`[WiZiT API] Batch Matrix API Error: ${status}`);
                             resolve(); 
                             return;
                         }
@@ -221,7 +221,7 @@ export const validateAddressStrict = async (addressStr: string): Promise<string>
     logApiCall('AddressValidation (REST)', end - start, addressStr.split(',')[0]);
 
     if (data.error) {
-        console.error(`[VisOpt API] Validation Error: ${data.error.message}`);
+        console.error(`[WiZiT API] Validation Error: ${data.error.message}`);
         throw new Error("Validation API: " + data.error.message);
     }
 
@@ -234,7 +234,7 @@ export const validateAddressStrict = async (addressStr: string): Promise<string>
 
     return addrObj.formattedAddress || addressStr;
   } catch (err) {
-    console.error(`[VisOpt API] Validation Catch:`, err);
+    console.error(`[WiZiT API] Validation Catch:`, err);
     throw err;
   }
 };

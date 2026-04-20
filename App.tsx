@@ -291,7 +291,7 @@ const App: React.FC = () => {
 
   // Compile Plan Function (Extracted for re-use)
   const loadDailyPlan = (clientSource: Client[]): Visit[] => {
-        console.log("%c[VisOpt] Compiling Daily Plan...", 'color: #1a73e8; font-weight: bold;');
+        console.log("%c[WiZiT] Compiling Daily Plan...", 'color: #1a73e8; font-weight: bold;');
         const today = new Date();
         const compiledVisits: Visit[] = [];
 
@@ -372,7 +372,7 @@ const App: React.FC = () => {
             const dayRoute = savedRoutes.find(r => r.name.trim().toLowerCase() === currentDayName);
 
             if (dayRoute) {
-                console.log(`%c[VisOpt] Priority A: Auto-loading Saved Route: ${dayRoute.name}`, 'color: #d93025; font-weight: bold;');
+                console.log(`%c[WiZiT] Priority A: Auto-loading Saved Route: ${dayRoute.name}`, 'color: #d93025; font-weight: bold;');
                 setVisits(dayRoute.visits);
                 if (dayRoute.startTrip) setStartTrip(dayRoute.startTrip);
                 if (dayRoute.returnTrip) setReturnTrip(dayRoute.returnTrip);
@@ -407,7 +407,7 @@ const App: React.FC = () => {
         }
 
         if (!hasSessionData) {
-             console.log("%c[VisOpt] Priority B: Dynamic Compilation", 'color: #1a73e8; font-weight: bold;');
+             console.log("%c[WiZiT] Priority B: Dynamic Compilation", 'color: #1a73e8; font-weight: bold;');
              const dailyRoute = loadDailyPlan(dbClients);
              if (dailyRoute.length > 0) {
                  setVisits(dailyRoute);
