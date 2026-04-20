@@ -286,8 +286,8 @@ export const ClientDbModal: React.FC<ClientDbModalProps> = ({
                                   className="rounded text-google-blue focus:ring-google-blue cursor-pointer"
                                 />
                             </td>
-                            <td className="px-4 py-1 text-sm text-gray-900 dark:text-gray-100 font-medium">{client.name}</td>
-                            <td className="px-4 py-1 text-sm text-gray-900 dark:text-gray-100">{client.surname}</td>
+                            <td className="px-4 py-1 text-sm text-gray-900 dark:text-gray-100">{client.name}</td>
+                            <td className="px-4 py-1 text-sm text-gray-900 dark:text-gray-100 font-medium">{client.surname}</td>
                             <td className="px-4 py-1 text-sm text-gray-500 dark:text-gray-400 truncate max-w-xs" title={client.address}>{client.address}</td>
                             <td className="px-4 py-1 text-center">
                                 {client.isAddressValid === true && <svg className="w-5 h-5 text-green-500 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>}

@@ -194,10 +194,10 @@ const SortableRow: React.FC<SortableRowProps> = ({ visit, isSelected, onToggleSe
       <td {...listeners} className="cursor-move px-2 py-1 whitespace-nowrap text-base text-gray-500 dark:text-gray-400 font-mono text-center touch-manipulation">
         {visit.order > 0 ? visit.order : '-'}
       </td>
-      <td {...listeners} className="cursor-move px-2 py-1 whitespace-nowrap text-base font-medium text-gray-900 dark:text-white touch-manipulation">
+      <td {...listeners} className="cursor-move px-2 py-1 whitespace-nowrap text-base text-gray-900 dark:text-gray-200 touch-manipulation">
         {visit.name}
       </td>
-      <td {...listeners} className="cursor-move px-2 py-1 whitespace-nowrap text-base text-gray-900 dark:text-gray-200 touch-manipulation">
+      <td {...listeners} className="cursor-move px-2 py-1 whitespace-nowrap text-base font-medium text-gray-900 dark:text-white touch-manipulation">
         {visit.surname}
       </td>
       <td {...listeners} className="cursor-move px-2 py-1 text-base text-gray-500 dark:text-gray-400 touch-manipulation" title={visit.address}>

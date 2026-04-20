@@ -7,6 +7,12 @@
       "hosting": {
         "main-app": [
           "wizit"
+        ],
+        "legacy-app": [
+          "proj-visopt"
+        ],
+        "test-site": [
+          "wizit-test"
         ]
       }
     }
