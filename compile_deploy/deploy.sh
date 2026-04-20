@@ -84,7 +84,7 @@ function _wizit_deploy_logic() {
     echo ""
     echo "------------------------------------------------"
     echo "SUCCESS: Build, Sanitized, and Deployed to Firebase!"
-    echo "URL      : https://proj-visopt.web.app"
+    echo "URL      : https://wizit.web.app"
     echo "Version  : $NEW_VERSION"
     echo "------------------------------------------------"
 }

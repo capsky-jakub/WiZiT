@@ -1,5 +1,15 @@
 {
   "projects": {
     "default": "proj-visopt"
-  }
+  },
+  "targets": {
+    "proj-visopt": {
+      "hosting": {
+        "main-app": [
+          "wizit"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }
