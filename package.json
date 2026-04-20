@@ -1,4 +1,3 @@
-
 {
   "name": "wizit-odocalc",
   "version": "1.0.0",
@@ -14,20 +13,21 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
     "@dnd-kit/core": "^6.0.8",
     "@dnd-kit/sortable": "^7.0.2",
     "@dnd-kit/utilities": "^3.2.1",
     "firebase": "^10.8.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "serve": "^14.2.1"
   },
   "devDependencies": {
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "firebase-tools": "^15.15.0",
     "typescript": "^5.0.2",
     "vite": "^6.0.0",
-    "@vitejs/plugin-react": "^4.3.4",
     "vite-plugin-singlefile": "^2.1.0"
   }
 }

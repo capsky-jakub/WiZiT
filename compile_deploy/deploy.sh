@@ -7,8 +7,6 @@
 
 # --- CONFIGURATION ---
 WIZIT_PROJECT_DIR="/home/capsky-jakub/Dev/WebDev/WiZiT"
-WIZIT_FINAL_NAME="my-wizit-app_m41n.html"
-WIZIT_GCS_BUCKET="gs://myvisopt/"
 WIZIT_FIREBASE_KEY="***REMOVED***"
 
 # Exit immediately if a command exits with a non-zero status
@@ -48,7 +46,6 @@ function _wizit_build() {
 # 4. Sanitize, Version & Deploy
 function _wizit_deploy_logic() {
     local ENTRY_FILE="dist/index.html"
-    local TARGET_FILE="dist/$WIZIT_FINAL_NAME"
 
     # Check if the compiler produced the file
     if [ ! -f "$ENTRY_FILE" ]; then
@@ -56,42 +53,38 @@ function _wizit_deploy_logic() {
         exit 1
     fi
 
-    _log "STEP 4: Renaming, Versioning & Sanitizing"
-    mv "$ENTRY_FILE" "$TARGET_FILE"
+    _log "STEP 4: Versioning & Sanitizing"
 
     # --- VERSION INJECTION ---
     local NEW_VERSION="v$(date +'%y.%m%d.%H%M')"
     echo "Injecting Version: $NEW_VERSION"
-    sed -i "s/WIZIT_APP_VERSION/$NEW_VERSION/g" "$TARGET_FILE"
+    sed -i "s/WIZIT_APP_VERSION/$NEW_VERSION/g" "$ENTRY_FILE"
 
     # --- API KEY SANITIZATION ---
     # 1. Protect specific Firebase key via placeholder
-    sed -i "s/$WIZIT_FIREBASE_KEY/MY_PROTECTED_FIREBASE_KEY/g" "$TARGET_FILE"
+    sed -i "s/$WIZIT_FIREBASE_KEY/MY_PROTECTED_FIREBASE_KEY/g" "$ENTRY_FILE"
     
     # 2. Wipe ALL other Google API keys (AIzaSy + 33 chars)
-    sed -i -E 's/AIzaSy[A-Za-z0-9_-]{33}//g' "$TARGET_FILE"
+    sed -i -E 's/AIzaSy[A-Za-z0-9_-]{33}//g' "$ENTRY_FILE"
     
     # 3. Restore specific key from placeholder
-    sed -i "s/MY_PROTECTED_FIREBASE_KEY/$WIZIT_FIREBASE_KEY/g" "$TARGET_FILE"
+    sed -i "s/MY_PROTECTED_FIREBASE_KEY/$WIZIT_FIREBASE_KEY/g" "$ENTRY_FILE"
 
-    _log "STEP 5: Deploying to Google Cloud Storage"
+    _log "STEP 5: Deploying to Firebase Hosting"
     
     # --- DEBUG TRACE START ---
     set -x 
     
-    # OPTION A: Safety / Dev (No Caching)
-    # gcloud storage cp "$TARGET_FILE" "$WIZIT_GCS_BUCKET" --content-type="text/html" --cache-control="no-cache, no-store, must-revalidate"
-    
-    # OPTION B: Performance (1 Hour Cache) - Currently Active
-    gcloud storage cp "$TARGET_FILE" "$WIZIT_GCS_BUCKET" --content-type="text/html" --cache-control="public, max-age=86400"
+    # Deploy to Firebase Hosting
+    npx firebase deploy --only hosting
     
     set +x
     # --- DEBUG TRACE END ---
 
     echo ""
     echo "------------------------------------------------"
-    echo "SUCCESS: Build, Sanitized, and Deployed!"
-    echo "File Name: $WIZIT_FINAL_NAME"
+    echo "SUCCESS: Build, Sanitized, and Deployed to Firebase!"
+    echo "URL      : https://proj-visopt.web.app"
     echo "Version  : $NEW_VERSION"
     echo "------------------------------------------------"
 }
