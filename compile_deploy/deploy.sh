@@ -6,8 +6,11 @@
 # ==============================================================================
 
 # --- CONFIGURATION ---
+# Load local environment variables if available
+set -a; [ -f .env.local ] && . .env.local; set +a
+
 WIZIT_PROJECT_DIR="/home/capsky-jakub/Dev/WebDev/WiZiT"
-WIZIT_FIREBASE_KEY="***REMOVED***"
+WIZIT_FIREBASE_KEY="${VITE_FIREBASE_API_KEY:-}"
 
 # Exit immediately if a command exits with a non-zero status
 set -e

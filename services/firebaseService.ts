@@ -9,9 +9,9 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, User, Auth, onAu
 import { getFirestore, doc, setDoc, getDoc, Firestore } from "firebase/firestore/lite";
 import { BackupData, SessionData, SyncCategory } from "../types";
 
-// --- HARDCODED CONFIGURATION ---
+// --- CONFIGURATION ---
 const firebaseConfig = {
-  apiKey: "***REMOVED***",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "",
   authDomain: "proj-visopt.firebaseapp.com",
   projectId: "proj-visopt",
   storageBucket: "proj-visopt.firebasestorage.app",
