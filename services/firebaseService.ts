@@ -10,8 +10,7 @@ import { getFirestore, doc, setDoc, getDoc, Firestore } from "firebase/firestore
 import { BackupData, SessionData, SyncCategory } from "../types";
 
 // --- CONFIGURATION ---
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "",
+const firebaseConfigBase = {
   authDomain: "proj-visopt.firebaseapp.com",
   projectId: "proj-visopt",
   storageBucket: "proj-visopt.firebasestorage.app",
@@ -25,23 +24,32 @@ let db: Firestore | undefined;
 
 const COLLECTION = "localstorage";
 
-// Initialize immediately
-try {
-    if (getApps().length > 0) {
-        app = getApps()[0];
-    } else {
-        app = initializeApp(firebaseConfig);
-    }
-    
-    auth = getAuth(app);
-    db = getFirestore(app, "dbvisopt");
-    console.log("[Cloud] Firebase initialized");
-} catch (e) {
-    console.error("[Cloud] Firebase Initialization Failed. Check services/firebaseService.ts config.", e);
-}
-
 export const FirebaseService = {
   
+  initialize: (apiKey: string) => {
+      if (!apiKey || apiKey.length < 10) return false;
+      try {
+          if (getApps().length > 0) {
+              const currentApp = getApps()[0];
+              if (currentApp.options.apiKey === apiKey) {
+                  return true;
+              }
+              console.warn("[Cloud] Firebase key changed. Reloading page.");
+              window.location.reload();
+              return false;
+          }
+          
+          app = initializeApp({ ...firebaseConfigBase, apiKey });
+          auth = getAuth(app);
+          db = getFirestore(app, "dbvisopt");
+          console.log("[Cloud] Firebase initialized dynamically");
+          return true;
+      } catch (e) {
+          console.error("[Cloud] Firebase Initialization Failed.", e);
+          return false;
+      }
+  },
+
   isConfigured: () => {
       return !!auth && !!db;
   },

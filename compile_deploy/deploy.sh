@@ -10,7 +10,7 @@
 set -a; [ -f .env.local ] && . .env.local; set +a
 
 WIZIT_PROJECT_DIR="/home/capsky-jakub/Dev/WebDev/WiZiT"
-WIZIT_FIREBASE_KEY="${VITE_FIREBASE_API_KEY:-}"
+#WIZIT_FIREBASE_KEY="${VITE_FIREBASE_API_KEY:-}"
 
 # Exit immediately if a command exits with a non-zero status
 set -e
@@ -64,14 +64,31 @@ function _wizit_deploy_logic() {
     sed -i "s/WIZIT_APP_VERSION/$NEW_VERSION/g" "$ENTRY_FILE"
 
     # --- API KEY SANITIZATION ---
+    # SAFETY CHECK (Idempotency & Safety):
+    # In 'sed', if the search pattern is empty (i.e. 's//replacement/'), it attempts to 
+    # reuse the last executed regex. If none exists, it throws "no previous regular expression".    
+    # Since an empty $WIZIT_FIREBASE_KEY causes this syntax error, we must strictly check for it.
+    
+        #if [ -z "$WIZIT_FIREBASE_KEY" ]; then
+        #    echo "!!! ERROR: WIZIT_FIREBASE_KEY is empty! Sanitization aborted." >&2
+        #    echo "    -> Please ensure VITE_FIREBASE_API_KEY is defined in .env.local" >&2
+        #    exit 1
+        #fi
+
     # 1. Protect specific Firebase key via placeholder
-    sed -i "s/$WIZIT_FIREBASE_KEY/MY_PROTECTED_FIREBASE_KEY/g" "$ENTRY_FILE"
+    # By replacing the legitimate key with a temporary placeholder, we shield it
+    # from the subsequent aggressive wiping of all other Google API keys.
+    
+        #sed -i "s/$WIZIT_FIREBASE_KEY/MY_PROTECTED_FIREBASE_KEY/g" "$ENTRY_FILE"
     
     # 2. Wipe ALL other Google API keys (AIzaSy + 33 chars)
+    # The flag -E enables extended regular expressions. The pattern 'AIzaSy[A-Za-z0-9_-]{33}'
+    # perfectly matches standard Google Maps/Cloud API keys, preventing accidental leaks.
     sed -i -E 's/AIzaSy[A-Za-z0-9_-]{33}//g' "$ENTRY_FILE"
     
     # 3. Restore specific key from placeholder
-    sed -i "s/MY_PROTECTED_FIREBASE_KEY/$WIZIT_FIREBASE_KEY/g" "$ENTRY_FILE"
+    
+        #sed -i "s/MY_PROTECTED_FIREBASE_KEY/$WIZIT_FIREBASE_KEY/g" "$ENTRY_FILE"
 
     _log "STEP 5: Deploying to Firebase Hosting"
     

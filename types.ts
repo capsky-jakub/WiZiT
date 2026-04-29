@@ -83,6 +83,7 @@ export interface AppSettings {
   isStartValid?: boolean; // Track if start address is validated
   isDarkMode: boolean; // Dark mode toggle
   googleApiKey?: string; // User provided API Key (Unencrypted)
+  firebaseApiKey?: string; // User provided Firebase API Key (Unencrypted)
   cacheExpirationDays?: number; // Cache expiration in days
   language: 'cs' | 'en'; // Display language
 }

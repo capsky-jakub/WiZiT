@@ -17,6 +17,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, s
   const [validationStatus, setValidationStatus] = useState<{isValid?: boolean, msg?: string}>({});
   const [isValidating, setIsValidating] = useState(false);
   const [keyStatus, setKeyStatus] = useState<'valid' | 'invalid' | 'unknown'>('unknown');
+  const [firebaseKeyStatus, setFirebaseKeyStatus] = useState<'valid' | 'invalid' | 'unknown'>('unknown');
   
   const { nodeRef, handleRef } = useDraggable<HTMLHeadingElement>(isOpen);
   const t = translations[settings.language || 'cs'];
@@ -41,6 +42,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, s
             setKeyStatus('invalid');
         } else {
             setKeyStatus('unknown');
+        }
+
+        if (settings.firebaseApiKey && settings.firebaseApiKey.startsWith('AIza')) {
+            setFirebaseKeyStatus('valid');
+        } else if (settings.firebaseApiKey) {
+            setFirebaseKeyStatus('invalid');
+        } else {
+            setFirebaseKeyStatus('unknown');
         }
     }
     
@@ -218,6 +227,40 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, s
                         <svg className="w-5 h-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                     )}
                     {keyStatus === 'invalid' && (
+                        <svg className="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                    )}
+                 </div>
+             </div>
+          </div>
+
+          {/* Firebase API Key */}
+          <div>
+             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                 {t.lblFirebaseApiKey}
+             </label>
+             <div className="relative">
+                 <input 
+                   type="text" 
+                   required
+                   className={`w-full border rounded-md p-2 focus:ring-2 outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono text-sm
+                      ${firebaseKeyStatus === 'valid' ? 'border-green-400 focus:ring-green-300' : ''}
+                      ${firebaseKeyStatus === 'invalid' ? 'border-red-400 focus:ring-red-300' : 'border-gray-300 dark:border-gray-600 focus:ring-google-blue'}
+                   `}
+                   value={formData.firebaseApiKey || ''}
+                   onChange={e => {
+                       const val = e.target.value;
+                       setFormData(prev => ({ ...prev, firebaseApiKey: val }));
+                       if (val.trim().startsWith('AIza')) setFirebaseKeyStatus('valid');
+                       else if (val.trim().length > 0) setFirebaseKeyStatus('invalid');
+                       else setFirebaseKeyStatus('unknown');
+                   }}
+                   placeholder="AIzaSy..."
+                 />
+                 <div className="absolute right-2 top-2.5">
+                    {firebaseKeyStatus === 'valid' && (
+                        <svg className="w-5 h-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                    )}
+                    {firebaseKeyStatus === 'invalid' && (
                         <svg className="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                     )}
                  </div>

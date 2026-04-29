@@ -93,6 +93,7 @@ export const translations = {
 
     // Settings
     lblApiKey: "Google Maps API Key",
+    lblFirebaseApiKey: "Firebase API Key",
     lblApiKeyDesc: "Required for routing and validation. Saved locally.",
     lblAddress: "Start / End Address",
     lblOdometer: "Current Odometer",
@@ -270,6 +271,7 @@ export const translations = {
 
     // Settings
     lblApiKey: "Google Maps API Klíč",
+    lblFirebaseApiKey: "Firebase API Klíč",
     lblApiKeyDesc: "Vyžadováno pro výpočty. Uloženo lokálně.",
     lblAddress: "Startovní / Cílová adresa",
     lblOdometer: "Aktuální stav tachometru",
