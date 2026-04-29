@@ -18,7 +18,10 @@ import { isClientScheduledForDate, sortVisitsByTime } from './services/scheduler
 import { FirebaseService } from './services/firebaseService';
 import { User } from 'firebase/auth';
 
-const DEFAULT_DEV_API_KEY = "";
+// Safely inject dev keys only in local environment.
+// Vite completely strips the import.meta.env.DEV block during a production build (dead code elimination).
+const DEFAULT_DEV_API_KEY = import.meta.env.DEV ? (import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "") : "";
+const DEFAULT_DEV_FIREBASE_KEY = import.meta.env.DEV ? (import.meta.env.VITE_FIREBASE_API_KEY || "") : "";
 
 const uuid = () => Math.random().toString(36).substring(2, 9);
 const commercialRound = (num: number) => Math.floor(num + 0.5);
@@ -62,7 +65,7 @@ const App: React.FC = () => {
         isStartValid: false,
         isDarkMode: true,
         googleApiKey: DEFAULT_DEV_API_KEY,
-        firebaseApiKey: "",
+        firebaseApiKey: DEFAULT_DEV_FIREBASE_KEY,
         cacheExpirationDays: 30,
         language: 'en'
     });
@@ -325,6 +328,7 @@ const App: React.FC = () => {
                 if (!loaded.cacheExpirationDays) loaded.cacheExpirationDays = 30;
                 if (!loaded.language) loaded.language = 'en';
                 if (!loaded.googleApiKey && DEFAULT_DEV_API_KEY) loaded.googleApiKey = DEFAULT_DEV_API_KEY;
+                if (!loaded.firebaseApiKey && DEFAULT_DEV_FIREBASE_KEY) loaded.firebaseApiKey = DEFAULT_DEV_FIREBASE_KEY;
 
                 setSettings(loaded);
                 currentSettings = loaded;
@@ -650,7 +654,7 @@ const App: React.FC = () => {
                 isStartValid: false,
                 isDarkMode: true,
                 googleApiKey: DEFAULT_DEV_API_KEY,
-                firebaseApiKey: "",
+                firebaseApiKey: DEFAULT_DEV_FIREBASE_KEY,
                 cacheExpirationDays: 30,
                 language: settings.language
             });

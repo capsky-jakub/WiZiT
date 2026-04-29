@@ -348,8 +348,8 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang, onL
             </section>
         </div>
 
-        <div className="mt-8 flex justify-between items-center border-t dark:border-gray-700 pt-4">
-            <div className="flex items-center gap-3">
+        <div className="mt-8 flex flex-col md:flex-row justify-between items-center border-t dark:border-gray-700 pt-4 gap-4">
+            <div className="flex items-center gap-3 w-full md:w-1/3 justify-center md:justify-start">
                 <span className="text-xs text-gray-400 font-mono italic">{t.footerBrand}</span>
                 <button 
                     onClick={handleCheckUpdates} 
@@ -358,9 +358,19 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang, onL
                     {t.btnCheckUpdates}
                 </button>
             </div>
-            <button onClick={onClose} className="px-8 py-2 bg-google-blue hover:bg-blue-700 text-white rounded-lg font-bold transition-all shadow-md transform hover:scale-105 active:scale-95">
-              {t.close}
-            </button>
+            
+            <div className="flex flex-col items-center text-sm text-gray-400 font-mono italic text-center w-full md:w-1/3">
+                <span>Copyright © 2025 - {new Date().getFullYear()} <a href="mailto:capsky.jakub@gmail.com" className="hover:text-gray-600 dark:hover:text-gray-200 transition-colors">capsky.jakub@gmail.com</a></span>
+                <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noopener noreferrer" className="hover:text-google-blue transition-colors mt-0.5">
+                    Licensed under GNU AGPLv3
+                </a>
+            </div>
+
+            <div className="w-full md:w-1/3 flex justify-center md:justify-end">
+                <button onClick={onClose} className="px-8 py-2 bg-google-blue hover:bg-blue-700 text-white rounded-lg font-bold transition-all shadow-md transform hover:scale-105 active:scale-95">
+                  {t.close}
+                </button>
+            </div>
         </div>
       </div>
     </div>
