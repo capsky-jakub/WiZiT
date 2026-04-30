@@ -182,7 +182,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang, onL
         </button>
 
         <h2 ref={handleRef} className="text-2xl font-bold mb-6 text-gray-800 dark:text-white flex items-center gap-2 border-b dark:border-gray-700 pb-2 select-none">
-            <span className="text-google-blue">{t.appTitle}</span> - {t.helpTitle}
+            {t.helpTitle}
         </h2>
 
         <div className="space-y-8 text-gray-700 dark:text-gray-300 flex-grow">
