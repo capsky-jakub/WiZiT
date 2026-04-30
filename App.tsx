@@ -23,6 +23,9 @@ import { User } from 'firebase/auth';
 const DEFAULT_DEV_API_KEY = import.meta.env.DEV ? (import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "") : "";
 const DEFAULT_DEV_FIREBASE_KEY = import.meta.env.DEV ? (import.meta.env.VITE_FIREBASE_API_KEY || "") : "";
 
+import logoWhiteSmall from './logo/logo_white_small2.png';
+import logoDark from './logo/logo_dark2.png';
+
 const uuid = () => Math.random().toString(36).substring(2, 9);
 const commercialRound = (num: number) => Math.floor(num + 0.5);
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
@@ -1180,7 +1183,8 @@ const App: React.FC = () => {
                 <header className="flex flex-col md:flex-row md:items-center justify-between bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
                     <div className="mb-4 md:mb-0">
                         <h1 className="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
-                            <span className="text-google-blue">{t.appTitle}</span>
+                            <img src={logoWhiteSmall} alt={t.appTitle} className="h-8 block dark:hidden" />
+                            <img src={logoDark} alt={t.appTitle} className="h-8 hidden dark:block" />
                         </h1>
                         <p className="text-gray-500 dark:text-gray-400 text-xs flex items-center gap-1">
                             {t.subTitle}
