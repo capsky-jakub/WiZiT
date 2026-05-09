@@ -1,6 +1,7 @@
 {
   "projects": {
-    "default": "proj-visopt"
+    "default": "proj-visopt",
+    "dev": "proj-visopt-dev"
   },
   "targets": {
     "proj-visopt": {

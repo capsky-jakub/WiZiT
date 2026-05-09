@@ -10,7 +10,15 @@ import { getFirestore, doc, setDoc, getDoc, Firestore } from "firebase/firestore
 import { BackupData, SessionData, SyncCategory } from "../types";
 
 // --- CONFIGURATION ---
-const firebaseConfigBase = {
+const isDev = import.meta.env.DEV;
+
+const firebaseConfigBase = isDev ? {
+  authDomain: "proj-visopt-dev.firebaseapp.com",
+  projectId: "proj-visopt-dev",
+  storageBucket: "proj-visopt-dev.firebasestorage.app",
+  messagingSenderId: "954720261844",
+  appId: "1:954720261844:web:6ba29257a021020ecb0d41"
+} : {
   authDomain: "proj-visopt.firebaseapp.com",
   projectId: "proj-visopt",
   storageBucket: "proj-visopt.firebasestorage.app",
@@ -188,6 +196,7 @@ export const FirebaseService = {
           if (cloudData.settings) localStorage.setItem('odocalc_settings', JSON.stringify(cloudData.settings));
           if (cloudData.savedRoutes) localStorage.setItem('odocalc_saved_routes', JSON.stringify(cloudData.savedRoutes));
           if (cloudData.lmod) localStorage.setItem('odocalc_lmod', JSON.stringify(cloudData.lmod));
+          if (cloudData.apikeymaps) localStorage.setItem('odocalc_apikeymaps', cloudData.apikeymaps);
           
           // Restore Session Data (Handle New Object vs Old Array)
           if (cloudData.visits) {

@@ -213,7 +213,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, s
              <div className="relative">
                  <input 
                    type="text" 
-                   required
                    className={`w-full border rounded-md p-2 focus:ring-2 outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono text-sm
                       ${keyStatus === 'valid' ? 'border-green-400 focus:ring-green-300' : ''}
                       ${keyStatus === 'invalid' ? 'border-red-400 focus:ring-red-300' : 'border-gray-300 dark:border-gray-600 focus:ring-google-blue'}
@@ -241,7 +240,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, s
              <div className="relative">
                  <input 
                    type="text" 
-                   required
                    className={`w-full border rounded-md p-2 focus:ring-2 outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono text-sm
                       ${firebaseKeyStatus === 'valid' ? 'border-green-400 focus:ring-green-300' : ''}
                       ${firebaseKeyStatus === 'invalid' ? 'border-red-400 focus:ring-red-300' : 'border-gray-300 dark:border-gray-600 focus:ring-google-blue'}

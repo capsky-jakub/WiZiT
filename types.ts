@@ -113,6 +113,7 @@ export interface BackupData {
   savedRoutes: SavedRoute[];
   lmod: any; // Cache object
   timestamp: number; // Last modified time
+  apikeymaps?: string; // Loaded from Firestore
   
   // Session Data (Synced)
   // Can be legacy Array or new SessionData object

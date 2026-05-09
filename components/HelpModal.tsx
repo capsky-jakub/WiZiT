@@ -103,9 +103,9 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang, onL
     { n: 'Dušek', s: 'Dubina', a: 'Jana Zajíce 982, 530 12 Pardubice III', o: '5', d: '90' },
     { n: 'Pravoslav', s: 'Pardubičky', a: 'Průmyslová 462, 530 03 Pardubice IV-Pardubičky', o: '7', d: '120' },
     { n: 'Drahomíra', s: 'Dukla', a: 'Chrudimská 1315, 530 02 Pardubice V-Zelené Předměstí', o: '8', d: '150' },
-    { n: 'Filip', s: 'Fajn', a: 'Žižkova 770, 530 06 Pardubice VI', o: '6', d: '100' },
-    { n: 'Jakub', s: 'Kubík', a: 'Kostnická 495, 530 06 Pardubice VI-Svítkov', o: '4', d: '90' },
-    { n: 'Petr', s: 'Pilař', a: 'Žižkova 23, 530 06 Pardubice VI', o: '2', d: '45' },
+    { n: 'Filip', s: 'Fajnový', a: 'Žižkova 770, 530 06 Pardubice VI', o: '6', d: '100' },
+    { n: 'Jakub', s: 'Kíbuk', a: 'Kostnická 495, 530 06 Pardubice VI-Svítkov', o: '4', d: '90' },
+    { n: 'David', s: 'Pilník', a: 'Žižkova 23, 530 06 Pardubice VI', o: '2', d: '45' },
   ];
 
   const formatForView = (data: any[]) => data.map(d => ({...d, a: d.a.length > 30 ? d.a.substring(0, 30) + '...' : d.a}));

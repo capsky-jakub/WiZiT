@@ -22,9 +22,9 @@ import { User } from 'firebase/auth';
 // Vite completely strips the import.meta.env.DEV block during a production build (dead code elimination).
 const DEFAULT_DEV_API_KEY = import.meta.env.DEV ? (import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "") : "";
 const DEFAULT_DEV_FIREBASE_KEY = import.meta.env.DEV ? (import.meta.env.VITE_FIREBASE_API_KEY || "") : "";
+const DEFAULT_START_ADDRESS = import.meta.env.VITE_DEFAULT_START_ADDRESS || "";
 
-import logoWhiteSmall from './logo/logo_white_small2.png';
-import logoDark from './logo/logo_dark2.png';
+import mainLogo from './logo/logo_dark.png';
 
 const uuid = () => Math.random().toString(36).substring(2, 9);
 const commercialRound = (num: number) => Math.floor(num + 0.5);
@@ -42,6 +42,17 @@ const addSecondsToTime = (timeStr: string, secondsToAdd: number): string => {
     const ss = date.getSeconds().toString().padStart(2, '0');
     return `${hh}:${mm}:${ss}`;
 };
+
+const deobfuscateKey = (key: string) => {
+    if (!key) return key;
+    if (key.length > 6) {
+        const prefix = key.substring(0, 6);
+        const suffix = key.substring(6);
+        return `${prefix}${suffix.split('').reverse().join('')}`;
+    }
+    return key;
+};
+const HARDCODED_FB_KEY = import.meta.env.VITE_HARDCODED_FB_KEY || "";
 
 const App: React.FC = () => {
     const [visits, setVisits] = useState<Visit[]>([]);
@@ -61,7 +72,7 @@ const App: React.FC = () => {
     const isInitialLoad = useRef(true); // Prevent sync on initial render
 
     const [settings, setSettings] = useState<AppSettings>({
-        startAddress: "Dlouhá 1113, 530 06 Pardubice, Česko",
+        startAddress: DEFAULT_START_ADDRESS,
         currentOdometer: 0,
         departureTime: "08:00:00",
         isStrictMode: false,
@@ -131,9 +142,10 @@ const App: React.FC = () => {
         if (data.settings) {
             setSettings(data.settings);
             // Re-apply API key if needed
-            if (data.settings.googleApiKey) {
-                setRuntimeApiKey(data.settings.googleApiKey);
-                loadGoogleMapsScript(data.settings.googleApiKey)
+            const newMapsKey = data.settings.googleApiKey || data.apikeymaps || '';
+            if (newMapsKey) {
+                setRuntimeApiKey(newMapsKey);
+                loadGoogleMapsScript(newMapsKey)
                     .then(() => setIsApiReady(true))
                     .catch(() => setIsApiReady(false));
             }
@@ -337,18 +349,25 @@ const App: React.FC = () => {
                 currentSettings = loaded;
                 setCacheExpirationDays(loaded.cacheExpirationDays);
 
-                if (loaded.googleApiKey) {
-                    setRuntimeApiKey(loaded.googleApiKey);
-                    loadGoogleMapsScript(loaded.googleApiKey)
+                const cachedMapsKey = localStorage.getItem('odocalc_apikeymaps');
+                // Priority: BYOK (user-entered) > Firestore cached > dev env default
+                const activeMapsKey = loaded.googleApiKey || cachedMapsKey || DEFAULT_DEV_API_KEY;
+
+                if (activeMapsKey) {
+                    setRuntimeApiKey(activeMapsKey);
+                    loadGoogleMapsScript(activeMapsKey)
                         .then(() => setIsApiReady(true))
                         .catch(e => { console.error("API Load Error:", e); setIsApiReady(false); });
                 }
 
             } catch (e) { console.error("Failed to load settings", e); }
         } else {
-            if (DEFAULT_DEV_API_KEY) {
-                setRuntimeApiKey(DEFAULT_DEV_API_KEY);
-                loadGoogleMapsScript(DEFAULT_DEV_API_KEY)
+            const cachedMapsKey = localStorage.getItem('odocalc_apikeymaps');
+            // Priority: Firestore cached > dev env default (no BYOK settings exist yet)
+            const activeMapsKey = cachedMapsKey || DEFAULT_DEV_API_KEY || "";
+            if (activeMapsKey) {
+                setRuntimeApiKey(activeMapsKey);
+                loadGoogleMapsScript(activeMapsKey)
                     .then(() => setIsApiReady(true))
                     .catch(e => { console.error(e); setIsApiReady(false); });
             }
@@ -451,15 +470,17 @@ const App: React.FC = () => {
             }
         }
 
-        // Mark initial load as done after a brief delay
-        setTimeout(() => { isInitialLoad.current = false; }, 1000);
+        // 3s buffer: ensures localStorage is NOT overwritten with empty React state
+        // before syncDown has a chance to restore cloud data into React state.
+        setTimeout(() => { isInitialLoad.current = false; }, 3000);
 
     }, []);
 
-    // Initialize Firebase when settings.firebaseApiKey changes
+    // Initialize Firebase when settings.firebaseApiKey changes or fallback to default
     useEffect(() => {
-        if (settings.firebaseApiKey) {
-            const ready = FirebaseService.initialize(settings.firebaseApiKey);
+        const activeFbKey = settings.firebaseApiKey || DEFAULT_DEV_FIREBASE_KEY || deobfuscateKey(HARDCODED_FB_KEY);
+        if (activeFbKey) {
+            const ready = FirebaseService.initialize(activeFbKey);
             setIsFirebaseReady(ready);
         }
     }, [settings.firebaseApiKey]);
@@ -511,6 +532,12 @@ const App: React.FC = () => {
 
     // --- Persistence Effect (Updated) ---
     useEffect(() => {
+        if (settings.isDarkMode) document.documentElement.classList.add('dark');
+        else document.documentElement.classList.remove('dark');
+
+        // Prevent overwriting local storage with initial empty state during boot
+        if (isInitialLoad.current) return;
+
         // NEW LOGIC: Consolidate visits, start, and return into one object
         const sessionData: SessionData = {
             stops: visits,
@@ -527,9 +554,6 @@ const App: React.FC = () => {
 
         localStorage.setItem('odocalc_settings', JSON.stringify(settings));
         localStorage.setItem('odocalc_db_clients', JSON.stringify(clients));
-
-        if (settings.isDarkMode) document.documentElement.classList.add('dark');
-        else document.documentElement.classList.remove('dark');
     }, [visits, settings, startTrip, returnTrip, clients, resultMode]);
 
     useEffect(() => { setDeleteConfirming(false); setPlanReloadConfirming(false); }, [selectedIds]);
@@ -637,20 +661,8 @@ const App: React.FC = () => {
 
     const handleClearDB = () => {
         if (dbDeleteConfirming) {
-            localStorage.removeItem('odocalc_lmod');
-            localStorage.removeItem('odocalc_saved_routes');
-            localStorage.removeItem('odocalc_db_clients');
-            // Session cleanup
-            localStorage.removeItem('odocalc_visits');
-            localStorage.removeItem('odocalc_start');
-            localStorage.removeItem('odocalc_return');
-
-            setVisits([]);
-            setClients([]);
-            setStartTrip(null);
-            setReturnTrip(null);
-            setSettings({
-                startAddress: "Dlouhá 1113, 530 06 Pardubice, Česko",
+            const newSettings = {
+                startAddress: DEFAULT_START_ADDRESS,
                 currentOdometer: 0,
                 departureTime: "08:00:00",
                 isStrictMode: false,
@@ -660,13 +672,36 @@ const App: React.FC = () => {
                 firebaseApiKey: DEFAULT_DEV_FIREBASE_KEY,
                 cacheExpirationDays: 30,
                 language: settings.language
-            });
+            };
+
+            setVisits([]);
+            setClients([]);
+            setStartTrip(null);
+            setReturnTrip(null);
+            setSettings(newSettings);
+            
+            // Synchronously update localStorage so syncUp reads the cleared state
+            localStorage.setItem('odocalc_db_clients', '[]');
+            localStorage.setItem('odocalc_visits', JSON.stringify({ stops: [], start: null, return: null }));
+            localStorage.setItem('odocalc_settings', JSON.stringify(newSettings));
+            localStorage.removeItem('odocalc_lmod');
+            localStorage.removeItem('odocalc_saved_routes');
+            localStorage.removeItem('odocalc_start');
+            localStorage.removeItem('odocalc_return');
+            // Remove the Firestore-cached Maps API key so it doesn't silently survive the reset
+            localStorage.removeItem('odocalc_apikeymaps');
+            // Reset timestamp so next syncDown correctly recognizes the new cloud state
+            localStorage.removeItem('odocalc_last_modified');
+
             if (DEFAULT_DEV_API_KEY) { setRuntimeApiKey(DEFAULT_DEV_API_KEY); setIsApiReady(true); } else { setRuntimeApiKey(""); setIsApiReady(false); }
             setCacheExpirationDays(30);
             setDbDeleteConfirming(false);
             console.log(t.msgDbCleared);
-            // Sync clear (Full update needed to clear cloud)
-            handleFullSyncCheck();
+            
+            // Force push cleared state to cloud if logged in
+            if (user) {
+                FirebaseService.syncUp(user).catch(e => console.error("Factory Reset Sync Error", e));
+            }
         } else {
             setDbDeleteConfirming(true);
             setTimeout(() => setDbDeleteConfirming(false), 4000);
@@ -1183,8 +1218,7 @@ const App: React.FC = () => {
                 <header className="flex flex-col md:flex-row md:items-center justify-between bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
                     <div className="mb-4 md:mb-0">
                         <h1 className="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
-                            <img src={logoWhiteSmall} alt={t.appTitle} className="h-8 block dark:hidden" />
-                            <img src={logoDark} alt={t.appTitle} className="h-8 hidden dark:block" />
+                            <img src={mainLogo} alt={t.appTitle} className="h-8" />
                         </h1>
                         <p className="text-gray-500 dark:text-gray-400 text-xs flex items-center gap-1">
                             {t.subTitle}
