@@ -73,7 +73,7 @@ WiZiT is the perfect companion for anyone spending their workday on the road:
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/your-username/WiZiT.git
+git clone https://github.com/capsky-jakub/WiZiT.git
 cd WiZiT
 ```
 
@@ -98,6 +98,12 @@ npm run dev
 ```bash
 npm run build
 ```
+
+---
+
+## 🤝 Contributing
+
+Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
 ---
 
