@@ -10,20 +10,23 @@ WiZiT is a smart route optimizer and visit planner designed for mobile professio
 - **Mapping & Routing:** Google Maps Platform (Distance Matrix, Places, Address Validation)
 - **Optimization:** Custom TSP (Traveling Salesperson Problem) solver (Nearest Neighbor + 2-OPT refinement)
 - **Backend & Sync:** Firebase (Authentication & Firestore)
-- **Drag & Drop:** `@dnd-kit`
+- **Drag & Drop:** `@dnd-kit` (core, sortable, utilities)
 - **Excel Support:** Custom parser for client and visit data imports/exports
+- **Build Plugin:** `vite-plugin-singlefile` (for unified artifact generation)
 
 ## Architecture
 The application follows a modular React architecture:
-- `App.tsx`: The central orchestrator managing global state, orchestration of calculations, and modal visibility.
+- `App.tsx`: The central orchestrator managing global state, orchestration of calculations, cloud synchronization, and modal visibility.
+- `types.ts`: Centralized TypeScript definitions for core entities like `Visit`, `Client`, `SavedRoute`, `AppSettings`, and `SessionData`.
 - `services/`: Encapsulates business logic and external API integrations.
     - `googleMapsService.ts`: Handles geocoding, distance matrix calculations (including batch processing), and address validation.
     - `tspSolver.ts`: Contains the optimization logic for route sequencing.
     - `firebaseService.ts`: Manages cloud synchronization and user authentication.
     - `distanceCache.ts`: Implements "LMOD" (Local Matrix Object Data), a persistent localStorage cache for distance data to minimize API costs and latency.
     - `scheduler.ts`: Logic for determining which clients are due for a visit based on recurrence patterns.
-- `components/`: UI components organized by feature (Modals, Tables, Map views).
-- `types.ts`: Centralized TypeScript definitions for core entities like `Visit`, `Client`, `SavedRoute`, and `AppSettings`.
+    - `excelService.ts`: Parsing and exporting logic for Excel data.
+    - `translations.ts`: i18n support.
+- `components/`: UI components organized by feature (Modals, Tables, Map views, Visit Lists).
 
 ## Building and Running
 
@@ -38,8 +41,14 @@ npm run dev
 
 ### Production Build
 ```bash
-# Build the project using Vite
+# Build the project using Vite and TypeScript
 npm run build
+
+# Preview the production build locally
+npm run preview
+
+# Serve the built artifact (using 'serve' package)
+npm run start
 ```
 
 ### Deployment
@@ -60,10 +69,12 @@ The project includes a custom deployment pipeline in `compile_deploy/deploy.sh`.
 - **API Optimization:** Always prefer using `DistanceCache` (LMOD) to avoid redundant Google Maps API calls. Batch operations in `googleMapsService.ts` should be used for large sets of addresses.
 - **Localization:** Use the `translations.ts` service for UI text. Support is currently provided for English (`en`) and Czech (`cs`).
 - **Idempotency:** Data mutations in `App.tsx` should ensure state consistency, especially when syncing with Firebase.
+- **Environment Variables:** Development API keys should be safely injected using Vite's `import.meta.env` (e.g., `VITE_GOOGLE_MAPS_API_KEY`) and sanitized during production builds.
 
 ## Key Files
 - `App.tsx`: Main entry point and state container.
 - `types.ts`: Data models and application state interfaces.
+- `package.json`: Dependency management and npm scripts.
 - `services/tspSolver.ts`: Core optimization algorithm.
 - `services/distanceCache.ts`: Performance optimization via persistence.
 - `compile_deploy/deploy.sh`: Production lifecycle management.

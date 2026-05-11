@@ -4,11 +4,11 @@ export type Language = 'cs' | 'en';
 
 export const translations = {
   en: {
-    appTitle: "WiZ!T",
+    appTitle: "WiZiT",
     subTitle: "Plan, Optimize, Visit...",
     footerBrand: "WIZIT_APP_VERSION",
     keyMissing: "Key Missing",
-    
+
     // Buttons
     newVisit: "New Visit",
     importExcel: "Import Excel",
@@ -110,7 +110,7 @@ export const translations = {
     lblDuration: "Duration (min)",
     lblDurationDesc: "Expected time spent at this location.",
     lblDragHint: "* Order is determined by the list position. Drag rows to reorder.",
-    
+
     // Scheduling
     lblScheduleTitle: "Scheduling Rules",
     lblVisitStartAt: "Preferred Time",
@@ -128,14 +128,14 @@ export const translations = {
     helpPrereqTitle: "Prerequisites",
     helpPrereqExcel: "Excel Import: The application expects a specific column structure (without headers). Column A: Name, B: Surname, C: Address, D: Order (Number), E: Duration (Minutes, Optional).",
     helpPrereqApiKey: "Google Maps API Key: To use this app, you must provide your own API Key from Google Cloud Platform. It requires the 'Directions API', 'Distance Matrix API', and 'Places API' to be enabled.",
-    
+
     helpLogicTitle: "Logic & Workflow",
     helpLogicClients: "Client DB: The central storage for all your customers. Set up recurring schedules here.",
     helpLogicImportPlan: "Import Plan: Automatically builds the route for today based on the schedules defined in Client DB.",
     helpLogicStartup: [
-        "1. Priority: Loads Saved Route for today (e.g. named 'monday')",
-        "2. Priority: Compiles from Client DB based on schedule",
-        "3. Fallback: Loads last session"
+      "1. Priority: Loads Saved Route for today (e.g. named 'monday')",
+      "2. Priority: Compiles from Client DB based on schedule",
+      "3. Fallback: Loads last session"
     ],
 
     helpCalcTitle: "Calculation Modes",
@@ -146,10 +146,10 @@ export const translations = {
 
     helpMouseTitle: "Mouse Controls",
     helpMouseContent: [
-        "Drag & Drop rows to reorder.",
-        "Double-click a row to Edit.",
-        "Right-click a row to Skip/Unskip.",
-        "Click column headers to Sort."
+      "Drag & Drop rows to reorder.",
+      "Double-click a row to Edit.",
+      "Right-click a row to Skip/Unskip.",
+      "Click column headers to Sort."
     ],
 
     helpFeaturesTitle: "Special Features",
@@ -158,6 +158,10 @@ export const translations = {
     helpFeatReset: "Factory Reset: Completely wipes the local database, settings, and cached distances. Use with caution.",
     helpFeatCache: "Smart Caching (LMOD): The app stores distance results in your browser ('LMOD'). This saves you money by preventing repeated API calls for the same route segments.",
     helpFeatValidation: "Validation: 'Strict Mode' in settings prevents calculation if any address is ambiguous. Standard mode allows calculation but marks addresses with red crosses if unverified.",
+    helpFeatHybridByokTitle: "Hybrid BYOK (Bring Your Own Key)",
+    helpFeatHybridByok: "You can use your own Google Maps API Key in Settings for maximum control, but if you don't have one and sign in successfully, the system will automatically provide a shared API key for you.",
+    helpFeatCloudTitle: "Hybrid Cloud Sync",
+    helpFeatCloud: "Your data (clients, routes, settings) is saved securely to your browser's local storage for offline speed, and automatically synced with the cloud when you sign in, making it available across your devices.",
     helpTipsTitle: "Tips & Tricks",
     helpTipLmod: "To save API usage, do not clear your browser's 'Local Storage' unnecessarily, as this holds the LMOD cache.",
     helpTipExport: "Export/Import: Use the arrow icons in the top bar to save your entire workspace (including settings and cache) to a JSON file. Useful for moving to another computer.",
@@ -182,11 +186,11 @@ export const translations = {
     msgAddedToRoute: "clients added to route.",
   },
   cs: {
-    appTitle: "WiZ!T",
+    appTitle: "WiZiT",
     subTitle: "Plánuj, Optimalizuj, Navštěvuj...",
     footerBrand: "WIZIT_APP_VERSION",
     keyMissing: "Chybí klíč",
-    
+
     // Buttons
     newVisit: "Nová návštěva",
     importExcel: "Import Excel",
@@ -306,14 +310,14 @@ export const translations = {
     helpPrereqTitle: "Prerekvizity",
     helpPrereqExcel: "Import Excelu: Aplikace očekává specifickou strukturu sloupců (bez záhlaví). Sloupec A: Jméno, B: Příjmení, C: Adresa, D: Pořadí (Číslo), E: Trvání (Minuty, Volitelné).",
     helpPrereqApiKey: "Google Maps API Klíč: Pro funkčnost musíte vložit vlastní API klíč z Google Cloud Platform. Vyžaduje povolené služby 'Directions API', 'Distance Matrix API' a 'Places API'.",
-    
+
     helpLogicTitle: "Logika a Workflow",
     helpLogicClients: "Databáze: Centrální úložiště zákazníků. Zde nastavte opakování návštěv.",
     helpLogicImportPlan: "Načíst plán: Automaticky sestaví trasu pro dnešní den na základě nastavených plánů v DB.",
     helpLogicStartup: [
-        "1. Priorita: Načte uloženou trasu pro dnešek (např. název 'pondělí')",
-        "2. Priorita: Sestaví z Databáze klientů dle plánu pro dnešní den",
-        "3. Záloha: Načte poslední relaci prohlížeče"
+      "1. Priorita: Načte uloženou trasu pro dnešek (např. název 'pondělí')",
+      "2. Priorita: Sestaví z Databáze klientů dle plánu pro dnešní den",
+      "3. Záloha: Načte poslední relaci prohlížeče"
     ],
 
     helpCalcTitle: "Režimy Výpočtu",
@@ -324,10 +328,10 @@ export const translations = {
 
     helpMouseTitle: "Ovládání myší",
     helpMouseContent: [
-        "Tažením myší změníte pořadí řádků.",
-        "Dvojklikem upravíte návštěvu.",
-        "Pravým tlačítkem přeskočíte/obnovíte návštěvu.",
-        "Kliknutím na záhlaví seřadíte sloupce."
+      "Tažením myší změníte pořadí řádků.",
+      "Dvojklikem upravíte návštěvu.",
+      "Pravým tlačítkem přeskočíte/obnovíte návštěvu.",
+      "Kliknutím na záhlaví seřadíte sloupce."
     ],
 
     helpFeaturesTitle: "Speciální Funkce",
@@ -336,6 +340,10 @@ export const translations = {
     helpFeatReset: "Tovární nastavení: Kompletně vymaže lokální databázi, nastavení i mezipaměť vzdáleností. Používejte opatrně.",
     helpFeatCache: "Chytrá mezipaměť (LMOD): Aplikace ukládá výsledky vzdáleností v prohlížeči ('LMOD'). To šetří peníze zamezením opakovaných volání API pro stejné úseky.",
     helpFeatValidation: "Ověřování: 'Striktní režim' v nastavení zabrání výpočtu, pokud je nějaká adresa nejednoznačná. Standardní režim dovolí výpočet, ale označí neověřené adresy červeným křížkem.",
+    helpFeatHybridByokTitle: "Hybridní BYOK (Vlastní klíč)",
+    helpFeatHybridByok: "Pro maximální kontrolu můžete v Nastavení zadat vlastní Google Maps API klíč. Pokud jej nemáte a úspěšně se přihlásíte, systém vám automaticky poskytne sdílený klíč.",
+    helpFeatCloudTitle: "Hybridní Cloudová Synchronizace",
+    helpFeatCloud: "Vaše data (klienti, trasy, nastavení) se pro rychlost a offline použití ukládají v prohlížeči a po přihlášení se automaticky synchronizují s cloudem pro dostupnost napříč zařízeními.",
     helpTipsTitle: "Tipy a Triky",
     helpTipLmod: "Pro úsporu API volání nevymazávejte zbytečně 'Local Storage' prohlížeče, kde je uložena LMOD cache.",
     helpTipExport: "Export/Import: Použijte ikony šipek v horní liště pro uložení celého pracovního prostředí (včetně nastavení a cache) do JSON souboru. Vhodné pro přenos na jiný počítač.",

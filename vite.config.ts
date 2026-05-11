@@ -12,12 +12,12 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: undefined, // Disable chunk splitting
-        banner: '/*! Copyright (C) 2026 Jakub Capsky. This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. */',
+        banner: '/*! Copyright (C) 2026 CAPS.IT. This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. */',
       },
     },
   },
   preview: {
-    host: true, 
+    host: true,
     port: 8080
   },
   server: {

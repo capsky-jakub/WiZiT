@@ -182,17 +182,42 @@ export const FirebaseService = {
     if (!user || !user.email || !db) return { updated: false };
 
     try {
+      let sharedApiKeyMaps: string | undefined;
+      try {
+        const sharedRef = doc(db, COLLECTION, "shared");
+        const sharedSnap = await getDoc(sharedRef);
+        if (sharedSnap.exists()) {
+          sharedApiKeyMaps = sharedSnap.data()?.apikeymaps;
+        }
+      } catch (err) {
+        console.warn("[Cloud] Failed to fetch shared apikeymaps", err);
+      }
+
       const docRef = doc(db, COLLECTION, user.email);
       const docSnap = await getDoc(docRef);
 
       if (docSnap.exists()) {
         const cloudData = docSnap.data() as BackupData;
-        const localTs = parseInt(localStorage.getItem('odocalc_last_modified') || '0');
+        
+        if (sharedApiKeyMaps) {
+            cloudData.apikeymaps = sharedApiKeyMaps;
+        } else {
+            delete cloudData.apikeymaps;
+        }
 
+        const localTs = parseInt(localStorage.getItem('odocalc_last_modified') || '0');
         const cloudTs = cloudData.timestamp ?? Infinity;
+
+        const currentLocalApikey = localStorage.getItem('odocalc_apikeymaps');
+        let apikeyUpdated = false;
+        if (sharedApiKeyMaps && sharedApiKeyMaps !== currentLocalApikey) {
+            localStorage.setItem('odocalc_apikeymaps', sharedApiKeyMaps);
+            apikeyUpdated = true;
+        }
+
         console.log(`[Cloud] Timestamp Check - Local: ${localTs}, Cloud: ${cloudData.timestamp} (coerced: ${cloudTs})`);
 
-        if (cloudTs > localTs) {
+        if (cloudTs > localTs || apikeyUpdated) {
           if (cloudData.clients) localStorage.setItem('odocalc_db_clients', JSON.stringify(cloudData.clients));
           if (cloudData.settings) localStorage.setItem('odocalc_settings', JSON.stringify(cloudData.settings));
           if (cloudData.savedRoutes) localStorage.setItem('odocalc_saved_routes', JSON.stringify(cloudData.savedRoutes));
@@ -235,6 +260,14 @@ export const FirebaseService = {
         } else if (cloudData.timestamp === localTs) {
             console.log(`[Cloud] Timestamps equal. No sync needed.`);
             return { updated: false, synced: true };
+        }
+      } else if (sharedApiKeyMaps) {
+        // New user or empty doc, but we have a shared apikey
+        const currentLocalApikey = localStorage.getItem('odocalc_apikeymaps');
+        if (sharedApiKeyMaps !== currentLocalApikey) {
+            localStorage.setItem('odocalc_apikeymaps', sharedApiKeyMaps);
+            console.log(`[Cloud] New user. Synced DOWN shared apikeymaps successfully.`);
+            return { updated: true, data: { apikeymaps: sharedApiKeyMaps, timestamp: Date.now() } as BackupData };
         }
       }
     } catch (e: any) {

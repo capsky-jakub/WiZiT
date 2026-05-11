@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { translations, Language } from '../services/translations';
 import { useDraggable } from '../hooks/useDraggable';
+import branding from '../branding.json';
 
 interface HelpModalProps {
   isOpen: boolean;
@@ -14,7 +15,7 @@ type ButtonVariant = 'teal-outline' | 'orange' | 'google-blue' | 'green' | 'yell
 
 const ButtonBadge: React.FC<{ variant: ButtonVariant, icon?: React.ReactNode, text: string }> = ({ variant, icon, text }) => {
   let classes = "inline-flex items-center gap-2 px-3 py-1 rounded-lg text-sm font-medium shadow-sm select-none mx-1 align-middle my-1";
-  
+
   switch (variant) {
     case 'teal-outline':
       classes += " bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-teal-600 dark:text-teal-400";
@@ -45,8 +46,8 @@ const ButtonBadge: React.FC<{ variant: ButtonVariant, icon?: React.ReactNode, te
 
   return (
     <span className={classes}>
-       {icon && <span className="w-4 h-4 flex items-center justify-center">{icon}</span>}
-       <span className="whitespace-nowrap">{text}</span>
+      {icon && <span className="w-4 h-4 flex items-center justify-center">{icon}</span>}
+      <span className="whitespace-nowrap">{text}</span>
     </span>
   );
 };
@@ -108,7 +109,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang, onL
     { n: 'David', s: 'Pilník', a: 'Žižkova 23, 530 06 Pardubice VI', o: '2', d: '45' },
   ];
 
-  const formatForView = (data: any[]) => data.map(d => ({...d, a: d.a.length > 30 ? d.a.substring(0, 30) + '...' : d.a}));
+  const formatForView = (data: any[]) => data.map(d => ({ ...d, a: d.a.length > 30 ? d.a.substring(0, 30) + '...' : d.a }));
 
   const visualData1 = formatForView(excelData1);
   const visualData2 = formatForView(excelData2);
@@ -127,53 +128,53 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang, onL
 
   const renderPreviewTable = (data: any[]) => (
     <div className="border border-gray-300 dark:border-gray-600 rounded-md overflow-hidden bg-white dark:bg-gray-900 shadow-sm relative">
-        <div className="bg-[#217346] text-white px-3 py-1 text-xs font-bold flex items-center gap-2 justify-between">
+      <div className="bg-[#217346] text-white px-3 py-1 text-xs font-bold flex items-center gap-2 justify-between">
         <div className="flex items-center gap-2">
-            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
-            Excel Structure (Flexible)
+          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" /></svg>
+          Excel Structure (Flexible)
         </div>
-        </div>
-        <div className="overflow-x-auto">
+      </div>
+      <div className="overflow-x-auto">
         <table className="w-full text-xs text-left border-collapse font-mono">
-            <thead>
-                <tr className="bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400">
-                    <th className="p-1 border-r border-b border-gray-300 dark:border-gray-600 w-8 text-center bg-gray-200 dark:bg-gray-700"></th> 
-                    <th className="p-1 border-r border-b border-gray-300 dark:border-gray-600 font-normal w-24 text-center">A</th>
-                    <th className="p-1 border-r border-b border-gray-300 dark:border-gray-600 font-normal w-24 text-center">B</th>
-                    <th className="p-1 border-r border-b border-gray-300 dark:border-gray-600 font-normal text-center">C</th>
-                    <th className="p-1 border-r border-b border-gray-300 dark:border-gray-600 font-normal w-16 text-center text-gray-400">D (Opt)</th>
-                    <th className="p-1 border-b border-gray-300 dark:border-gray-600 font-normal w-16 text-center text-gray-400">E (Opt)</th>
-                </tr>
-            </thead>
-            <tbody className="bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200">
-                <tr>
-                    <td className="p-1 border-r border-b border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 text-center text-gray-500">1</td>
-                    <td className="p-1 border-r border-b border-gray-300 dark:border-gray-600 font-bold bg-gray-50 dark:bg-gray-800/50">Name</td>
-                    <td className="p-1 border-r border-b border-gray-300 dark:border-gray-600 font-bold bg-gray-50 dark:bg-gray-800/50">Surname</td>
-                    <td className="p-1 border-r border-b border-gray-300 dark:border-gray-600 font-bold bg-gray-50 dark:bg-gray-800/50">Address</td>
-                    <td className="p-1 border-r border-b border-gray-300 dark:border-gray-600 font-bold bg-gray-50/50 dark:bg-gray-800/30 text-right text-gray-500">Order</td>
-                    <td className="p-1 border-b border-gray-300 dark:border-gray-600 font-bold bg-gray-50/50 dark:bg-gray-800/30 text-right text-gray-500">Duration</td>
-                </tr>
-                {data.map((row, i) => (
-                    <tr key={i}>
-                        <td className="p-1 border-r border-b border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 text-center text-gray-500">{i + 2}</td>
-                        <td className="p-1 border-r border-b border-gray-300 dark:border-gray-600">{row.n}</td>
-                        <td className="p-1 border-r border-b border-gray-300 dark:border-gray-600">{row.s}</td>
-                        <td className="p-1 border-r border-b border-gray-300 dark:border-gray-600 truncate max-w-[150px]" title={row.a}>{row.a}</td>
-                        <td className="p-1 border-r border-b border-gray-300 dark:border-gray-600 text-right text-gray-500">{row.o}</td>
-                        <td className="p-1 border-b border-gray-300 dark:border-gray-600 text-right text-gray-500">{row.d}</td>
-                    </tr>
-                ))}
-            </tbody>
+          <thead>
+            <tr className="bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400">
+              <th className="p-1 border-r border-b border-gray-300 dark:border-gray-600 w-8 text-center bg-gray-200 dark:bg-gray-700"></th>
+              <th className="p-1 border-r border-b border-gray-300 dark:border-gray-600 font-normal w-24 text-center">A</th>
+              <th className="p-1 border-r border-b border-gray-300 dark:border-gray-600 font-normal w-24 text-center">B</th>
+              <th className="p-1 border-r border-b border-gray-300 dark:border-gray-600 font-normal text-center">C</th>
+              <th className="p-1 border-r border-b border-gray-300 dark:border-gray-600 font-normal w-16 text-center text-gray-400">D (Opt)</th>
+              <th className="p-1 border-b border-gray-300 dark:border-gray-600 font-normal w-16 text-center text-gray-400">E (Opt)</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+            <tr>
+              <td className="p-1 border-r border-b border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 text-center text-gray-500">1</td>
+              <td className="p-1 border-r border-b border-gray-300 dark:border-gray-600 font-bold bg-gray-50 dark:bg-gray-800/50">Name</td>
+              <td className="p-1 border-r border-b border-gray-300 dark:border-gray-600 font-bold bg-gray-50 dark:bg-gray-800/50">Surname</td>
+              <td className="p-1 border-r border-b border-gray-300 dark:border-gray-600 font-bold bg-gray-50 dark:bg-gray-800/50">Address</td>
+              <td className="p-1 border-r border-b border-gray-300 dark:border-gray-600 font-bold bg-gray-50/50 dark:bg-gray-800/30 text-right text-gray-500">Order</td>
+              <td className="p-1 border-b border-gray-300 dark:border-gray-600 font-bold bg-gray-50/50 dark:bg-gray-800/30 text-right text-gray-500">Duration</td>
+            </tr>
+            {data.map((row, i) => (
+              <tr key={i}>
+                <td className="p-1 border-r border-b border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 text-center text-gray-500">{i + 2}</td>
+                <td className="p-1 border-r border-b border-gray-300 dark:border-gray-600">{row.n}</td>
+                <td className="p-1 border-r border-b border-gray-300 dark:border-gray-600">{row.s}</td>
+                <td className="p-1 border-r border-b border-gray-300 dark:border-gray-600 truncate max-w-[150px]" title={row.a}>{row.a}</td>
+                <td className="p-1 border-r border-b border-gray-300 dark:border-gray-600 text-right text-gray-500">{row.o}</td>
+                <td className="p-1 border-b border-gray-300 dark:border-gray-600 text-right text-gray-500">{row.d}</td>
+              </tr>
+            ))}
+          </tbody>
         </table>
-        </div>
+      </div>
     </div>
   );
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[110] p-4">
       {/* 2x Wider Modal: Increased max-width */}
-      <div 
+      <div
         ref={nodeRef}
         className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-[95vw] md:max-w-[85vw] max-h-[90vh] overflow-y-auto animate-fade-in-up transition-colors p-6 relative flex flex-col"
       >
@@ -182,195 +183,209 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang, onL
         </button>
 
         <h2 ref={handleRef} className="text-2xl font-bold mb-6 text-gray-800 dark:text-white flex items-center gap-2 border-b dark:border-gray-700 pb-2 select-none">
-            {t.helpTitle}
+          {t.helpTitle}
         </h2>
 
         <div className="space-y-8 text-gray-700 dark:text-gray-300 flex-grow">
-            
-            {/* Prerequisites */}
-            <section className="bg-blue-50 dark:bg-blue-900/10 p-4 rounded-lg border border-blue-100 dark:border-blue-800">
-                <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                    <svg className="w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    {t.helpPrereqTitle}
-                </h3>
-                <ul className="list-disc pl-5 space-y-2 text-sm mb-4">
-                    <li><strong>Google API:</strong> {t.helpPrereqApiKey}</li>
-                    <li><strong>Excel:</strong> {t.helpPrereqExcel}</li>
-                </ul>
-                
-                <div className="flex flex-col md:flex-row gap-6 mt-6">
-                  {/* Example 1 */}
-                  <div className="flex-1">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">{t.btnExample1}</span>
-                      <button 
-                        onClick={() => handleTestClick(excelData1)}
-                        className="bg-green-600 hover:bg-green-700 text-white font-medium py-1 px-3 rounded shadow-sm text-xs flex items-center gap-2 transition-all transform hover:scale-105 active:scale-95"
-                      >
-                         <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                         {t.btnTryIt}
-                      </button>
-                    </div>
-                    {renderPreviewTable(visualData1)}
-                  </div>
 
-                  {/* Example 2 */}
-                  <div className="flex-1">
-                    <div className="flex justify-between items-center mb-2">
-                       <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">{t.btnExample2}</span>
-                       <button 
-                        onClick={() => handleTestClick(excelData2)}
-                        className="bg-teal-600 hover:bg-teal-700 text-white font-medium py-1 px-3 rounded shadow-sm text-xs flex items-center gap-2 transition-all transform hover:scale-105 active:scale-95"
-                      >
-                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                          {t.btnTryIt}
-                      </button>
-                    </div>
-                    {renderPreviewTable(visualData2)}
-                  </div>
+          {/* Prerequisites */}
+          <section className="bg-blue-50 dark:bg-blue-900/10 p-4 rounded-lg border border-blue-100 dark:border-blue-800">
+            <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+              <svg className="w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              {t.helpPrereqTitle}
+            </h3>
+            <ul className="list-disc pl-5 space-y-2 text-sm mb-4">
+              <li><strong>Google API:</strong> {t.helpPrereqApiKey}</li>
+              <li><strong>Excel:</strong> {t.helpPrereqExcel}</li>
+            </ul>
+
+            <div className="flex flex-col md:flex-row gap-6 mt-6">
+              {/* Example 1 */}
+              <div className="flex-1">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">{t.btnExample1}</span>
+                  <button
+                    onClick={() => handleTestClick(excelData1)}
+                    className="bg-green-600 hover:bg-green-700 text-white font-medium py-1 px-3 rounded shadow-sm text-xs flex items-center gap-2 transition-all transform hover:scale-105 active:scale-95"
+                  >
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    {t.btnTryIt}
+                  </button>
                 </div>
-            </section>
+                {renderPreviewTable(visualData1)}
+              </div>
 
-            {/* Vertical Stack Layout */}
-            <div className="flex flex-col gap-6">
-                
-                {/* Core Logic */}
-                <section>
-                    <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-4 flex items-center gap-2 border-l-4 border-orange-500 pl-3">
-                        {t.helpLogicTitle}
-                    </h3>
-                    <div className="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-xl border border-gray-100 dark:border-gray-700 text-sm space-y-4">
-                         
-                         <div className="flex items-start gap-2">
-                            <div className="mt-1"><ButtonBadge variant="orange" icon={Icons.clients} text={t.clientDb} /></div>
-                            <div className="mt-2 text-gray-600 dark:text-gray-400">{t.helpLogicClients}</div>
-                         </div>
-                         
-                         <div className="flex items-start gap-2">
-                            <div className="mt-1"><ButtonBadge variant="teal-outline" icon={Icons.importPlan} text={t.importPlan} /></div>
-                            <div className="mt-2 text-gray-600 dark:text-gray-400">{t.helpLogicImportPlan}</div>
-                         </div>
-
-                         <div className="pl-2 pt-2 border-t dark:border-gray-600">
-                             <ul className="list-disc pl-4 space-y-2 text-gray-600 dark:text-gray-400 leading-relaxed">
-                                {(t.helpLogicStartup as string[]).map((line, i) => (
-                                    <li key={i}>{line}</li>
-                                ))}
-                             </ul>
-                         </div>
-                    </div>
-                </section>
-
-                {/* Calculation Modes */}
-                <section>
-                    <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-4 flex items-center gap-2 border-l-4 border-gray-500 pl-3">
-                        {t.helpCalcTitle}
-                    </h3>
-                    <div className="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-xl border border-gray-100 dark:border-gray-700 text-sm space-y-4">
-                         
-                         <div className="flex items-start gap-2">
-                            <div className="mt-1"><ButtonBadge variant="google-blue" icon={Icons.precalc} text={t.precalc} /></div>
-                            <div className="mt-2 text-gray-600 dark:text-gray-400">{t.helpCalcPrecalc}</div>
-                         </div>
-
-                         <div className="flex items-start gap-2">
-                            <div className="mt-1"><ButtonBadge variant="green" icon={Icons.optimal} text={t.optimal} /></div>
-                            <div className="mt-2 text-gray-600 dark:text-gray-400">{t.helpCalcOptimal}</div>
-                         </div>
-
-                         <div className="flex items-start gap-2">
-                            <div className="mt-1"><ButtonBadge variant="standard-white" icon={Icons.calculate} text={t.calculate} /></div>
-                            <div className="mt-2 text-gray-600 dark:text-gray-400">{t.helpCalcCalculate}</div>
-                         </div>
-
-                         <div className="flex items-start gap-2">
-                            <div className="mt-1"><ButtonBadge variant="gray" icon={Icons.validate} text={t.validate} /></div>
-                            <div className="mt-2 text-gray-600 dark:text-gray-400">{t.helpCalcValidate}</div>
-                         </div>
-                    </div>
-                </section>
-
-                {/* Mouse Controls */}
-                <section>
-                    <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-4 flex items-center gap-2 border-l-4 border-purple-500 pl-3">
-                        {t.helpMouseTitle}
-                    </h3>
-                    <div className="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-xl border border-gray-100 dark:border-gray-700 text-sm">
-                         <ul className="list-disc pl-4 space-y-2 text-gray-600 dark:text-gray-400 leading-relaxed">
-                            {(t.helpMouseContent as string[]).map((line, i) => (
-                                <li key={i}>{line}</li>
-                            ))}
-                         </ul>
-                    </div>
-                </section>
-
-                {/* Features Expansion */}
-                <section>
-                    <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-4 flex items-center gap-2 border-l-4 border-google-blue pl-3">
-                        {t.helpFeaturesTitle}
-                    </h3>
-                    <div className="space-y-4 text-sm">
-                        
-                        <div className="bg-gray-50 dark:bg-gray-700/30 p-3 rounded-lg border border-gray-100 dark:border-gray-700 flex items-start gap-3">
-                            <div className="mt-0.5"><ButtonBadge variant="teal-solid" icon={Icons.visualize} text={t.visualize} /></div>
-                            <p className="text-gray-600 dark:text-gray-400 pt-1.5">{t.helpFeatVisualize}</p>
-                        </div>
-
-                        <div className="bg-gray-50 dark:bg-gray-700/30 p-3 rounded-lg border border-gray-100 dark:border-gray-700 flex items-start gap-3">
-                            <div className="mt-0.5"><ButtonBadge variant="white-border" icon={Icons.savedRoutes} text={t.savedRoutes} /></div>
-                            <p className="text-gray-600 dark:text-gray-400 pt-1.5">{t.helpFeatRoutes}</p>
-                        </div>
-
-                        <div className="bg-gray-50 dark:bg-gray-700/30 p-3 rounded-lg border border-gray-100 dark:border-gray-700">
-                            <span className="font-bold text-green-600 block mb-1">LMOD Cache</span>
-                            <p className="text-gray-600 dark:text-gray-400">{t.helpFeatCache}</p>
-                        </div>
-
-                         <div className="bg-gray-50 dark:bg-gray-700/30 p-3 rounded-lg border border-gray-100 dark:border-gray-700">
-                            <span className="font-bold text-red-600 block mb-1">Factory Reset / Validation</span>
-                            <p className="text-gray-600 dark:text-gray-400">{t.helpFeatReset}</p>
-                            <p className="text-gray-600 dark:text-gray-400 mt-2">{t.helpFeatValidation}</p>
-                        </div>
-                    </div>
-                </section>
+              {/* Example 2 */}
+              <div className="flex-1">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">{t.btnExample2}</span>
+                  <button
+                    onClick={() => handleTestClick(excelData2)}
+                    className="bg-teal-600 hover:bg-teal-700 text-white font-medium py-1 px-3 rounded shadow-sm text-xs flex items-center gap-2 transition-all transform hover:scale-105 active:scale-95"
+                  >
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    {t.btnTryIt}
+                  </button>
+                </div>
+                {renderPreviewTable(visualData2)}
+              </div>
             </div>
+          </section>
 
-             {/* Tips */}
-             <section className="bg-green-50 dark:bg-green-900/10 p-4 rounded-lg border border-green-100 dark:border-green-800">
-                <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                    <svg className="w-5 h-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
-                    {t.helpTipsTitle}
-                </h3>
-                <ul className="list-disc pl-5 space-y-2 text-sm">
-                    <li><strong>Backup/Restore:</strong> {t.helpTipExport}</li>
-                    <li><strong>Economy:</strong> {t.helpTipLmod}</li>
-                </ul>
+          {/* Vertical Stack Layout */}
+          <div className="flex flex-col gap-6">
+
+            {/* Core Logic */}
+            <section>
+              <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-4 flex items-center gap-2 border-l-4 border-orange-500 pl-3">
+                {t.helpLogicTitle}
+              </h3>
+              <div className="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-xl border border-gray-100 dark:border-gray-700 text-sm space-y-4">
+
+                <div className="flex items-start gap-2">
+                  <div className="mt-1"><ButtonBadge variant="orange" icon={Icons.clients} text={t.clientDb} /></div>
+                  <div className="mt-2 text-gray-600 dark:text-gray-400">{t.helpLogicClients}</div>
+                </div>
+
+                <div className="flex items-start gap-2">
+                  <div className="mt-1"><ButtonBadge variant="teal-outline" icon={Icons.importPlan} text={t.importPlan} /></div>
+                  <div className="mt-2 text-gray-600 dark:text-gray-400">{t.helpLogicImportPlan}</div>
+                </div>
+
+                <div className="pl-2 pt-2 border-t dark:border-gray-600">
+                  <ul className="list-disc pl-4 space-y-2 text-gray-600 dark:text-gray-400 leading-relaxed">
+                    {(t.helpLogicStartup as string[]).map((line, i) => (
+                      <li key={i}>{line}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
             </section>
+
+            {/* Calculation Modes */}
+            <section>
+              <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-4 flex items-center gap-2 border-l-4 border-gray-500 pl-3">
+                {t.helpCalcTitle}
+              </h3>
+              <div className="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-xl border border-gray-100 dark:border-gray-700 text-sm space-y-4">
+
+                <div className="flex items-start gap-2">
+                  <div className="mt-1"><ButtonBadge variant="google-blue" icon={Icons.precalc} text={t.precalc} /></div>
+                  <div className="mt-2 text-gray-600 dark:text-gray-400">{t.helpCalcPrecalc}</div>
+                </div>
+
+                <div className="flex items-start gap-2">
+                  <div className="mt-1"><ButtonBadge variant="green" icon={Icons.optimal} text={t.optimal} /></div>
+                  <div className="mt-2 text-gray-600 dark:text-gray-400">{t.helpCalcOptimal}</div>
+                </div>
+
+                <div className="flex items-start gap-2">
+                  <div className="mt-1"><ButtonBadge variant="standard-white" icon={Icons.calculate} text={t.calculate} /></div>
+                  <div className="mt-2 text-gray-600 dark:text-gray-400">{t.helpCalcCalculate}</div>
+                </div>
+
+                <div className="flex items-start gap-2">
+                  <div className="mt-1"><ButtonBadge variant="gray" icon={Icons.validate} text={t.validate} /></div>
+                  <div className="mt-2 text-gray-600 dark:text-gray-400">{t.helpCalcValidate}</div>
+                </div>
+              </div>
+            </section>
+
+            {/* Mouse Controls */}
+            <section>
+              <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-4 flex items-center gap-2 border-l-4 border-purple-500 pl-3">
+                {t.helpMouseTitle}
+              </h3>
+              <div className="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-xl border border-gray-100 dark:border-gray-700 text-sm">
+                <ul className="list-disc pl-4 space-y-2 text-gray-600 dark:text-gray-400 leading-relaxed">
+                  {(t.helpMouseContent as string[]).map((line, i) => (
+                    <li key={i}>{line}</li>
+                  ))}
+                </ul>
+              </div>
+            </section>
+
+            {/* Features Expansion */}
+            <section>
+              <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-4 flex items-center gap-2 border-l-4 border-google-blue pl-3">
+                {t.helpFeaturesTitle}
+              </h3>
+              <div className="space-y-4 text-sm">
+
+                <div className="bg-gray-50 dark:bg-gray-700/30 p-3 rounded-lg border border-gray-100 dark:border-gray-700 flex items-start gap-3">
+                  <div className="mt-0.5"><ButtonBadge variant="teal-solid" icon={Icons.visualize} text={t.visualize} /></div>
+                  <p className="text-gray-600 dark:text-gray-400 pt-1.5">{t.helpFeatVisualize}</p>
+                </div>
+
+                <div className="bg-gray-50 dark:bg-gray-700/30 p-3 rounded-lg border border-gray-100 dark:border-gray-700 flex items-start gap-3">
+                  <div className="mt-0.5"><ButtonBadge variant="white-border" icon={Icons.savedRoutes} text={t.savedRoutes} /></div>
+                  <p className="text-gray-600 dark:text-gray-400 pt-1.5">{t.helpFeatRoutes}</p>
+                </div>
+
+                <div className="bg-gray-50 dark:bg-gray-700/30 p-3 rounded-lg border border-gray-100 dark:border-gray-700">
+                  <span className="font-bold text-green-600 block mb-1">LMOD Cache</span>
+                  <p className="text-gray-600 dark:text-gray-400">{t.helpFeatCache}</p>
+                </div>
+
+                <div className="bg-gray-50 dark:bg-gray-700/30 p-3 rounded-lg border border-gray-100 dark:border-gray-700">
+                  <span className="font-bold text-blue-600 dark:text-blue-400 block mb-1">{t.helpFeatHybridByokTitle}</span>
+                  <p className="text-gray-600 dark:text-gray-400">{t.helpFeatHybridByok}</p>
+                </div>
+
+                <div className="bg-gray-50 dark:bg-gray-700/30 p-3 rounded-lg border border-gray-100 dark:border-gray-700">
+                  <span className="font-bold text-purple-600 dark:text-purple-400 block mb-1">{t.helpFeatCloudTitle}</span>
+                  <p className="text-gray-600 dark:text-gray-400">{t.helpFeatCloud}</p>
+                </div>
+
+                <div className="bg-gray-50 dark:bg-gray-700/30 p-3 rounded-lg border border-gray-100 dark:border-gray-700">
+                  <span className="font-bold text-red-600 block mb-1">Factory Reset / Validation</span>
+                  <p className="text-gray-600 dark:text-gray-400">{t.helpFeatReset}</p>
+                  <p className="text-gray-600 dark:text-gray-400 mt-2">{t.helpFeatValidation}</p>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          {/* Tips */}
+          <section className="bg-green-50 dark:bg-green-900/10 p-4 rounded-lg border border-green-100 dark:border-green-800">
+            <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+              <svg className="w-5 h-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
+              {t.helpTipsTitle}
+            </h3>
+            <ul className="list-disc pl-5 space-y-2 text-sm">
+              <li><strong>Backup/Restore:</strong> {t.helpTipExport}</li>
+              <li><strong>Economy:</strong> {t.helpTipLmod}</li>
+            </ul>
+          </section>
         </div>
 
         <div className="mt-8 flex flex-col md:flex-row justify-between items-center border-t dark:border-gray-700 pt-4 gap-4">
-            <div className="flex items-center gap-3 w-full md:w-1/3 justify-center md:justify-start">
-                <span className="text-xs text-gray-400 font-mono italic">{t.footerBrand}</span>
-                <button 
-                    onClick={handleCheckUpdates} 
-                    className="px-2 py-1 text-xs font-medium bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded transition-colors shadow-sm"
-                >
-                    {t.btnCheckUpdates}
-                </button>
-            </div>
-            
-            <div className="flex flex-col items-center text-sm text-gray-400 font-mono italic text-center w-full md:w-1/3">
-                <span>Copyright © 2025 - {new Date().getFullYear()} <a href="mailto:capsky.jakub@gmail.com" className="hover:text-gray-600 dark:hover:text-gray-200 transition-colors">capsky.jakub@gmail.com</a></span>
-                <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noopener noreferrer" className="hover:text-google-blue transition-colors mt-0.5">
-                    Licensed under GNU AGPLv3
-                </a>
-            </div>
+          <div className="flex items-center gap-3 w-full md:w-1/3 justify-center md:justify-start">
+            <span className="text-xs text-gray-400 font-mono italic">{t.footerBrand}</span>
+            <button
+              onClick={handleCheckUpdates}
+              className="px-2 py-1 text-xs font-medium bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded transition-colors shadow-sm"
+            >
+              {t.btnCheckUpdates}
+            </button>
+          </div>
 
-            <div className="w-full md:w-1/3 flex justify-center md:justify-end">
-                <button onClick={onClose} className="px-8 py-2 bg-google-blue hover:bg-blue-700 text-white rounded-lg font-bold transition-all shadow-md transform hover:scale-105 active:scale-95">
-                  {t.close}
-                </button>
-            </div>
+          <div className="flex flex-row flex-wrap items-center justify-center gap-x-2 text-[10px] md:text-sm text-gray-400 font-mono w-full md:w-1/3">
+            <span>Copyright © {branding.copyrightStartYear}-{new Date().getFullYear()}</span>
+            <span>|</span>
+            <a href={`mailto:${branding.email}`} className="hover:text-gray-600 dark:hover:text-gray-200 transition-colors">{branding.author}</a>
+            <span>|</span>
+            <a href={branding.githubUrl} target="_blank" rel="noopener noreferrer" className="hover:text-gray-600 dark:hover:text-gray-200 transition-colors">GitHub</a>
+            <span>|</span>
+            <a href={branding.licenseUrl} target="_blank" rel="noopener noreferrer" className="hover:text-google-blue transition-colors">{branding.license}</a>
+          </div>
+
+
+          <div className="w-full md:w-1/3 flex justify-center md:justify-end">
+            <button onClick={onClose} className="px-8 py-2 bg-google-blue hover:bg-blue-700 text-white rounded-lg font-bold transition-all shadow-md transform hover:scale-105 active:scale-95">
+              {t.close}
+            </button>
+          </div>
         </div>
       </div>
     </div>
