@@ -189,9 +189,10 @@ export const FirebaseService = {
         const cloudData = docSnap.data() as BackupData;
         const localTs = parseInt(localStorage.getItem('odocalc_last_modified') || '0');
 
-        console.log(`[Cloud] Timestamp Check - Local: ${localTs}, Cloud: ${cloudData.timestamp}`);
+        const cloudTs = cloudData.timestamp ?? Infinity;
+        console.log(`[Cloud] Timestamp Check - Local: ${localTs}, Cloud: ${cloudData.timestamp} (coerced: ${cloudTs})`);
 
-        if (cloudData.timestamp > localTs) {
+        if (cloudTs > localTs) {
           if (cloudData.clients) localStorage.setItem('odocalc_db_clients', JSON.stringify(cloudData.clients));
           if (cloudData.settings) localStorage.setItem('odocalc_settings', JSON.stringify(cloudData.settings));
           if (cloudData.savedRoutes) localStorage.setItem('odocalc_saved_routes', JSON.stringify(cloudData.savedRoutes));
