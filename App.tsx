@@ -149,6 +149,14 @@ const App: React.FC = () => {
                     .then(() => setIsApiReady(true))
                     .catch(() => setIsApiReady(false));
             }
+        } else if (data.apikeymaps) {
+            // Firestore doc has ONLY apikeymaps (no settings block, e.g. admin-seeded doc).
+            // Without this branch, isApiReady stays false because the if(data.settings)
+            // block above is the only place setIsApiReady(true) is called from cloud data.
+            setRuntimeApiKey(data.apikeymaps);
+            loadGoogleMapsScript(data.apikeymaps)
+                .then(() => setIsApiReady(true))
+                .catch(() => setIsApiReady(false));
         }
 
         // Restore Session Data

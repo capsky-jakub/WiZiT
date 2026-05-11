@@ -221,7 +221,13 @@ export const FirebaseService = {
               }
           }
 
-          localStorage.setItem('odocalc_last_modified', cloudData.timestamp.toString());
+          // Use cloudTs (already coerced) rather than cloudData.timestamp directly:
+          // if the doc had no timestamp field, cloudData.timestamp is undefined and
+          // calling .toString() on it would throw, aborting syncDown before
+          // applyCloudData could ever run. Fall back to Date.now() so the local
+          // marker is still a valid number for future comparisons.
+          const persistTs = cloudTs === Infinity ? Date.now() : cloudData.timestamp!;
+          localStorage.setItem('odocalc_last_modified', persistTs.toString());
           
           console.log(`[Cloud] Synced DOWN successfully. Local updated.`);
           return { updated: true, data: cloudData };
