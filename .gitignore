@@ -28,6 +28,9 @@ dist-ssr
 /auto_deploy/
 
 .gemini/
+.agents/
+.gg_utils/
+.firebase/
 gha-creds-*.json
 compile_deploy/
 migrated_prompt_history/
