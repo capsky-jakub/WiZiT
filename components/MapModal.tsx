@@ -117,8 +117,35 @@ export const MapSection: React.FC<MapSectionProps> = ({ isOpen, onClose, startTr
               position: legs[0].start_location, map: map, label: { text: 'S', color: 'white', fontWeight: 'bold' }, title: 'Start: ' + startAddr, zIndex: 999 
           });
 
-          // FIX: Added text-gray-900 to ensure visibility on white InfoWindow background in dark mode
-          const startContent = `<div class="p-2 min-w-[200px] text-gray-900"><h3 class="font-bold border-b pb-1 mb-1">Start</h3><p class="text-sm text-gray-600 mb-2">${startAddr}</p></div>`;
+          // Helper to safely build DOM element for InfoWindow, preventing DOM-based XSS
+          const createInfoWindowNode = (headingText: string, subtitleText: string, distanceBadgeText?: string): HTMLDivElement => {
+              const container = document.createElement('div');
+              container.className = 'p-2 min-w-[200px] text-gray-900';
+
+              const heading = document.createElement('h3');
+              heading.className = 'font-bold border-b pb-1 mb-1';
+              heading.textContent = headingText;
+              container.appendChild(heading);
+
+              const subtitle = document.createElement('p');
+              subtitle.className = distanceBadgeText ? 'text-xs text-gray-500 mb-1' : 'text-sm text-gray-600 mb-2';
+              subtitle.textContent = subtitleText;
+              container.appendChild(subtitle);
+
+              if (distanceBadgeText) {
+                  const badgeWrap = document.createElement('div');
+                  badgeWrap.className = 'mt-2 bg-gray-50 p-2 rounded border border-gray-100';
+                  const badge = document.createElement('p');
+                  badge.className = 'text-sm font-mono font-bold text-gray-800';
+                  badge.textContent = `+ ${distanceBadgeText}`;
+                  badgeWrap.appendChild(badge);
+                  container.appendChild(badgeWrap);
+              }
+
+              return container;
+          };
+
+          const startContent = createInfoWindowNode('Start', startAddr);
 
           startMarker.addListener('click', () => {
               infoWindowRef.current.setContent(startContent);
@@ -133,8 +160,7 @@ export const MapSection: React.FC<MapSectionProps> = ({ isOpen, onClose, startTr
                   const marker = new google.maps.Marker({
                       position: leg.end_location, map: map, label: { text: visit.order.toString(), color: 'black', fontWeight: 'bold' }, title: `${visit.order}. ${visit.surname}`,
                   });
-                  // FIX: Added text-gray-900 to ensure visibility on white InfoWindow background in dark mode
-                  const content = `<div class="p-2 min-w-[200px] text-gray-900"><h3 class="font-bold border-b pb-1 mb-1">#${visit.order} ${visit.surname}</h3><p class="text-xs text-gray-500 mb-1">${visit.address}</p><div class="mt-2 bg-gray-50 p-2 rounded border border-gray-100"><p class="text-sm font-mono font-bold text-gray-800">+ ${leg.distance.text}</p></div></div>`;
+                  const content = createInfoWindowNode(`#${visit.order} ${visit.surname}`, visit.address, leg.distance?.text || '');
                   marker.addListener('click', () => {
                       infoWindowRef.current.setContent(content);
                       infoWindowRef.current.open(map, marker);

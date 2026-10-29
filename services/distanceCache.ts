@@ -25,6 +25,9 @@ export const DistanceCache = {
       
       const cache = JSON.parse(raw);
       const key = getKey(origin, dest);
+      if (!cache || typeof cache !== 'object' || !Object.prototype.hasOwnProperty.call(cache, key)) {
+          return null;
+      }
       const entry = cache[key];
 
       if (!entry) return null;
@@ -88,7 +91,11 @@ export const DistanceCache = {
     
     try {
         const cache = JSON.parse(raw);
-        const entry = cache[getKey(origin, dest)];
+        const key = getKey(origin, dest);
+        if (!cache || typeof cache !== 'object' || !Object.prototype.hasOwnProperty.call(cache, key)) {
+            return false;
+        }
+        const entry = cache[key];
 
         if (!entry) return false;
 

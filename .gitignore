@@ -30,3 +30,4 @@ dist-ssr
 .gemini/
 gha-creds-*.json
 compile_deploy/
+migrated_prompt_history/

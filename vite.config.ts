@@ -17,11 +17,11 @@ export default defineConfig({
     },
   },
   preview: {
-    host: true,
+    host: 'localhost',
     port: 8080
   },
   server: {
-    host: true,
+    host: 'localhost',
     port: 8080
   }
 });

@@ -26,7 +26,10 @@ const DEFAULT_START_ADDRESS = import.meta.env.VITE_DEFAULT_START_ADDRESS || "";
 
 import mainLogo from './logo/logo_dark.png';
 
-const uuid = () => Math.random().toString(36).substring(2, 9);
+const uuid = (): string =>
+    typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+        ? crypto.randomUUID()
+        : Math.random().toString(36).substring(2, 11);
 const commercialRound = (num: number) => Math.floor(num + 0.5);
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
@@ -629,8 +632,12 @@ const App: React.FC = () => {
         reader.onload = (event) => {
             try {
                 const text = event.target?.result as string;
-                const data = JSON.parse(text);
-                if (!data.visits && !data.settings) throw new Error("Invalid backup file format");
+                const data = JSON.parse(text, (key, value) =>
+                    key === '__proto__' || key === 'constructor' || key === 'prototype' ? undefined : value
+                );
+                if (!data || typeof data !== 'object' || (!data.visits && !data.settings)) {
+                    throw new Error("Invalid backup file format");
+                }
 
                 if (data.lmod) localStorage.setItem('odocalc_lmod', JSON.stringify(data.lmod));
                 if (data.saved_routes) localStorage.setItem('odocalc_saved_routes', JSON.stringify(data.saved_routes));

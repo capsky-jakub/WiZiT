@@ -61,7 +61,9 @@ export const SavedRoutesModal: React.FC<SavedRoutesModalProps> = ({
     if (!newRouteName.trim()) return;
 
     const newRoute: SavedRoute = {
-      id: Math.random().toString(36).substring(2, 9),
+      id: typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+        ? crypto.randomUUID()
+        : Math.random().toString(36).substring(2, 11),
       name: newRouteName.trim(),
       createdAt: new Date().toISOString(),
       visits: currentVisits,
