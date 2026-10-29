@@ -1,0 +1,134 @@
+rules_version = '2';
+
+// ===============================================================
+// Assumed Data Model (Sanitized Template)
+// ===============================================================
+//
+// Application: WiZiT (Smart Route Optimizer & Visit Planner)
+// Databases: `dbvisopt` (and `{database}`)
+//
+// Collection: /localstorage
+//
+// 1. Document: /localstorage/{userEmail}
+//    Purpose: Per-user isolated CRM, visit session, and settings storage.
+//    Security Requirements:
+//      - Strict per-user isolation: caller must be authenticated with verified email
+//        matching {userEmail} (case-insensitive) AND belong to the authorized whitelist.
+//      - Listing (/localstorage) prohibited (allow list: if false).
+//      - Schema and size limits strictly validated on both create and update.
+//
+// 2. Document: /localstorage/shared
+//    Purpose: Central storage of system-shared Google Maps API key (`apikeymaps`).
+//    Security Requirements:
+//      - Read (get): Only authenticated callers with verified email in authorized whitelist.
+//      - Listing (list): Explicitly prohibited (allow list: if false).
+//      - Write: Strictly prohibited for browser clients (allow write: if false).
+//
+// 3. Catch-all:
+//    - Any other document or collection is denied access (allow read, write: if false).
+//
+// ===============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Helper Functions: Authentication & Whitelist Authorization
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isEmailVerified() {
+      return isAuthenticated() &&
+             request.auth.token.email_verified == true;
+    }
+
+    // Replace with your approved administrator / user emails in local firestore.rules
+    function getAuthorizedEmails() {
+      return [
+        'admin@example.com',
+        'operator1@example.com',
+        'operator2@example.com'
+      ];
+    }
+
+    function isAuthorized() {
+      return isEmailVerified() &&
+             request.auth.token.email is string &&
+             request.auth.token.email.lower() in getAuthorizedEmails();
+    }
+
+    function isTenantOwner(userEmail) {
+      return isAuthorized() &&
+             userEmail is string &&
+             userEmail.lower() == request.auth.token.email.lower() &&
+             userEmail.lower() != 'shared';
+    }
+
+    // ===============================================================
+    // Domain Validator Functions (Validator Function Pattern)
+    // ===============================================================
+
+    function getAllowedTenantFields() {
+      return [
+        'timestamp',
+        'clients',
+        'settings',
+        'savedRoutes',
+        'lmod',
+        'visits',
+        'apikeymaps',
+        'start',
+        'return'
+      ];
+    }
+
+    function isValidTenantBackup(data) {
+      return data.keys().hasOnly(getAllowedTenantFields()) &&
+             ('timestamp' in data && data.timestamp is number && data.timestamp > 0 && data.timestamp < 32503680000000) &&
+             (!('clients' in data) || (data.clients is list && data.clients.size() <= 2000)) &&
+             (!('settings' in data) || (data.settings is map && data.settings.size() <= 50)) &&
+             (!('savedRoutes' in data) || (data.savedRoutes is list && data.savedRoutes.size() <= 500)) &&
+             (!('lmod' in data) || (data.lmod is map && data.lmod.size() <= 10000)) &&
+             (!('visits' in data) || (
+               (data.visits is map && data.visits.size() <= 10) ||
+               (data.visits is list && data.visits.size() <= 500)
+             )) &&
+             (!('apikeymaps' in data) || (data.apikeymaps is string && data.apikeymaps.size() <= 200)) &&
+             (!('start' in data) || (data.start == null || (data.start is map && data.start.size() <= 20))) &&
+             (!('return' in data) || (data.return == null || (data.return is map && data.return.size() <= 20)));
+    }
+
+    // ===============================================================
+    // Rules: System Shared Configuration
+    // ===============================================================
+
+    match /localstorage/shared {
+      allow get: if isAuthorized();
+      allow list: if false;
+      allow write: if false;
+    }
+
+    // ===============================================================
+    // Rules: Per-User Tenant Storage
+    // ===============================================================
+
+    match /localstorage/{userEmail} {
+      allow get: if isTenantOwner(userEmail);
+      allow list: if false;
+      allow create: if isTenantOwner(userEmail) && isValidTenantBackup(request.resource.data);
+      allow update: if isTenantOwner(userEmail) && isValidTenantBackup(request.resource.data);
+      allow delete: if isTenantOwner(userEmail);
+    }
+
+    // ===============================================================
+    // Default Deny Catch-All
+    // ===============================================================
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
