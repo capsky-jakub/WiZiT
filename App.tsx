@@ -112,6 +112,7 @@ const App: React.FC = () => {
     const [planReloadConfirming, setPlanReloadConfirming] = useState(false);
     const [isApiReady, setIsApiReady] = useState(false);
     const [resultMode, setResultMode] = useState<ResultMode>('standard');
+    const [searchTerm, setSearchTerm] = useState('');
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const importDbInputRef = useRef<HTMLInputElement>(null);
@@ -1230,69 +1231,164 @@ const App: React.FC = () => {
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 md:p-8 transition-colors duration-200 font-sans">
             <div className="w-[95%] max-w-none mx-auto space-y-6">
-                <header className="flex flex-col md:flex-row md:items-center justify-between bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
-                    <div className="mb-4 md:mb-0">
-                        <h1 className="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
-                            <img src={mainLogo} alt={t.appTitle} className="h-8" />
-                        </h1>
-                        <p className="text-gray-500 dark:text-gray-400 text-xs flex items-center gap-1">
-                            {t.subTitle}
-                            {isApiReady ? (
-                                <span className="text-green-500 flex items-center" title="API Ready"><svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" /></svg></span>
-                            ) : (
-                                <span className="text-red-500 flex items-center cursor-pointer hover:underline" onClick={() => setIsSettingsOpen(true)} title="API Missing">
-                                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
-                                    <span className="ml-1">{t.keyMissing}</span>
-                                </span>
-                            )}
-                        </p>
+                <header className="flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-gray-800 px-4 py-2.5 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
+                    {/* 1. Logo & Subtitle */}
+                    <div className="flex items-center gap-3 flex-shrink-0">
+                        <div>
+                            <h1 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                                <img src={mainLogo} alt={t.appTitle} className="h-7" />
+                            </h1>
+                            <p className="text-gray-500 dark:text-gray-400 text-[11px] flex items-center gap-1 leading-tight">
+                                <span className="hidden xl:inline">{t.subTitle}</span>
+                                {isApiReady ? (
+                                    <span className="text-green-500 flex items-center" title="API Ready"><svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" /></svg></span>
+                                ) : (
+                                    <span className="text-red-500 flex items-center cursor-pointer hover:underline" onClick={() => setIsSettingsOpen(true)} title="API Missing">
+                                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
+                                        <span className="ml-1">{t.keyMissing}</span>
+                                    </span>
+                                )}
+                            </p>
+                        </div>
                     </div>
-                    <div className="flex flex-wrap items-center gap-3">
+
+                    {/* 2. Specific Functions (Compressed: Visit Actions + Search + Optimization Actions) */}
+                    <div className="flex flex-wrap items-center gap-2 justify-center flex-grow order-last xl:order-none w-full xl:w-auto">
+                        {/* Left Action Set: Visit Management */}
+                        <div className="flex flex-wrap items-center gap-1.5">
+                            {/* Client DB Button - Prominent */}
+                            <button type="button" onClick={() => setIsClientDbOpen(true)} title={t.clientDb} className="px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-bold text-xs transition-colors flex items-center gap-1.5 shadow-sm transform active:scale-95">
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                                <span>{t.clientDb}</span>
+                            </button>
+
+                            <button type="button" onClick={handleReloadPlan} title={planReloadConfirming ? t.confirm : t.importPlan} className={`px-2.5 py-1.5 border rounded-lg font-medium text-xs transition-colors flex items-center gap-1.5 shadow-sm ${planReloadConfirming ? 'bg-teal-600 text-white border-teal-700 hover:bg-teal-700' : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-teal-600 dark:text-teal-400 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                <span className="hidden 2xl:inline">{planReloadConfirming ? t.confirm : t.importPlan}</span>
+                            </button>
+
+                            <button type="button" onClick={() => fileInputRef.current?.click()} title={t.importExcel} className="px-2.5 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 font-medium text-xs transition-colors flex items-center gap-1.5 shadow-sm">
+                                <svg className="w-4 h-4 text-green-600 dark:text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                <span className="hidden 2xl:inline">{t.importExcel}</span>
+                            </button>
+
+                            <button type="button" onClick={() => setIsSavedRoutesOpen(true)} title={t.savedRoutes} className="px-2.5 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 font-medium text-xs transition-colors flex items-center gap-1.5 shadow-sm">
+                                <svg className="w-4 h-4 text-google-blue dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z" /></svg>
+                                <span className="hidden 2xl:inline">{t.savedRoutes}</span>
+                            </button>
+
+                            <button type="button" onClick={handleAddVisit} title={t.newVisit} className="px-2.5 py-1.5 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-lg font-medium text-xs transition-colors shadow-sm flex items-center gap-1.5">
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                                <span>{t.newVisit}</span>
+                            </button>
+
+                            {selectedIds.size > 0 && (
+                                <button type="button" onClick={handleDeleteClick} title={deleteConfirming ? t.confirm : `${t.delete} (${selectedIds.size})`} className={`px-2.5 py-1.5 border rounded-lg font-medium text-xs transition-colors shadow-sm ${deleteConfirming ? 'bg-red-600 text-white border-red-700 hover:bg-red-700' : 'bg-white dark:bg-gray-800 text-red-600 dark:text-red-400 border-gray-300 dark:border-gray-600 hover:bg-red-50 dark:hover:bg-red-900/20'}`}>
+                                    {deleteConfirming ? t.confirm : `${t.delete} (${selectedIds.size})`}
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Search Bar (Narrowed) */}
+                        <div className="relative w-36 md:w-44 lg:w-48 xl:w-56 max-w-xs flex-shrink-0">
+                            <input 
+                                type="text" 
+                                placeholder={t.search}
+                                aria-label={t.search}
+                                className="w-full pl-8 pr-7 py-1.5 text-xs border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-google-blue focus:border-google-blue outline-none shadow-sm transition-colors"
+                                value={searchTerm}
+                                onChange={e => setSearchTerm(e.target.value)}
+                                onKeyDown={e => { if (e.key === 'Escape') setSearchTerm(''); }}
+                            />
+                            <svg className="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-2 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                            {searchTerm && (
+                                <button 
+                                    type="button" 
+                                    onClick={() => setSearchTerm('')} 
+                                    className="absolute right-2 top-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-0.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                    title="Clear"
+                                >
+                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Right Action Set: Optimization Actions */}
+                        <div className="flex flex-wrap items-center gap-1.5">
+                            <button type="button" onClick={handleValidate} title={selectedIds.size > 0 ? `${t.validate} (${selectedIds.size})` : `${t.validate}`} disabled={calcStatus === CalculationStatus.ROUTING || calcStatus === CalculationStatus.VALIDATING} className={`px-2.5 py-1.5 text-white rounded-lg font-medium text-xs transition-colors shadow-sm flex items-center gap-1.5 ${calcStatus === CalculationStatus.ROUTING || calcStatus === CalculationStatus.VALIDATING ? 'bg-gray-400 cursor-not-allowed' : 'bg-gray-600 hover:bg-gray-700'}`}>
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                <span className="hidden 2xl:inline">{selectedIds.size > 0 ? `${t.validate} (${selectedIds.size})` : `${t.validate}`}</span>
+                            </button>
+                            <button type="button" onClick={() => setIsMapOpen(!isMapOpen)} title={isMapOpen ? t.hideMap : t.visualize} disabled={!canVisualize} className={`px-2.5 py-1.5 text-white rounded-lg font-medium text-xs transition-colors shadow-sm flex items-center gap-1.5 ${!canVisualize ? 'bg-gray-400 cursor-not-allowed' : 'bg-teal-600 hover:bg-teal-700'}`}>
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" /></svg>
+                                <span className="hidden 2xl:inline">{isMapOpen ? t.hideMap : t.visualize}</span>
+                            </button>
+                            <button type="button" onClick={handleOptimizeRoute} title={selectedIds.size > 0 ? `${t.optimal} (${selectedIds.size})` : t.optimal} disabled={calcStatus === CalculationStatus.ROUTING || calcStatus === CalculationStatus.VALIDATING || shouldDisableActions} className={`px-2.5 py-1.5 text-white rounded-lg font-medium text-xs transition-colors shadow-sm flex items-center gap-1.5 ${calcStatus === CalculationStatus.ROUTING || calcStatus === CalculationStatus.VALIDATING || shouldDisableActions ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'}`}>
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                                <span className="hidden 2xl:inline">{selectedIds.size > 0 ? `${t.optimal} (${selectedIds.size})` : t.optimal}</span>
+                            </button>
+                            <button type="button" onClick={() => runCalculation(undefined, 'preview')} title={t.precalc} disabled={calcStatus === CalculationStatus.ROUTING || calcStatus === CalculationStatus.VALIDATING || shouldDisableActions} className={`px-2.5 py-1.5 text-white rounded-lg font-medium text-xs transition-colors shadow-sm flex items-center gap-1.5 ${calcStatus === CalculationStatus.ROUTING || calcStatus === CalculationStatus.VALIDATING || shouldDisableActions ? 'bg-gray-400 cursor-not-allowed' : 'bg-google-blue hover:bg-blue-700'}`}>
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                <span className="hidden 2xl:inline">{t.precalc}</span>
+                            </button>
+                            <button type="button" onClick={() => runCalculation(undefined, 'standard')} title={t.calculate} disabled={calcStatus === CalculationStatus.ROUTING || calcStatus === CalculationStatus.VALIDATING || shouldDisableActions} className={`px-3 py-1.5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 rounded-lg font-medium text-xs transition-colors shadow-sm flex items-center gap-1.5 ${calcStatus === CalculationStatus.ROUTING || calcStatus === CalculationStatus.VALIDATING || shouldDisableActions ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : ''}`}>
+                                {calcStatus === CalculationStatus.ROUTING ? (
+                                    <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                ) : (
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                )}
+                                <span>{t.calculate}</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* 3. General Toolbar (Right: Sync, DB export/import, Reset, Settings, Help) */}
+                    <div className="flex items-center gap-2 flex-shrink-0">
                         <input type="file" ref={fileInputRef} accept=".xlsx" className="hidden" onChange={handleExcelUpload} />
                         <input type="file" ref={importDbInputRef} accept=".json" className="hidden" onChange={handleImportDB} />
                         <div className="flex items-center gap-1 bg-gray-50 dark:bg-gray-700/50 p-1 rounded-lg border border-gray-200 dark:border-gray-600">
                             {/* Auth/Sync Button Group */}
                             {user ? (
                                 isVerifying ? (
-                                    <div className="flex items-center gap-2 p-2 px-3">
-                                        <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
-                                        <span className="text-xs text-blue-600 font-medium">Verifying...</span>
+                                    <div className="flex items-center gap-1.5 p-1.5 px-2">
+                                        <div className="animate-spin h-3.5 w-3.5 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+                                        <span className="text-[11px] text-blue-600 font-medium">Verifying...</span>
                                     </div>
                                 ) : (
-                                    <div className="flex items-center gap-1 bg-green-50 dark:bg-green-900/30 p-1 rounded-md border border-green-100 dark:border-green-800 animate-fade-in">
-                                        <button onClick={handleFullSyncCheck} className={`p-2 rounded-md transition-colors ${isSyncing ? 'animate-spin text-green-600' : 'text-green-600 hover:bg-green-100 dark:text-green-400 dark:hover:bg-green-800'}`} title="Sync Now (Check Cloud)">
-                                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                                    <div className="flex items-center gap-1 bg-green-50 dark:bg-green-900/30 p-0.5 rounded-md border border-green-100 dark:border-green-800 animate-fade-in">
+                                        <button onClick={handleFullSyncCheck} className={`p-1.5 rounded-md transition-colors ${isSyncing ? 'animate-spin text-green-600' : 'text-green-600 hover:bg-green-100 dark:text-green-400 dark:hover:bg-green-800'}`} title="Sync Now (Check Cloud)">
+                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
                                         </button>
-                                        <button onClick={handleLogout} className="p-2 text-green-600 hover:bg-green-100 dark:text-green-400 dark:hover:bg-green-800 rounded-md transition-colors" title={`Logout ${user.email}`}>
-                                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                                        <button onClick={handleLogout} className="p-1.5 text-green-600 hover:bg-green-100 dark:text-green-400 dark:hover:bg-green-800 rounded-md transition-colors" title={`Logout ${user.email}`}>
+                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
                                         </button>
                                     </div>
                                 )
                             ) : (
-                                <button type="button" onClick={handleLogin} className="p-2 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-800 rounded-md transition-all shadow-sm flex items-center gap-1" title="Sign In to Sync">
-                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg>
-                                    <span className="text-xs font-semibold hidden md:inline">{isFirebaseReady ? 'Sync' : 'Setup Sync'}</span>
+                                <button type="button" onClick={handleLogin} className="p-1.5 px-2 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-800 rounded-md transition-all shadow-sm flex items-center gap-1" title="Sign In to Sync">
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg>
+                                    <span className="text-xs font-semibold hidden sm:inline">{isFirebaseReady ? 'Sync' : 'Setup Sync'}</span>
                                 </button>
                             )}
 
-                            <div className="w-px h-5 bg-gray-300 dark:bg-gray-500 mx-1"></div>
+                            <div className="w-px h-4 bg-gray-300 dark:bg-gray-500 mx-0.5"></div>
 
-                            <button type="button" onClick={handleExportDB} className="p-2 text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600 rounded-md transition-all shadow-sm" title={t.exportDb}>
-                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                            <button type="button" onClick={handleExportDB} className="p-1.5 text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600 rounded-md transition-all shadow-sm" title={t.exportDb}>
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
                             </button>
-                            <button type="button" onClick={() => importDbInputRef.current?.click()} className="p-2 text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600 rounded-md transition-all shadow-sm" title={t.importDb}>
-                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                            <button type="button" onClick={() => importDbInputRef.current?.click()} className="p-1.5 text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600 rounded-md transition-all shadow-sm" title={t.importDb}>
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                             </button>
-                            <div className="w-px h-5 bg-gray-300 dark:bg-gray-500 mx-1"></div>
-                            <button type="button" onClick={handleClearDB} className={`p-2 rounded-md transition-all shadow-sm ${dbDeleteConfirming ? 'bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400' : 'text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600'}`} title={dbDeleteConfirming ? t.confirmClear : t.clearDb}>
-                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                            <div className="w-px h-4 bg-gray-300 dark:bg-gray-500 mx-0.5"></div>
+                            <button type="button" onClick={handleClearDB} className={`p-1.5 rounded-md transition-all shadow-sm ${dbDeleteConfirming ? 'bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400' : 'text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600'}`} title={dbDeleteConfirming ? t.confirmClear : t.clearDb}>
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                             </button>
-                            <div className="w-px h-5 bg-gray-300 dark:bg-gray-500 mx-1"></div>
-                            <button type="button" onClick={() => setIsSettingsOpen(true)} className={`p-2 rounded-md transition-all shadow-sm ${!isApiReady ? 'text-red-500 bg-red-50 dark:bg-red-900/20 animate-pulse' : 'text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600'}`} title={t.settingsTitle}>
-                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                            <div className="w-px h-4 bg-gray-300 dark:bg-gray-500 mx-0.5"></div>
+                            <button type="button" onClick={() => setIsSettingsOpen(true)} className={`p-1.5 rounded-md transition-all shadow-sm ${!isApiReady ? 'text-red-500 bg-red-50 dark:bg-red-900/20 animate-pulse' : 'text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600'}`} title={t.settingsTitle}>
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                             </button>
-                            <button type="button" onClick={() => setIsHelpOpen(true)} className="p-2 text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600 rounded-md transition-all shadow-sm" title={t.helpTitle}>
-                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            <button type="button" onClick={() => setIsHelpOpen(true)} className="p-1.5 text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600 rounded-md transition-all shadow-sm" title={t.helpTitle}>
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                             </button>
                         </div>
                     </div>
@@ -1307,78 +1403,13 @@ const App: React.FC = () => {
                         </div>
                     )}
 
-                    <div className="flex flex-col md:flex-row justify-between items-center gap-4 py-2">
-
-                        {/* Main Action Group (Left) */}
-                        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-                            {/* Client DB Button - Prominent */}
-                            <button type="button" onClick={() => setIsClientDbOpen(true)} className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-bold text-sm transition-colors flex items-center gap-2 shadow-md transform active:scale-95">
-                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-                                <span>{t.clientDb}</span>
-                            </button>
-
-                            <button type="button" onClick={handleReloadPlan} className={`px-3 py-2 border rounded-lg font-medium text-sm transition-colors flex items-center gap-2 shadow-sm ${planReloadConfirming ? 'bg-teal-600 text-white border-teal-700 hover:bg-teal-700' : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-teal-600 dark:text-teal-400 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>
-                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                                <span className="hidden md:inline">{planReloadConfirming ? t.confirm : t.importPlan}</span>
-                            </button>
-
-                            <button type="button" onClick={() => fileInputRef.current?.click()} className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 font-medium text-sm transition-colors flex items-center gap-2 shadow-sm">
-                                <svg className="w-5 h-5 text-green-600 dark:text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                                <span className="hidden md:inline">{t.importExcel}</span>
-                            </button>
-
-                            <button type="button" onClick={() => setIsSavedRoutesOpen(true)} className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 font-medium text-sm transition-colors flex items-center gap-2 shadow-sm" title={t.savedRoutes}>
-                                <svg className="w-5 h-5 text-google-blue dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z" /></svg>
-                                <span className="hidden md:inline">{t.savedRoutes}</span>
-                            </button>
-
-                            <button type="button" onClick={handleAddVisit} className="px-3 py-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-lg font-medium text-sm transition-colors shadow-sm flex items-center gap-2">
-                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-                                <span>{t.newVisit}</span>
-                            </button>
-
-                            {selectedIds.size > 0 && (
-                                <button type="button" onClick={handleDeleteClick} className={`px-3 py-2 border rounded-lg font-medium text-sm transition-colors shadow-sm ${deleteConfirming ? 'bg-red-600 text-white border-red-700 hover:bg-red-700' : 'bg-white dark:bg-gray-800 text-red-600 dark:text-red-400 border-gray-300 dark:border-gray-600 hover:bg-red-50 dark:hover:bg-red-900/20'}`}>
-                                    {deleteConfirming ? t.confirm : `${t.delete} (${selectedIds.size})`}
-                                </button>
-                            )}
-                        </div>
-
-                        {/* Right Group: Optimization Actions */}
-                        <div className="flex items-center gap-2 w-full md:w-auto justify-end">
-                            <button type="button" onClick={handleValidate} disabled={calcStatus === CalculationStatus.ROUTING || calcStatus === CalculationStatus.VALIDATING} className={`px-3 py-2 text-white rounded-lg font-medium text-sm transition-colors shadow-sm flex items-center gap-2 ${calcStatus === CalculationStatus.ROUTING || calcStatus === CalculationStatus.VALIDATING ? 'bg-gray-400 cursor-not-allowed' : 'bg-gray-600 hover:bg-gray-700'}`}>
-                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                <span className="hidden md:inline">{selectedIds.size > 0 ? `${t.validate} (${selectedIds.size})` : `${t.validate}`}</span>
-                            </button>
-                            <button type="button" onClick={() => setIsMapOpen(!isMapOpen)} disabled={!canVisualize} className={`px-3 py-2 text-white rounded-lg font-medium text-sm transition-colors shadow-sm flex items-center gap-2 ${!canVisualize ? 'bg-gray-400 cursor-not-allowed' : 'bg-teal-600 hover:bg-teal-700'}`}>
-                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" /></svg>
-                                <span className="hidden md:inline">{isMapOpen ? t.hideMap : t.visualize}</span>
-                            </button>
-                            <button type="button" onClick={handleOptimizeRoute} disabled={calcStatus === CalculationStatus.ROUTING || calcStatus === CalculationStatus.VALIDATING || shouldDisableActions} className={`px-3 py-2 text-white rounded-lg font-medium text-sm transition-colors shadow-sm flex items-center gap-2 ${calcStatus === CalculationStatus.ROUTING || calcStatus === CalculationStatus.VALIDATING || shouldDisableActions ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'}`}>
-                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                                <span className="hidden md:inline">{selectedIds.size > 0 ? `${t.optimal} (${selectedIds.size})` : t.optimal}</span>
-                            </button>
-                            <button type="button" onClick={() => runCalculation(undefined, 'preview')} disabled={calcStatus === CalculationStatus.ROUTING || calcStatus === CalculationStatus.VALIDATING || shouldDisableActions} className={`px-3 py-2 text-white rounded-lg font-medium text-sm transition-colors shadow-sm flex items-center gap-2 ${calcStatus === CalculationStatus.ROUTING || calcStatus === CalculationStatus.VALIDATING || shouldDisableActions ? 'bg-gray-400 cursor-not-allowed' : 'bg-google-blue hover:bg-blue-700'}`}>
-                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                                <span className="hidden md:inline">{t.precalc}</span>
-                            </button>
-                            <button type="button" onClick={() => runCalculation(undefined, 'standard')} disabled={calcStatus === CalculationStatus.ROUTING || calcStatus === CalculationStatus.VALIDATING || shouldDisableActions} className={`px-4 py-2 bg-white text-gray-900 border border-gray-300 hover:bg-gray-50 rounded-lg font-medium text-sm transition-colors shadow-sm flex items-center gap-2 ${calcStatus === CalculationStatus.ROUTING || calcStatus === CalculationStatus.VALIDATING || shouldDisableActions ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : ''}`}>
-                                {calcStatus === CalculationStatus.ROUTING ? (
-                                    <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                ) : (
-                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                                )}
-                                <span>{t.calculate}</span>
-                            </button>
-                        </div>
-                    </div>
-
                     <VisitList
                         visits={visits} startTrip={startTrip} returnTrip={returnTrip} selectedIds={selectedIds} onEdit={handleEditVisit} onReorder={handleReorder} onToggleSkip={handleToggleSkip} onDelete={handleDeleteRow}
                         onToggleSelect={(id) => { const newSet = new Set(selectedIds); if (newSet.has(id)) newSet.delete(id); else newSet.add(id); setSelectedIds(newSet); }}
                         onToggleAll={(checked) => { if (checked) setSelectedIds(new Set(visits.map(v => v.id))); else setSelectedIds(new Set()); }}
                         lang={settings.language} departureTime={settings.departureTime}
                         resultMode={resultMode}
+                        searchTerm={searchTerm}
                     />
 
                     {compilationInfo && (

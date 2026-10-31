@@ -33,6 +33,7 @@ interface VisitListProps {
   lang: Language;
   departureTime: string; 
   resultMode?: ResultMode; 
+  searchTerm?: string;
 }
 
 // Helper format function for duration
@@ -272,9 +273,8 @@ const SortableRow: React.FC<SortableRowProps> = ({ visit, isSelected, onToggleSe
 
 // --- Main List Component ---
 export const VisitList: React.FC<VisitListProps> = ({ 
-  visits, startTrip, returnTrip, selectedIds, onToggleSelect, onToggleAll, onEdit, onReorder, onToggleSkip, onDelete, lang, departureTime, resultMode
+  visits, startTrip, returnTrip, selectedIds, onToggleSelect, onToggleAll, onEdit, onReorder, onToggleSkip, onDelete, lang, departureTime, resultMode, searchTerm = ''
 }) => {
-  const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState<{ key: keyof Visit, direction: 'asc' | 'desc' } | null>(null);
 
   const allSelected = visits.length > 0 && selectedIds.size === visits.length;
@@ -394,18 +394,6 @@ export const VisitList: React.FC<VisitListProps> = ({
 
   return (
     <div className="w-full">
-        {/* Search Bar */}
-        <div className="mb-2 relative">
-            <input 
-                type="text" 
-                placeholder={t.search}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-google-blue outline-none shadow-sm"
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-            />
-            <svg className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-        </div>
-
         <div className="overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm bg-white dark:bg-gray-800 w-full transition-colors">
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
