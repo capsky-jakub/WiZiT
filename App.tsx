@@ -1256,34 +1256,64 @@ const App: React.FC = () => {
                     <div className="flex flex-wrap items-center gap-2 justify-center flex-grow order-last xl:order-none w-full xl:w-auto">
                         {/* Left Action Set: Visit Management */}
                         <div className="flex flex-wrap items-center gap-1.5">
-                            {/* Client DB Button - Prominent */}
-                            <button type="button" onClick={() => setIsClientDbOpen(true)} title={t.clientDb} className="px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-bold text-xs transition-colors flex items-center gap-1.5 shadow-sm transform active:scale-95">
+                            {/* Client DB Button - Unified surface with orange text & icon */}
+                            <button 
+                                type="button" 
+                                onClick={() => setIsClientDbOpen(true)} 
+                                title={t.clientDb} 
+                                className="px-2.5 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-950/30 hover:border-orange-300 dark:hover:border-orange-700 rounded-lg font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-sm transform active:scale-95"
+                            >
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                                 <span>{t.clientDb}</span>
                             </button>
 
-                            <button type="button" onClick={handleReloadPlan} title={planReloadConfirming ? t.confirm : t.importPlan} className={`px-2.5 py-1.5 border rounded-lg font-medium text-xs transition-colors flex items-center gap-1.5 shadow-sm ${planReloadConfirming ? 'bg-teal-600 text-white border-teal-700 hover:bg-teal-700' : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-teal-600 dark:text-teal-400 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>
+                            <button 
+                                type="button" 
+                                onClick={handleReloadPlan} 
+                                title={planReloadConfirming ? t.confirm : t.importPlan} 
+                                className={`px-2.5 py-1.5 border rounded-lg font-medium text-xs transition-colors flex items-center gap-1.5 shadow-sm ${planReloadConfirming ? 'bg-teal-600 text-white border-teal-700 hover:bg-teal-700' : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-teal-600 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-950/30 hover:border-teal-300 dark:hover:border-teal-700'}`}
+                            >
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                                 <span className="hidden 2xl:inline">{planReloadConfirming ? t.confirm : t.importPlan}</span>
                             </button>
 
-                            <button type="button" onClick={() => fileInputRef.current?.click()} title={t.importExcel} className="px-2.5 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 font-medium text-xs transition-colors flex items-center gap-1.5 shadow-sm">
-                                <svg className="w-4 h-4 text-green-600 dark:text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                            <button 
+                                type="button" 
+                                onClick={() => fileInputRef.current?.click()} 
+                                title={t.importExcel} 
+                                className="px-2.5 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-green-600 dark:text-green-500 rounded-lg hover:bg-green-50 dark:hover:bg-green-950/30 hover:border-green-300 dark:hover:border-green-700 font-medium text-xs transition-colors flex items-center gap-1.5 shadow-sm"
+                            >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                                 <span className="hidden 2xl:inline">{t.importExcel}</span>
                             </button>
 
-                            <button type="button" onClick={() => setIsSavedRoutesOpen(true)} title={t.savedRoutes} className="px-2.5 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 font-medium text-xs transition-colors flex items-center gap-1.5 shadow-sm">
-                                <svg className="w-4 h-4 text-google-blue dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z" /></svg>
+                            <button 
+                                type="button" 
+                                onClick={() => setIsSavedRoutesOpen(true)} 
+                                title={t.savedRoutes} 
+                                className="px-2.5 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-google-blue dark:text-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950/30 hover:border-blue-300 dark:hover:border-blue-700 font-medium text-xs transition-colors flex items-center gap-1.5 shadow-sm"
+                            >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z" /></svg>
                                 <span className="hidden 2xl:inline">{t.savedRoutes}</span>
                             </button>
 
-                            <button type="button" onClick={handleAddVisit} title={t.newVisit} className="px-2.5 py-1.5 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-lg font-medium text-xs transition-colors shadow-sm flex items-center gap-1.5">
+                            <button 
+                                type="button" 
+                                onClick={handleAddVisit} 
+                                title={t.newVisit} 
+                                className="px-2.5 py-1.5 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-lg font-medium text-xs transition-colors shadow-sm flex items-center gap-1.5"
+                            >
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
                                 <span>{t.newVisit}</span>
                             </button>
 
                             {selectedIds.size > 0 && (
-                                <button type="button" onClick={handleDeleteClick} title={deleteConfirming ? t.confirm : `${t.delete} (${selectedIds.size})`} className={`px-2.5 py-1.5 border rounded-lg font-medium text-xs transition-colors shadow-sm ${deleteConfirming ? 'bg-red-600 text-white border-red-700 hover:bg-red-700' : 'bg-white dark:bg-gray-800 text-red-600 dark:text-red-400 border-gray-300 dark:border-gray-600 hover:bg-red-50 dark:hover:bg-red-900/20'}`}>
+                                <button 
+                                    type="button" 
+                                    onClick={handleDeleteClick} 
+                                    title={deleteConfirming ? t.confirm : `${t.delete} (${selectedIds.size})`} 
+                                    className={`px-2.5 py-1.5 border rounded-lg font-medium text-xs transition-colors shadow-sm ${deleteConfirming ? 'bg-red-600 text-white border-red-700 hover:bg-red-700' : 'bg-white dark:bg-gray-800 text-red-600 dark:text-red-400 border-gray-300 dark:border-gray-600 hover:bg-red-50 dark:hover:bg-red-950/30 hover:border-red-300 dark:hover:border-red-700'}`}
+                                >
                                     {deleteConfirming ? t.confirm : `${t.delete} (${selectedIds.size})`}
                                 </button>
                             )}
@@ -1315,27 +1345,57 @@ const App: React.FC = () => {
 
                         {/* Right Action Set: Optimization Actions */}
                         <div className="flex flex-wrap items-center gap-1.5">
-                            <button type="button" onClick={handleValidate} title={selectedIds.size > 0 ? `${t.validate} (${selectedIds.size})` : `${t.validate}`} disabled={calcStatus === CalculationStatus.ROUTING || calcStatus === CalculationStatus.VALIDATING} className={`px-2.5 py-1.5 text-white rounded-lg font-medium text-xs transition-colors shadow-sm flex items-center gap-1.5 ${calcStatus === CalculationStatus.ROUTING || calcStatus === CalculationStatus.VALIDATING ? 'bg-gray-400 cursor-not-allowed' : 'bg-gray-600 hover:bg-gray-700'}`}>
+                            <button 
+                                type="button" 
+                                onClick={handleValidate} 
+                                title={selectedIds.size > 0 ? `${t.validate} (${selectedIds.size})` : `${t.validate}`} 
+                                disabled={calcStatus === CalculationStatus.ROUTING || calcStatus === CalculationStatus.VALIDATING} 
+                                className={`px-2.5 py-1.5 border rounded-lg font-medium text-xs transition-colors flex items-center gap-1.5 ${calcStatus === CalculationStatus.ROUTING || calcStatus === CalculationStatus.VALIDATING ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 border-gray-200 dark:border-gray-700 cursor-not-allowed' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm'}`}
+                            >
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                 <span className="hidden 2xl:inline">{selectedIds.size > 0 ? `${t.validate} (${selectedIds.size})` : `${t.validate}`}</span>
                             </button>
-                            <button type="button" onClick={() => setIsMapOpen(!isMapOpen)} title={isMapOpen ? t.hideMap : t.visualize} disabled={!canVisualize} className={`px-2.5 py-1.5 text-white rounded-lg font-medium text-xs transition-colors shadow-sm flex items-center gap-1.5 ${!canVisualize ? 'bg-gray-400 cursor-not-allowed' : 'bg-teal-600 hover:bg-teal-700'}`}>
+                            <button 
+                                type="button" 
+                                onClick={() => setIsMapOpen(!isMapOpen)} 
+                                title={isMapOpen ? t.hideMap : t.visualize} 
+                                disabled={!canVisualize} 
+                                className={`px-2.5 py-1.5 border rounded-lg font-medium text-xs transition-colors flex items-center gap-1.5 ${!canVisualize ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 border-gray-200 dark:border-gray-700 cursor-not-allowed' : 'bg-white dark:bg-gray-800 text-teal-600 dark:text-teal-400 border-gray-300 dark:border-gray-600 hover:bg-teal-50 dark:hover:bg-teal-950/30 hover:border-teal-300 dark:hover:border-teal-700 shadow-sm'}`}
+                            >
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" /></svg>
                                 <span className="hidden 2xl:inline">{isMapOpen ? t.hideMap : t.visualize}</span>
                             </button>
-                            <button type="button" onClick={handleOptimizeRoute} title={selectedIds.size > 0 ? `${t.optimal} (${selectedIds.size})` : t.optimal} disabled={calcStatus === CalculationStatus.ROUTING || calcStatus === CalculationStatus.VALIDATING || shouldDisableActions} className={`px-2.5 py-1.5 text-white rounded-lg font-medium text-xs transition-colors shadow-sm flex items-center gap-1.5 ${calcStatus === CalculationStatus.ROUTING || calcStatus === CalculationStatus.VALIDATING || shouldDisableActions ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'}`}>
+                            <button 
+                                type="button" 
+                                onClick={handleOptimizeRoute} 
+                                title={selectedIds.size > 0 ? `${t.optimal} (${selectedIds.size})` : t.optimal} 
+                                disabled={calcStatus === CalculationStatus.ROUTING || calcStatus === CalculationStatus.VALIDATING || shouldDisableActions} 
+                                className={`px-2.5 py-1.5 border rounded-lg font-medium text-xs transition-colors flex items-center gap-1.5 ${calcStatus === CalculationStatus.ROUTING || calcStatus === CalculationStatus.VALIDATING || shouldDisableActions ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 border-gray-200 dark:border-gray-700 cursor-not-allowed' : 'bg-white dark:bg-gray-800 text-green-600 dark:text-green-500 border-gray-300 dark:border-gray-600 hover:bg-green-50 dark:hover:bg-green-950/30 hover:border-green-300 dark:hover:border-green-700 shadow-sm'}`}
+                            >
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                                 <span className="hidden 2xl:inline">{selectedIds.size > 0 ? `${t.optimal} (${selectedIds.size})` : t.optimal}</span>
                             </button>
-                            <button type="button" onClick={() => runCalculation(undefined, 'preview')} title={t.precalc} disabled={calcStatus === CalculationStatus.ROUTING || calcStatus === CalculationStatus.VALIDATING || shouldDisableActions} className={`px-2.5 py-1.5 text-white rounded-lg font-medium text-xs transition-colors shadow-sm flex items-center gap-1.5 ${calcStatus === CalculationStatus.ROUTING || calcStatus === CalculationStatus.VALIDATING || shouldDisableActions ? 'bg-gray-400 cursor-not-allowed' : 'bg-google-blue hover:bg-blue-700'}`}>
+                            <button 
+                                type="button" 
+                                onClick={() => runCalculation(undefined, 'preview')} 
+                                title={t.precalc} 
+                                disabled={calcStatus === CalculationStatus.ROUTING || calcStatus === CalculationStatus.VALIDATING || shouldDisableActions} 
+                                className={`px-2.5 py-1.5 border rounded-lg font-medium text-xs transition-colors flex items-center gap-1.5 ${calcStatus === CalculationStatus.ROUTING || calcStatus === CalculationStatus.VALIDATING || shouldDisableActions ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 border-gray-200 dark:border-gray-700 cursor-not-allowed' : 'bg-white dark:bg-gray-800 text-google-blue dark:text-blue-400 border-gray-300 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-blue-950/30 hover:border-blue-300 dark:hover:border-blue-700 shadow-sm'}`}
+                            >
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                                 <span className="hidden 2xl:inline">{t.precalc}</span>
                             </button>
-                            <button type="button" onClick={() => runCalculation(undefined, 'standard')} title={t.calculate} disabled={calcStatus === CalculationStatus.ROUTING || calcStatus === CalculationStatus.VALIDATING || shouldDisableActions} className={`px-3 py-1.5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 rounded-lg font-medium text-xs transition-colors shadow-sm flex items-center gap-1.5 ${calcStatus === CalculationStatus.ROUTING || calcStatus === CalculationStatus.VALIDATING || shouldDisableActions ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : ''}`}>
+                            <button 
+                                type="button" 
+                                onClick={() => runCalculation(undefined, 'standard')} 
+                                title={t.calculate} 
+                                disabled={calcStatus === CalculationStatus.ROUTING || calcStatus === CalculationStatus.VALIDATING || shouldDisableActions} 
+                                className={`px-3 py-1.5 border rounded-lg font-medium text-xs transition-colors flex items-center gap-1.5 ${calcStatus === CalculationStatus.ROUTING || calcStatus === CalculationStatus.VALIDATING || shouldDisableActions ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 border-gray-200 dark:border-gray-700 cursor-not-allowed' : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm'}`}
+                            >
                                 {calcStatus === CalculationStatus.ROUTING ? (
-                                    <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                    <svg className="animate-spin w-4 h-4 text-google-blue" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                                 ) : (
-                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                    <svg className="w-4 h-4 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                                 )}
                                 <span>{t.calculate}</span>
                             </button>

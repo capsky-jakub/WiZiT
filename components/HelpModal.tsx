@@ -18,29 +18,27 @@ const ButtonBadge: React.FC<{ variant: ButtonVariant, icon?: React.ReactNode, te
 
   switch (variant) {
     case 'teal-outline':
+    case 'teal-solid':
       classes += " bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-teal-600 dark:text-teal-400";
       break;
     case 'white-border':
       classes += " bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200";
       break;
     case 'orange':
-      classes += " bg-orange-500 text-white";
+      classes += " bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-orange-600 dark:text-orange-400";
       break;
     case 'google-blue':
-      classes += " bg-google-blue text-white";
+      classes += " bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-google-blue dark:text-blue-400";
       break;
     case 'green':
-      classes += " bg-green-600 text-white";
+      classes += " bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-green-600 dark:text-green-500";
       break;
     case 'yellow': // Deprecated style, mapped to standard
     case 'standard-white':
-      classes += " bg-white border border-gray-300 text-gray-900 dark:bg-gray-100";
-      break;
-    case 'teal-solid':
-      classes += " bg-teal-600 text-white";
+      classes += " bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white";
       break;
     case 'gray':
-      classes += " bg-gray-600 text-white";
+      classes += " bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200";
       break;
   }
 
